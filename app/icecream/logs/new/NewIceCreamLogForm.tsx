@@ -102,6 +102,9 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
         const {
           data: { user },
         } = await supabase.auth.getUser();
+        if (!user) {
+          throw new Error("You must be logged in to upload a photo.");
+        }
         const filePath = `${user.id}/${Date.now()}-${photoFile.name}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("log-photos")
