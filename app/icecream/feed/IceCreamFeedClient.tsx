@@ -26,7 +26,7 @@ export type IceCreamLog = {
   visited_at: string;
   weather_temp: number | null;
   weather_condition: string | null;
-  profiles: LogProfile | null;
+  profiles: LogProfile[] | null;
   log_flavours: LogFlavour[];
 };
 
@@ -226,9 +226,10 @@ export function IceCreamFeedClient({
   return (
     <div className="flex flex-col gap-4">
       {logs.map((log) => {
+        const profile = log.profiles?.[0];
         const displayName =
-          log.profiles?.username ??
-          (log.profiles?.id ? "Anonymous scoop" : "Someone");
+          profile?.username ??
+          (profile?.id ? "Anonymous scoop" : "Someone");
         const timeAgo = formatTimeAgo(log.visited_at);
         const photoUrl = getPhotoUrl(log.photo_url);
         const weather = formatWeather(log);
