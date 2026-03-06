@@ -1,52 +1,62 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
-interface SplashScreenProps {
+export interface SplashScreenProps {
   onComplete: () => void
 }
 
+const FADE_OUT_DURATION_MS = 500
+const STAGE_SCHEDULE = [
+  { stage: 1, delay: 100 },
+  { stage: 2, delay: 600 },
+  { stage: 3, delay: 1100 },
+  { stage: 4, delay: 1900 },
+  { stage: 5, delay: 2500 },
+]
+
 export function SplashScreen({ onComplete }: SplashScreenProps) {
   const [stage, setStage] = useState(0)
-  // Stage 0: White screen
-  // Stage 1: "Gellog" fades in (dark text)
-  // Stage 2: "Gel" orange, "log" teal (+0.5s)
-  // Stage 3: "Gelato" & "Logger" fade in (+0.5s)
-  // Stage 4: Ice cream emoji appears (+0.8s)
-  // Stage 5: Fade out (+0.7s to reach 2.5s total)
+  const hasCompletedRef = useRef(false)
+
+  const completeSplash = useCallback(() => {
+    if (hasCompletedRef.current) {
+      return
+    }
+
+    hasCompletedRef.current = true
+    onComplete()
+  }, [onComplete])
 
   useEffect(() => {
-    // Start the animation sequence
-    const timers: NodeJS.Timeout[] = []
+    hasCompletedRef.current = false
 
-    // Stage 1: Show "Gellog" immediately
-    timers.push(setTimeout(() => setStage(1), 100))
+    const timers: Array<ReturnType<typeof setTimeout>> = STAGE_SCHEDULE.map(
+      ({ stage: nextStage, delay }) => setTimeout(() => setStage(nextStage), delay),
+    )
 
-    // Stage 2: Color transition after 0.5s
-    timers.push(setTimeout(() => setStage(2), 600))
-
-    // Stage 3: Show tagline after another 0.5s
-    timers.push(setTimeout(() => setStage(3), 1100))
-
-    // Stage 4: Show emoji after another 0.8s
-    timers.push(setTimeout(() => setStage(4), 1900))
-
-    // Stage 5: Fade out (at 2.5s total, accounting for animation)
-    timers.push(setTimeout(() => setStage(5), 2500))
-
-    // Call onComplete after fade out animation completes
-    timers.push(setTimeout(() => onComplete(), 3000))
+    // Fallback in case the opacity transition end event is skipped.
+    timers.push(setTimeout(completeSplash, 2500 + FADE_OUT_DURATION_MS + 100))
 
     return () => {
       timers.forEach((timer) => clearTimeout(timer))
     }
-  }, [onComplete])
+  }, [completeSplash])
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white transition-opacity duration-500 ${
+      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white px-6 text-center transition-opacity duration-500 ${
         stage === 5 ? "opacity-0" : "opacity-100"
       }`}
+      onTransitionEnd={(event) => {
+        if (
+          stage === 5 &&
+          event.target === event.currentTarget &&
+          event.propertyName === "opacity"
+        ) {
+          completeSplash()
+        }
+      }}
     >
       {/* Main Logo */}
       <div

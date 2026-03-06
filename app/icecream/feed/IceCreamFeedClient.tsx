@@ -1,5 +1,6 @@
 'use client';
 
+import { RatingStarsDisplay } from "@/app/components/RatingStars";
 import { createClient } from "@/src/lib/supabase/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -101,39 +102,6 @@ function formatWeather(log: IceCreamLog): string | null {
   if (pieces.length === 0) return null;
 
   return pieces.join(" · ");
-}
-
-type RatingStarsProps = {
-  value: number | null;
-  size?: "sm" | "lg";
-};
-
-function RatingStars({ value, size = "sm" }: RatingStarsProps) {
-  const safeValue = value ?? 0;
-  const baseClass =
-    size === "lg"
-      ? "h-6 w-6 text-xl"
-      : "h-4 w-4 text-base leading-none sm:h-5 sm:w-5 sm:text-lg";
-
-  return (
-    <div className="inline-flex items-center gap-0.5 rounded-full bg-white/80 px-2 py-1 text-orange-400 ring-1 ring-orange-100 dark:bg-zinc-900/70 dark:ring-zinc-700">
-      {[1, 2, 3, 4, 5].map((star) => {
-        const active = star <= safeValue;
-        return (
-          <span
-            key={star}
-            className={`${baseClass} ${
-              active
-                ? "text-orange-500 dark:text-orange-400"
-                : "text-orange-200 dark:text-zinc-700"
-            }`}
-          >
-            ★
-          </span>
-        );
-      })}
-    </div>
-  );
 }
 
 export function IceCreamFeedClient({
@@ -283,7 +251,7 @@ export function IceCreamFeedClient({
                   ) : null}
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <RatingStars value={log.overall_rating} size="lg" />
+                  <RatingStarsDisplay value={log.overall_rating} size="lg" />
                   <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                     {log.overall_rating.toFixed(1)}/5
                   </span>
