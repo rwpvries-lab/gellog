@@ -6,10 +6,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
+const DIETARY_TAG_SET = new Set(["Sugar-free", "Dairy-free", "Vegan", "Nut-free", "Gluten-free"]);
+
 type LogFlavour = {
   id: string;
   flavour_name: string;
   rating: number | null;
+  tags: string[] | null;
 };
 
 type LogProfile = {
@@ -168,7 +171,8 @@ export function IceCreamFeedClient({
         log_flavours (
           id,
           flavour_name,
-          rating
+          rating,
+          tags
         )
       `,
       )
@@ -273,7 +277,7 @@ export function IceCreamFeedClient({
                     return (
                       <div
                         key={flavour.id}
-                        className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium shadow-sm ${flavourClass}`}
+                        className={`inline-flex flex-wrap items-center gap-1 rounded-full px-3 py-1 text-xs font-medium shadow-sm ${flavourClass}`}
                       >
                         <span>{flavour.flavour_name}</span>
                         {flavour.rating != null ? (
@@ -282,6 +286,25 @@ export function IceCreamFeedClient({
                             {flavour.rating}
                           </span>
                         ) : null}
+                        {flavour.tags && flavour.tags.length > 0
+                          ? flavour.tags.map((tag) =>
+                              DIETARY_TAG_SET.has(tag) ? (
+                                <span
+                                  key={tag}
+                                  className="rounded-full bg-teal-100 px-1.5 py-0 text-[10px] font-medium text-teal-700 dark:bg-teal-900/50 dark:text-teal-200"
+                                >
+                                  {tag}
+                                </span>
+                              ) : (
+                                <span
+                                  key={tag}
+                                  className="rounded-full bg-orange-100 px-1.5 py-0 text-[10px] font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-200"
+                                >
+                                  {tag}
+                                </span>
+                              )
+                            )
+                          : null}
                       </div>
                     );
                   })}

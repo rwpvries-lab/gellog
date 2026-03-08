@@ -2,7 +2,7 @@
 
 import { StarRating } from "@/app/components/RatingStars";
 import { createClient } from "@/src/lib/supabase/client";
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 type NewIceCreamLogFormProps = {
   userId: string;
@@ -12,7 +12,16 @@ type Flavour = {
   id: number;
   name: string;
   rating: number | null;
+  tags: string[];
 };
+
+const DIETARY_TAGS = ["Sugar-free", "Dairy-free", "Vegan", "Nut-free", "Gluten-free"];
+
+const STATUS_TAGS: { label: string; icon: string }[] = [
+  { label: "Exclusive", icon: "🌟" },
+  { label: "Brand New", icon: "🆕" },
+  { label: "Leaving Soon", icon: "🔜" },
+];
 
 type WeatherData = {
   temperature: number;
@@ -47,10 +56,218 @@ function describeWeatherCode(code: number): { label: string; emoji: string } {
   return { label: "Mixed conditions", emoji: "🌡️" };
 }
 
+const MINUTE_STEPS = [0, 15, 30, 45];
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function pad(n: number): string {
+  return String(n).padStart(2, "0");
+}
+
+function todayDateStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function defaultHour(): number {
+  return new Date().getHours();
+}
+
+function defaultMinute(): number {
+  return Math.floor(new Date().getMinutes() / 15) * 15;
+}
+
+function buildVisitedAt(dateStr: string, hour: number, minute: number): string {
+  const proposed = `${dateStr}T${pad(hour)}:${pad(minute)}`;
+  const today = todayDateStr();
+  if (dateStr === today) {
+    const now = new Date();
+    const nowStr = `${today}T${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    if (proposed > nowStr) return nowStr;
+  }
+  return proposed;
+}
+
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+type DrumItem = { value: string; label: string };
+
+function getLast30Days(): DrumItem[] {
+  const result: DrumItem[] = [];
+  const today = new Date();
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const label =
+      i === 0
+        ? "Today"
+        : i === 1
+        ? "Yesterday"
+        : `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
+    result.push({ value: dateStr, label });
+  }
+  return result;
+}
+
+function formatTriggerLabel(visitedAtStr: string): string {
+  const [datePart, timePart] = visitedAtStr.split("T");
+  const time = timePart.slice(0, 5);
+  const today = todayDateStr();
+  if (datePart === today) return `Today at ${time}`;
+  const yd = new Date();
+  yd.setDate(yd.getDate() - 1);
+  const yesterday = `${yd.getFullYear()}-${pad(yd.getMonth() + 1)}-${pad(yd.getDate())}`;
+  if (datePart === yesterday) return `Yesterday at ${time}`;
+  const d = new Date(datePart + "T12:00:00");
+  return `${DAY_NAMES[d.getDay()]} ${d.getDate()} ${MONTH_NAMES[d.getMonth()]} at ${time}`;
+}
+
+function isToday(datetimeLocalValue: string): boolean {
+  return datetimeLocalValue.startsWith(todayDateStr());
+}
+
+const DRUM_ITEM_H = 44;
+const DRUM_VISIBLE = 5;
+
+function ScrollDrum({
+  items,
+  selectedValue,
+  onChange,
+}: {
+  items: DrumItem[];
+  selectedValue: string;
+  onChange: (value: string) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initialIdx = Math.max(0, items.findIndex((item) => item.value === selectedValue));
+  const [centerIdx, setCenterIdx] = useState(initialIdx);
+
+  useLayoutEffect(() => {
+    if (ref.current) {
+      ref.current.scrollTop = initialIdx * DRUM_ITEM_H;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function handleScroll() {
+    if (!ref.current) return;
+    const raw = ref.current.scrollTop / DRUM_ITEM_H;
+    const clamped = Math.max(0, Math.min(items.length - 1, Math.round(raw)));
+    setCenterIdx(clamped);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      if (!ref.current) return;
+      const finalIdx = Math.max(
+        0,
+        Math.min(items.length - 1, Math.round(ref.current.scrollTop / DRUM_ITEM_H))
+      );
+      const targetTop = finalIdx * DRUM_ITEM_H;
+      if (Math.abs(ref.current.scrollTop - targetTop) > 0.5) {
+        ref.current.scrollTo({ top: targetTop, behavior: "smooth" });
+      }
+      setCenterIdx(finalIdx);
+      onChange(items[finalIdx].value);
+    }, 150);
+  }
+
+  const containerH = DRUM_ITEM_H * DRUM_VISIBLE;
+  const padH = DRUM_ITEM_H * Math.floor(DRUM_VISIBLE / 2);
+  const fadePct = Math.round((padH / containerH) * 100);
+
+  return (
+    <div style={{ position: "relative", height: containerH, flex: 1 }}>
+      {/* Selection tint */}
+      <div
+        style={{
+          position: "absolute",
+          top: padH,
+          left: 0,
+          right: 0,
+          height: DRUM_ITEM_H,
+          background: "#FEF3C7",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+      {/* Scrollable items */}
+      <div
+        ref={ref}
+        onScroll={handleScroll}
+        style={{
+          position: "absolute",
+          inset: 0,
+          overflowY: "scroll",
+          scrollSnapType: "y mandatory",
+          WebkitOverflowScrolling: "touch",
+          scrollbarWidth: "none",
+          maskImage: `linear-gradient(to bottom, transparent 0%, black ${fadePct}%, black ${100 - fadePct}%, transparent 100%)`,
+          WebkitMaskImage: `linear-gradient(to bottom, transparent 0%, black ${fadePct}%, black ${100 - fadePct}%, transparent 100%)`,
+          background: "transparent",
+          zIndex: 1,
+        }}
+      >
+        <div style={{ height: padH, flexShrink: 0 }} />
+        {items.map((item, i) => (
+          <div
+            key={item.value}
+            style={{
+              height: DRUM_ITEM_H,
+              scrollSnapAlign: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: centerIdx === i ? 22 : 20,
+              fontWeight: centerIdx === i ? 500 : 400,
+              color: "#18181b",
+              userSelect: "none",
+            }}
+          >
+            {item.label}
+          </div>
+        ))}
+        <div style={{ height: padH, flexShrink: 0 }} />
+      </div>
+      {/* Selection lines */}
+      <div
+        style={{
+          position: "absolute",
+          top: padH,
+          left: 0,
+          right: 0,
+          height: 1,
+          background: "#D97706",
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: padH + DRUM_ITEM_H,
+          left: 0,
+          right: 0,
+          height: 1,
+          background: "#D97706",
+          pointerEvents: "none",
+          zIndex: 2,
+        }}
+      />
+    </div>
+  );
+}
+
 export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
   const [salonName, setSalonName] = useState("");
+  const [selectedDay, setSelectedDay] = useState(todayDateStr);
+  const [selectedHour, setSelectedHour] = useState(defaultHour);
+  const [selectedMinute, setSelectedMinute] = useState(defaultMinute);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [draftDay, setDraftDay] = useState(todayDateStr);
+  const [draftHour, setDraftHour] = useState(defaultHour);
+  const [draftMinute, setDraftMinute] = useState(defaultMinute);
   const [flavours, setFlavours] = useState<Flavour[]>([
-    { id: 1, name: "", rating: null },
+    { id: 1, name: "", rating: null, tags: [] },
   ]);
   const [overallRating, setOverallRating] = useState<number | null>(5);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -62,6 +279,8 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
   const [weatherUnavailable, setWeatherUnavailable] = useState(false);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherCaptured, setWeatherCaptured] = useState(false);
+
+  const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -128,6 +347,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
           overall_rating: overallRating,
           notes: notes.trim() || null,
           photo_url: photoPath,
+          visited_at: new Date(visitedAt).toISOString(),
           weather_temp: weather?.temperature ?? null,
           weather_feels_like: weather?.apparentTemperature ?? null,
           weather_condition: weather
@@ -149,6 +369,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
               log_id: log.id,
               flavour_name: flavour.name,
               rating: flavour.rating,
+              tags: flavour.tags.length > 0 ? flavour.tags : null,
             }))
           );
 
@@ -159,7 +380,14 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
 
       setSuccess("Gelogd!");
       setSalonName("");
-      setFlavours([{ id: 1, name: "", rating: null }]);
+      setSelectedDay(todayDateStr());
+      setSelectedHour(defaultHour());
+      setSelectedMinute(defaultMinute());
+      setSheetOpen(false);
+      setDraftDay(todayDateStr());
+      setDraftHour(defaultHour());
+      setDraftMinute(defaultMinute());
+      setFlavours([{ id: 1, name: "", rating: null, tags: [] }]);
       setOverallRating(5);
       setPhotoFile(null);
       setNotes("");
@@ -179,7 +407,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
   function handleAddFlavour() {
     setFlavours((prev) => [
       ...prev,
-      { id: prev.length + 1, name: "", rating: null },
+      { id: prev.length + 1, name: "", rating: null, tags: [] },
     ]);
   }
 
@@ -276,6 +504,24 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
     }
   }
 
+  function openSheet() {
+    setDraftDay(selectedDay);
+    setDraftHour(selectedHour);
+    setDraftMinute(selectedMinute);
+    setSheetOpen(true);
+  }
+
+  function confirmSheet() {
+    setSelectedDay(draftDay);
+    setSelectedHour(draftHour);
+    setSelectedMinute(draftMinute);
+    setSheetOpen(false);
+  }
+
+  function cancelSheet() {
+    setSheetOpen(false);
+  }
+
   return (
     <form
       onSubmit={handleSubmit}
@@ -324,8 +570,74 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
           </p>
         </div>
 
+        {/* Date/time trigger pill */}
+        <button
+          type="button"
+          onClick={openSheet}
+          className="flex w-full items-center gap-3 rounded-2xl bg-zinc-100 px-4 py-3 text-left text-sm text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+        >
+          <span className="text-base leading-none">🕐</span>
+          <span className="flex-1">{formatTriggerLabel(visitedAt)}</span>
+          <span className="text-zinc-400">›</span>
+        </button>
+
+        {/* iOS-style bottom sheet */}
+        {sheetOpen && (
+          <div className="fixed inset-0 z-50 flex flex-col justify-end">
+            <div
+              className="absolute inset-0 bg-black/40"
+              onClick={cancelSheet}
+            />
+            <div className="relative rounded-t-[20px] bg-white shadow-2xl">
+              <div className="flex items-center justify-between px-5 py-4">
+                <button
+                  type="button"
+                  onClick={cancelSheet}
+                  className="text-sm text-zinc-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmSheet}
+                  className="text-sm font-semibold text-amber-600"
+                >
+                  Bevestigen
+                </button>
+              </div>
+              <div className="flex pb-8">
+                <ScrollDrum
+                  items={getLast30Days()}
+                  selectedValue={draftDay}
+                  onChange={setDraftDay}
+                />
+                <ScrollDrum
+                  items={Array.from({ length: 24 }, (_, i) => ({
+                    value: String(i),
+                    label: pad(i),
+                  }))}
+                  selectedValue={String(draftHour)}
+                  onChange={(v) => setDraftHour(Number(v))}
+                />
+                <ScrollDrum
+                  items={MINUTE_STEPS.map((m) => ({
+                    value: String(m),
+                    label: pad(m),
+                  }))}
+                  selectedValue={String(draftMinute)}
+                  onChange={(v) => setDraftMinute(Number(v))}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col gap-2">
-          {weather ? (
+          {!isToday(visitedAt) ? (
+            <p className="text-xs text-zinc-500 dark:text-zinc-500">
+              Geen weerdata beschikbaar voor een datum in het verleden
+            </p>
+          ) : weather ? (
             <div className="inline-flex items-center gap-2 self-start rounded-full bg-teal-100/90 px-3 py-1 text-xs font-medium text-teal-800 ring-1 ring-teal-200 dark:bg-teal-900/40 dark:text-teal-100 dark:ring-teal-800">
               <span className="text-sm leading-none">✓</span>
               <span>{weather.emoji}</span>
@@ -424,6 +736,49 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
                     )
                   }
                 />
+
+                <div className="flex flex-wrap gap-1.5">
+                  {DIETARY_TAGS.map((tag) => {
+                    const selected = flavour.tags.includes(tag);
+                    return (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() =>
+                          setFlavours((prev) =>
+                            prev.map((item) =>
+                              item.id === flavour.id
+                                ? {
+                                    ...item,
+                                    tags: selected
+                                      ? item.tags.filter((t) => t !== tag)
+                                      : [...item.tags, tag],
+                                  }
+                                : item
+                            )
+                          )
+                        }
+                        className={
+                          selected
+                            ? "rounded-full px-2.5 py-0.5 text-xs font-medium bg-teal-600 text-white"
+                            : "rounded-full px-2.5 py-0.5 text-xs font-medium bg-white text-zinc-500 ring-1 ring-zinc-300 dark:bg-zinc-900 dark:text-zinc-400 dark:ring-zinc-600"
+                        }
+                      >
+                        {tag}
+                      </button>
+                    );
+                  })}
+                  {STATUS_TAGS.map((tag) => (
+                    <span
+                      key={tag.label}
+                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 ring-1 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-200 dark:ring-orange-800/50 opacity-40 cursor-default select-none"
+                      title="Set by salon operators"
+                    >
+                      <span>{tag.icon}</span>
+                      {tag.label}
+                    </span>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
