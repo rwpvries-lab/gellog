@@ -1,6 +1,7 @@
 "use client";
 
 import { StarRating } from "@/app/components/RatingStars";
+import { SalonInput, type SalonData } from "@/src/components/SalonInput";
 import { createClient } from "@/src/lib/supabase/client";
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -259,6 +260,11 @@ function ScrollDrum({
 
 export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
   const [salonName, setSalonName] = useState("");
+  const [salonPlaceId, setSalonPlaceId] = useState<string | null>(null);
+  const [salonAddress, setSalonAddress] = useState<string | null>(null);
+  const [salonLat, setSalonLat] = useState<number | null>(null);
+  const [salonLng, setSalonLng] = useState<number | null>(null);
+  const [salonCity, setSalonCity] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState(todayDateStr);
   const [selectedHour, setSelectedHour] = useState(defaultHour);
   const [selectedMinute, setSelectedMinute] = useState(defaultMinute);
@@ -346,6 +352,11 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
         .insert({
           user_id: userId,
           salon_name: trimmedSalon,
+          salon_place_id: salonPlaceId,
+          salon_address: salonAddress,
+          salon_lat: salonLat,
+          salon_lng: salonLng,
+          salon_city: salonCity,
           overall_rating: overallRating,
           notes: notes.trim() || null,
           photo_url: photoPath,
@@ -384,6 +395,11 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
 
       setSuccess("Gelogd!");
       setSalonName("");
+      setSalonPlaceId(null);
+      setSalonAddress(null);
+      setSalonLat(null);
+      setSalonLng(null);
+      setSalonCity(null);
       setSelectedDay(todayDateStr());
       setSelectedHour(defaultHour());
       setSelectedMinute(defaultMinute());
@@ -510,6 +526,15 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
     }
   }
 
+  function handlePlaceSelect(data: SalonData) {
+    setSalonName(data.salon_name);
+    setSalonPlaceId(data.salon_place_id);
+    setSalonAddress(data.salon_address);
+    setSalonLat(data.salon_lat);
+    setSalonLng(data.salon_lng);
+    setSalonCity(data.salon_city);
+  }
+
   function openSheet() {
     setDraftDay(selectedDay);
     setDraftHour(selectedHour);
@@ -562,14 +587,10 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
           >
             Salon name
           </label>
-          <input
-            id="salon-name"
-            type="text"
+          <SalonInput
             value={salonName}
-            onChange={(e) => setSalonName(e.target.value)}
-            placeholder="e.g. Gelateria Roma"
-            autoComplete="off"
-            className="w-full rounded-2xl border border-orange-100 bg-white/80 px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
+            onPlaceSelect={handlePlaceSelect}
+            userId={userId}
           />
           <p className="text-xs text-zinc-500 dark:text-zinc-500">
             Start typing and we’ll remember your favourites later.
@@ -692,7 +713,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
             <button
               type="button"
               onClick={handleAddFlavour}
-              className="inline-flex items-center justify-center rounded-full bg-[##FF7F50] px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className="inline-flex items-center justify-center rounded-full bg-[#FF7F50] px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-teal-300"
             >
               + Add flavour
             </button>
@@ -841,7 +862,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
             <span>
               {photoFile ? photoFile.name : "Add a sunny scoop photo"}
             </span>
-            <span className="rounded-full bg-[##00D4A6] px-3 py-1 text-xs font-semibold text-white">
+            <span className="rounded-full bg-[#00D4A6] px-3 py-1 text-xs font-semibold text-white">
               Choose file
             </span>
             <input
@@ -902,7 +923,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex h-11 items-center justify-center rounded-full bg-[##FF7F50] px-6 text-sm font-semibold text-white shadow-lg shadow-orange-300/50 transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-orange-50 disabled:opacity-60 dark:bg-orange-500 dark:shadow-none dark:focus:ring-offset-zinc-950"
+        className="inline-flex h-11 items-center justify-center rounded-full bg-[#FF7F50] px-6 text-sm font-semibold text-white shadow-lg shadow-orange-300/50 transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-orange-50 disabled:opacity-60 dark:bg-orange-500 dark:shadow-none dark:focus:ring-offset-zinc-950"
       >
         {submitting ? "Scooping…" : "Opslaan"}
       </button>
