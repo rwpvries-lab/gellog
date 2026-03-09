@@ -351,7 +351,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
           photo_url: photoPath,
           visited_at: new Date(visitedAt).toISOString(),
           vessel: vessel ?? null,
-          price_paid: pricePaid !== "" ? parseFloat(pricePaid) : null,
+          price_paid: pricePaid !== "" ? parseFloat(pricePaid.replace(",", ".")) : null,
           weather_temp: weather?.temperature ?? null,
           weather_feels_like: weather?.apparentTemperature ?? null,
           weather_condition: weather
@@ -871,10 +871,8 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
             <span className="pl-3 text-sm text-zinc-400">€</span>
             <input
               id="price-paid"
-              type="number"
+              type="text"
               inputMode="decimal"
-              step="0.01"
-              min="0"
               value={pricePaid}
               onChange={(e) => setPricePaid(e.target.value)}
               placeholder="0.00"
