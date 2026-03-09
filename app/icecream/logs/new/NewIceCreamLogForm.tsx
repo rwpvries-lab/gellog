@@ -872,6 +872,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
             <input
               id="price-paid"
               type="number"
+              inputMode="decimal"
               step="0.01"
               min="0"
               value={pricePaid}
