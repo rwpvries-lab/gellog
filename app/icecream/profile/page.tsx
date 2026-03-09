@@ -22,6 +22,7 @@ type IceCreamLog = {
   salon_name: string;
   overall_rating: number;
   visited_at: string;
+  price_paid: number | null;
   weather_condition: string | null;
   log_flavours: LogFlavour[];
 };
@@ -186,6 +187,14 @@ function deriveStats(logs: IceCreamLog[]) {
     )
     .slice(0, 6);
 
+  const logsWithPrice = logs.filter((log) => log.price_paid != null);
+  const totalSpent =
+    logsWithPrice.length >= 3
+      ? logsWithPrice.reduce((sum, log) => sum + (log.price_paid ?? 0), 0)
+      : null;
+  const averagePerVisit =
+    logsWithPrice.length >= 3 ? totalSpent! / logsWithPrice.length : null;
+
   return {
     totalAllTime,
     totalThisYear,
@@ -195,6 +204,8 @@ function deriveStats(logs: IceCreamLog[]) {
     mostVisitedSalon,
     bestWeather,
     recentLogs,
+    totalSpent,
+    averagePerVisit,
   };
 }
 
@@ -237,6 +248,7 @@ export default async function IceCreamProfilePage() {
         salon_name,
         overall_rating,
         visited_at,
+        price_paid,
         weather_condition,
         log_flavours (
           id,
@@ -263,6 +275,8 @@ export default async function IceCreamProfilePage() {
     mostVisitedSalon,
     bestWeather,
     recentLogs,
+    totalSpent,
+    averagePerVisit,
   } = deriveStats(logs);
 
   const displayName =
@@ -394,6 +408,28 @@ export default async function IceCreamProfilePage() {
                   {bestWeather ?? "Not enough data"}
                 </p>
               </div>
+
+              {totalSpent != null ? (
+                <div className="min-w-[150px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Total spent
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+                    €{totalSpent.toFixed(2)}
+                  </p>
+                </div>
+              ) : null}
+
+              {averagePerVisit != null ? (
+                <div className="min-w-[160px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Average per visit
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
+                    €{averagePerVisit.toFixed(2)}
+                  </p>
+                </div>
+              ) : null}
             </div>
           </section>
 

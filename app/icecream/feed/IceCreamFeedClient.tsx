@@ -28,6 +28,8 @@ export type IceCreamLog = {
   notes: string | null;
   photo_url: string | null;
   visited_at: string;
+  vessel: "cup" | "cone" | null;
+  price_paid: number | null;
   weather_temp: number | null;
   weather_condition: string | null;
   profiles: LogProfile[] | null;
@@ -161,6 +163,8 @@ export function IceCreamFeedClient({
         notes,
         photo_url,
         visited_at,
+        vessel,
+        price_paid,
         weather_temp,
         weather_condition,
         profiles (
@@ -246,6 +250,11 @@ export function IceCreamFeedClient({
                 <div className="flex flex-col">
                   <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
                     {log.salon_name}
+                    {log.vessel === "cone" ? (
+                      <span className="ml-1.5 text-sm font-normal">🍦</span>
+                    ) : log.vessel === "cup" ? (
+                      <span className="ml-1.5 text-sm font-normal">🍧</span>
+                    ) : null}
                   </h2>
                   {weather ? (
                     <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
@@ -324,7 +333,14 @@ export function IceCreamFeedClient({
                   </div>
                   <span className="font-medium">{displayName}</span>
                 </div>
-                <span>{timeAgo}</span>
+                <div className="flex items-center gap-2">
+                  {log.price_paid != null ? (
+                    <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-600 ring-1 ring-orange-100 dark:bg-zinc-900 dark:text-orange-300 dark:ring-zinc-700">
+                      €{log.price_paid.toFixed(2)}
+                    </span>
+                  ) : null}
+                  <span>{timeAgo}</span>
+                </div>
               </footer>
             </div>
           </article>

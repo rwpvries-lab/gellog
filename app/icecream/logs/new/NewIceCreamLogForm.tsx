@@ -270,6 +270,8 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
     { id: 1, name: "", rating: null, tags: [] },
   ]);
   const [overallRating, setOverallRating] = useState<number | null>(5);
+  const [vessel, setVessel] = useState<"cup" | "cone" | null>(null);
+  const [pricePaid, setPricePaid] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -348,6 +350,8 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
           notes: notes.trim() || null,
           photo_url: photoPath,
           visited_at: new Date(visitedAt).toISOString(),
+          vessel: vessel ?? null,
+          price_paid: pricePaid !== "" ? parseFloat(pricePaid) : null,
           weather_temp: weather?.temperature ?? null,
           weather_feels_like: weather?.apparentTemperature ?? null,
           weather_condition: weather
@@ -389,6 +393,8 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
       setDraftMinute(defaultMinute());
       setFlavours([{ id: 1, name: "", rating: null, tags: [] }]);
       setOverallRating(5);
+      setVessel(null);
+      setPricePaid("");
       setPhotoFile(null);
       setNotes("");
       setWeather(null);
@@ -790,6 +796,37 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
           onChange={(value) => setOverallRating(value)}
         />
 
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+            Vessel
+          </span>
+          <div className="flex gap-3">
+            {(
+              [
+                { value: "cone", emoji: "🍦", label: "Hoorntje" },
+                { value: "cup", emoji: "🍧", label: "Bakje" },
+              ] as const
+            ).map(({ value, emoji, label }) => {
+              const selected = vessel === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setVessel(selected ? null : value)}
+                  className={
+                    selected
+                      ? "flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-sm transition bg-[#D97706] text-white"
+                      : "flex flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-500 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                  }
+                >
+                  <span>{emoji}</span>
+                  <span>{label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="flex flex-col gap-1">
           <label
             htmlFor="photo"
@@ -821,6 +858,28 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
           <p className="text-xs text-zinc-500 dark:text-zinc-500">
             Stored in the <code>log-photos</code> bucket.
           </p>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor="price-paid"
+            className="text-sm font-medium text-zinc-800 dark:text-zinc-100"
+          >
+            Price paid (optional)
+          </label>
+          <div className="flex items-center rounded-2xl border border-orange-100 bg-white/80 shadow-sm focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70">
+            <span className="pl-3 text-sm text-zinc-400">€</span>
+            <input
+              id="price-paid"
+              type="number"
+              step="0.01"
+              min="0"
+              value={pricePaid}
+              onChange={(e) => setPricePaid(e.target.value)}
+              placeholder="0.00"
+              className="w-full rounded-2xl bg-transparent px-2 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100"
+            />
+          </div>
         </div>
 
         <div className="flex flex-col gap-1">

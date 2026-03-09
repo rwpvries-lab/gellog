@@ -19,6 +19,8 @@ export default async function IceCreamFeedPage() {
       notes,
       photo_url,
       visited_at,
+      vessel,
+      price_paid,
       weather_temp,
       weather_condition,
       profiles (
