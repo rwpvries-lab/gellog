@@ -15,6 +15,10 @@ type LogFlavour = {
   id: string;
   flavour_name: string;
   rating: number | null;
+  rating_texture: number | null;
+  rating_originality: number | null;
+  rating_intensity: number | null;
+  rating_presentation: number | null;
 };
 
 type IceCreamLog = {
@@ -32,6 +36,14 @@ type FlavourStats = {
   timesTried: number;
   ratingCount: number;
   ratingSum: number;
+  textureSum: number;
+  textureCount: number;
+  originalitySum: number;
+  originalityCount: number;
+  intensitySum: number;
+  intensityCount: number;
+  presentationSum: number;
+  presentationCount: number;
 };
 
 type RankedFlavour = {
@@ -39,6 +51,10 @@ type RankedFlavour = {
   name: string;
   timesTried: number;
   averageRating: number;
+  avgTexture: number | null;
+  avgOriginality: number | null;
+  avgIntensity: number | null;
+  avgPresentation: number | null;
 };
 
 function formatDate(isoDate: string): string {
@@ -84,12 +100,36 @@ function deriveStats(logs: IceCreamLog[]) {
           timesTried: 0,
           ratingCount: 0,
           ratingSum: 0,
+          textureSum: 0,
+          textureCount: 0,
+          originalitySum: 0,
+          originalityCount: 0,
+          intensitySum: 0,
+          intensityCount: 0,
+          presentationSum: 0,
+          presentationCount: 0,
         };
 
       existing.timesTried += 1;
       if (flavour.rating != null) {
         existing.ratingCount += 1;
         existing.ratingSum += flavour.rating;
+      }
+      if (flavour.rating_texture != null) {
+        existing.textureCount += 1;
+        existing.textureSum += flavour.rating_texture;
+      }
+      if (flavour.rating_originality != null) {
+        existing.originalityCount += 1;
+        existing.originalitySum += flavour.rating_originality;
+      }
+      if (flavour.rating_intensity != null) {
+        existing.intensityCount += 1;
+        existing.intensitySum += flavour.rating_intensity;
+      }
+      if (flavour.rating_presentation != null) {
+        existing.presentationCount += 1;
+        existing.presentationSum += flavour.rating_presentation;
       }
 
       flavourMap.set(key, existing);
@@ -98,8 +138,7 @@ function deriveStats(logs: IceCreamLog[]) {
 
   const allFlavourStats = Array.from(flavourMap.values()).map((stat) => ({
     ...stat,
-    averageRating:
-      stat.ratingCount > 0 ? stat.ratingSum / stat.ratingCount : null,
+    averageRating: stat.ratingCount > 0 ? stat.ratingSum / stat.ratingCount : null,
   }));
 
   const favouriteFlavour =
@@ -130,6 +169,10 @@ function deriveStats(logs: IceCreamLog[]) {
       name: stat.name,
       timesTried: stat.timesTried,
       averageRating: stat.averageRating ?? 0,
+      avgTexture: stat.textureCount > 0 ? stat.textureSum / stat.textureCount : null,
+      avgOriginality: stat.originalityCount > 0 ? stat.originalitySum / stat.originalityCount : null,
+      avgIntensity: stat.intensityCount > 0 ? stat.intensitySum / stat.intensityCount : null,
+      avgPresentation: stat.presentationCount > 0 ? stat.presentationSum / stat.presentationCount : null,
     }));
 
   const salonMap = new Map<
@@ -253,7 +296,11 @@ export default async function IceCreamProfilePage() {
         log_flavours (
           id,
           flavour_name,
-          rating
+          rating,
+          rating_texture,
+          rating_originality,
+          rating_intensity,
+          rating_presentation
         )
       `,
     )
@@ -470,6 +517,16 @@ export default async function IceCreamProfilePage() {
                             {flavour.timesTried} scoop
                             {flavour.timesTried === 1 ? "" : "s"}
                           </span>
+                          {(flavour.avgTexture != null || flavour.avgOriginality != null || flavour.avgIntensity != null || flavour.avgPresentation != null) ? (
+                            <span className="mt-0.5 text-[11px] text-zinc-400 dark:text-zinc-500">
+                              {[
+                                flavour.avgTexture != null && `Textuur: ${flavour.avgTexture.toFixed(1)}`,
+                                flavour.avgOriginality != null && `Originaliteit: ${flavour.avgOriginality.toFixed(1)}`,
+                                flavour.avgIntensity != null && `Intensiteit: ${flavour.avgIntensity.toFixed(1)}`,
+                                flavour.avgPresentation != null && `Presentatie: ${flavour.avgPresentation.toFixed(1)}`,
+                              ].filter(Boolean).join(" · ")}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                       <span className="text-sm font-semibold text-orange-500 dark:text-orange-300">

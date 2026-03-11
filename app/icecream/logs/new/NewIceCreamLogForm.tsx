@@ -14,6 +14,10 @@ type Flavour = {
   name: string;
   rating: number | null;
   tags: string[];
+  ratingTexture: number | null;
+  ratingOriginality: number | null;
+  ratingIntensity: number | null;
+  ratingPresentation: number | null;
 };
 
 const DIETARY_TAGS = ["Sugar-free", "Dairy-free", "Vegan", "Nut-free", "Gluten-free"];
@@ -273,13 +277,14 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
   const [draftHour, setDraftHour] = useState(defaultHour);
   const [draftMinute, setDraftMinute] = useState(defaultMinute);
   const [flavours, setFlavours] = useState<Flavour[]>([
-    { id: 1, name: "", rating: null, tags: [] },
+    { id: 1, name: "", rating: null, tags: [], ratingTexture: null, ratingOriginality: null, ratingIntensity: null, ratingPresentation: null },
   ]);
   const [overallRating, setOverallRating] = useState<number | null>(5);
   const [vessel, setVessel] = useState<"cup" | "cone" | null>(null);
   const [pricePaid, setPricePaid] = useState("");
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [notes, setNotes] = useState("");
+  const [expandedAdvanced, setExpandedAdvanced] = useState<Set<number>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -385,6 +390,10 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
               flavour_name: flavour.name,
               rating: flavour.rating,
               tags: flavour.tags.length > 0 ? flavour.tags : null,
+              rating_texture: flavour.ratingTexture,
+              rating_originality: flavour.ratingOriginality,
+              rating_intensity: flavour.ratingIntensity,
+              rating_presentation: flavour.ratingPresentation,
             }))
           );
 
@@ -407,7 +416,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
       setDraftDay(todayDateStr());
       setDraftHour(defaultHour());
       setDraftMinute(defaultMinute());
-      setFlavours([{ id: 1, name: "", rating: null, tags: [] }]);
+      setFlavours([{ id: 1, name: "", rating: null, tags: [], ratingTexture: null, ratingOriginality: null, ratingIntensity: null, ratingPresentation: null }]);
       setOverallRating(5);
       setVessel(null);
       setPricePaid("");
@@ -429,12 +438,24 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
   function handleAddFlavour() {
     setFlavours((prev) => [
       ...prev,
-      { id: prev.length + 1, name: "", rating: null, tags: [] },
+      { id: prev.length + 1, name: "", rating: null, tags: [], ratingTexture: null, ratingOriginality: null, ratingIntensity: null, ratingPresentation: null },
     ]);
   }
 
   function handleRemoveFlavour(id: number) {
     setFlavours((prev) => prev.filter((flavour) => flavour.id !== id));
+  }
+
+  function toggleAdvanced(id: number) {
+    setExpandedAdvanced((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
   }
 
   async function handleCaptureWeather() {
@@ -763,6 +784,45 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
                     )
                   }
                 />
+
+                <button
+                  type="button"
+                  onClick={() => toggleAdvanced(flavour.id)}
+                  className="self-start text-xs font-medium text-teal-700 dark:text-teal-400"
+                >
+                  {expandedAdvanced.has(flavour.id) ? "− Rate in more detail" : "+ Rate in more detail"}
+                </button>
+
+                <div
+                  className="grid transition-all duration-300"
+                  style={{ gridTemplateRows: expandedAdvanced.has(flavour.id) ? "1fr" : "0fr" }}
+                >
+                  <div className="overflow-hidden">
+                    <div className="flex flex-col gap-2 pt-1">
+                      {(
+                        [
+                          { key: "ratingTexture", label: "Textuur (Texture)" },
+                          { key: "ratingOriginality", label: "Originaliteit (Originality)" },
+                          { key: "ratingIntensity", label: "Intensiteit (Intensity)" },
+                          { key: "ratingPresentation", label: "Presentatie (Presentation)" },
+                        ] as const
+                      ).map(({ key, label }) => (
+                        <StarRating
+                          key={key}
+                          label={label}
+                          value={flavour[key]}
+                          onChange={(value) =>
+                            setFlavours((prev) =>
+                              prev.map((item) =>
+                                item.id === flavour.id ? { ...item, [key]: value } : item
+                              )
+                            )
+                          }
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
 
                 <div className="flex flex-wrap gap-1.5">
                   {DIETARY_TAGS.map((tag) => {
