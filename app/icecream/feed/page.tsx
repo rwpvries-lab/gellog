@@ -15,6 +15,9 @@ export default async function IceCreamFeedPage() {
       `
       id,
       salon_name,
+      salon_lat,
+      salon_lng,
+      salon_place_id,
       overall_rating,
       notes,
       photo_url,

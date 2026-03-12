@@ -3,6 +3,7 @@ import { createClient } from "@/src/lib/supabase/server";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { IceCreamHeatmap, type HeatmapDayData } from "./IceCreamHeatmap";
 
 type Profile = {
   id: string;
@@ -326,6 +327,18 @@ export default async function IceCreamProfilePage() {
     averagePerVisit,
   } = deriveStats(logs);
 
+  const heatmapData: Record<string, HeatmapDayData> = {};
+  logs.forEach((log) => {
+    const dateStr = log.visited_at.slice(0, 10);
+    if (!heatmapData[dateStr]) {
+      heatmapData[dateStr] = { count: 0, salons: [] };
+    }
+    heatmapData[dateStr].count += 1;
+    if (!heatmapData[dateStr].salons.includes(log.salon_name)) {
+      heatmapData[dateStr].salons.push(log.salon_name);
+    }
+  });
+
   const displayName =
     profile?.display_name?.trim() ||
     profile?.username?.trim() ||
@@ -477,6 +490,23 @@ export default async function IceCreamProfilePage() {
                   </p>
                 </div>
               ) : null}
+            </div>
+          </section>
+
+          <section aria-labelledby="activity-heatmap-heading">
+            <div className="mb-2 flex items-baseline justify-between gap-2">
+              <h2
+                id="activity-heatmap-heading"
+                className="text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300"
+              >
+                Activity
+              </h2>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                Last 12 months
+              </span>
+            </div>
+            <div className="rounded-3xl bg-white/90 p-4 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
+              <IceCreamHeatmap data={heatmapData} />
             </div>
           </section>
 

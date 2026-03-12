@@ -24,6 +24,9 @@ type LogProfile = {
 export type IceCreamLog = {
   id: string;
   salon_name: string;
+  salon_lat: number | null;
+  salon_lng: number | null;
+  salon_place_id: string | null;
   overall_rating: number;
   notes: string | null;
   photo_url: string | null;
@@ -118,6 +121,7 @@ export function IceCreamFeedClient({
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(initialLogs.length === pageSize);
   const [page, setPage] = useState(1);
+  const [openDirectionsId, setOpenDirectionsId] = useState<string | null>(null);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -159,6 +163,9 @@ export function IceCreamFeedClient({
         `
         id,
         salon_name,
+        salon_lat,
+        salon_lng,
+        salon_place_id,
         overall_rating,
         notes,
         photo_url,
@@ -340,12 +347,101 @@ export function IceCreamFeedClient({
                     </span>
                   ) : null}
                   <span>{timeAgo}</span>
+                  {log.salon_lat != null && log.salon_lng != null ? (
+                    <button
+                      type="button"
+                      onClick={() => setOpenDirectionsId(log.id)}
+                      className="flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700 ring-1 ring-teal-100 transition hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60 dark:hover:bg-teal-900/50"
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        <circle cx="12" cy="9" r="2.5"/>
+                      </svg>
+                      Directions
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      title="No location saved for this visit"
+                      className="flex cursor-not-allowed items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-400 ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-600 dark:ring-zinc-700"
+                    >
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        <circle cx="12" cy="9" r="2.5"/>
+                      </svg>
+                      Directions
+                    </button>
+                  )}
                 </div>
               </footer>
             </div>
           </article>
         );
       })}
+
+      {openDirectionsId ? (() => {
+        const directionsLog = logs.find((l) => l.id === openDirectionsId);
+        if (!directionsLog || directionsLog.salon_lat == null || directionsLog.salon_lng == null) return null;
+        const lat = directionsLog.salon_lat;
+        const lng = directionsLog.salon_lng;
+        const placeId = directionsLog.salon_place_id;
+        const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}${placeId ? `&destination_place_id=${placeId}` : ""}`;
+        const appleUrl = `maps://maps.apple.com/?daddr=${lat},${lng}`;
+        const wazeUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-end"
+            onClick={() => setOpenDirectionsId(null)}
+          >
+            <div
+              className="w-full rounded-t-3xl bg-white p-6 shadow-2xl ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                  Get directions to {directionsLog.salon_name}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setOpenDirectionsId(null)}
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-xs text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                  aria-label="Close"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                <a
+                  href={appleUrl}
+                  className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
+                >
+                  <span className="text-lg">🗺️</span>
+                  Open in Apple Maps
+                </a>
+                <a
+                  href={googleUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
+                >
+                  <span className="text-lg">🌐</span>
+                  Open in Google Maps
+                </a>
+                <a
+                  href={wazeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
+                >
+                  <span className="text-lg">🚗</span>
+                  Open in Waze
+                </a>
+              </div>
+            </div>
+          </div>
+        );
+      })() : null}
 
       {isEmpty ? (
         <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-white px-8 py-12 text-center text-sm text-zinc-600 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800">
