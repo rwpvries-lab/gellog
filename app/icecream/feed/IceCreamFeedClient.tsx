@@ -35,7 +35,7 @@ export type IceCreamLog = {
   price_paid: number | null;
   weather_temp: number | null;
   weather_condition: string | null;
-  profiles: LogProfile[] | null;
+  profiles: LogProfile | null;
   log_flavours: LogFlavour[];
 };
 
@@ -209,10 +209,8 @@ export function IceCreamFeedClient({
   return (
     <div className="flex flex-col gap-4">
       {logs.map((log) => {
-        const profile = log.profiles?.[0];
-        const displayName =
-          profile?.username ??
-          (profile?.id ? "Anonymous scoop" : "Someone");
+        const profile = log.profiles;
+        const displayName = profile?.username ?? "Unknown user";
         const timeAgo = formatTimeAgo(log.visited_at);
         const photoUrl = getPhotoUrl(log.photo_url);
         const weather = formatWeather(log);
@@ -335,9 +333,26 @@ export function IceCreamFeedClient({
 
               <footer className="mt-1 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
                 <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-[11px] font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-100">
-                    {displayName.charAt(0)?.toUpperCase() ?? "🍦"}
-                  </div>
+                  {profile?.avatar_url ? (
+                    <Image
+                      src={profile.avatar_url}
+                      alt={displayName}
+                      width={28}
+                      height={28}
+                      className="h-7 w-7 rounded-full object-cover"
+                    />
+                  ) : (() => {
+                    const colours = ['#4D97D6', '#60B488', '#C13A2D', '#D02E2E', '#3531B7'];
+                    const idx = profile?.id ? profile.id.charCodeAt(0) % colours.length : 0;
+                    return (
+                      <div
+                        className="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white"
+                        style={{ backgroundColor: colours[idx] }}
+                      >
+                        {displayName.charAt(0).toUpperCase()}
+                      </div>
+                    );
+                  })()}
                   <span className="font-medium">{displayName}</span>
                 </div>
                 <div className="flex items-center gap-2">

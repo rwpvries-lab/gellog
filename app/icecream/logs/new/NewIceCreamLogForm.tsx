@@ -3,6 +3,7 @@
 import { StarRating } from "@/app/components/RatingStars";
 import { SalonInput, type SalonData } from "@/src/components/SalonInput";
 import { createClient } from "@/src/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
 
 type NewIceCreamLogFormProps = {
@@ -263,6 +264,7 @@ function ScrollDrum({
 }
 
 export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
+  const router = useRouter();
   const [salonName, setSalonName] = useState("");
   const [salonPlaceId, setSalonPlaceId] = useState<string | null>(null);
   const [salonAddress, setSalonAddress] = useState<string | null>(null);
@@ -287,18 +289,16 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
   const [expandedAdvanced, setExpandedAdvanced] = useState<Set<number>>(new Set());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherUnavailable, setWeatherUnavailable] = useState(false);
+  const [weatherUnsupported, setWeatherUnsupported] = useState(false);
   const [weatherLoading, setWeatherLoading] = useState(false);
-  const [weatherCaptured, setWeatherCaptured] = useState(false);
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    setSuccess(null);
 
     if (!overallRating) {
       setError("Please select an overall rating.");
@@ -402,30 +402,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
         }
       }
 
-      setSuccess("Gelogd!");
-      setSalonName("");
-      setSalonPlaceId(null);
-      setSalonAddress(null);
-      setSalonLat(null);
-      setSalonLng(null);
-      setSalonCity(null);
-      setSelectedDay(todayDateStr());
-      setSelectedHour(defaultHour());
-      setSelectedMinute(defaultMinute());
-      setSheetOpen(false);
-      setDraftDay(todayDateStr());
-      setDraftHour(defaultHour());
-      setDraftMinute(defaultMinute());
-      setFlavours([{ id: 1, name: "", rating: null, tags: [], ratingTexture: null, ratingOriginality: null, ratingIntensity: null, ratingPresentation: null }]);
-      setOverallRating(5);
-      setVessel(null);
-      setPricePaid("");
-      setPhotoFile(null);
-      setNotes("");
-      setWeather(null);
-      setWeatherUnavailable(false);
-      setWeatherLoading(false);
-      setWeatherCaptured(false);
+      router.push("/feed");
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong.";
@@ -459,17 +436,18 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
   }
 
   async function handleCaptureWeather() {
-    if (weatherCaptured || weatherLoading) {
+    if (weatherLoading) {
       return;
     }
 
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
-      setWeatherUnavailable(true);
+      setWeatherUnsupported(true);
       return;
     }
 
     setWeatherLoading(true);
     setWeatherUnavailable(false);
+    setWeatherUnsupported(false);
 
     const position = await new Promise<GeolocationPosition | null>((resolve) => {
       navigator.geolocation.getCurrentPosition(
@@ -537,7 +515,6 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
         label,
         emoji,
       });
-      setWeatherCaptured(true);
       setWeatherUnavailable(false);
     } catch {
       // Swallow errors so the form still works even if weather fails.
@@ -591,12 +568,6 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
       {error ? (
         <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100 dark:bg-red-950/60 dark:text-red-200 dark:ring-red-900/60">
           {error}
-        </p>
-      ) : null}
-
-      {success ? (
-        <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800 ring-1 ring-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-200 dark:ring-emerald-900/60">
-          {success}
         </p>
       ) : null}
 
@@ -683,7 +654,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
         <div className="flex flex-col gap-2">
           {!isToday(visitedAt) ? (
             <p className="text-xs text-zinc-500 dark:text-zinc-500">
-              Geen weerdata beschikbaar voor een datum in het verleden
+              No weather data available for past visits
             </p>
           ) : weather ? (
             <div className="inline-flex items-center gap-2 self-start rounded-full bg-teal-100/90 px-3 py-1 text-xs font-medium text-teal-800 ring-1 ring-teal-200 dark:bg-teal-900/40 dark:text-teal-100 dark:ring-teal-800">
@@ -699,25 +670,31 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
               <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-sky-300 border-t-sky-600 dark:border-sky-800 dark:border-t-sky-200" />
               <span>Fetching weather...</span>
             </div>
-          ) : (
-            <>
+          ) : weatherUnsupported ? (
+            <p className="text-xs text-zinc-500 dark:text-zinc-500">
+              Location not supported on this browser
+            </p>
+          ) : weatherUnavailable ? (
+            <div className="flex items-center gap-2">
               <p className="text-xs text-zinc-500 dark:text-zinc-500">
-                Gellog captures the weather when you save - tap to allow
-                location
+                ⚠️ Weather unavailable
               </p>
-              {weatherUnavailable ? (
-                <p className="text-xs text-zinc-500 dark:text-zinc-500">
-                  Weather not available - you can still save your log
-                </p>
-              ) : null}
               <button
                 type="button"
                 onClick={handleCaptureWeather}
-                className="inline-flex items-center justify-center self-start rounded-full bg-teal-100 px-4 py-2 text-sm font-medium text-teal-800 ring-1 ring-teal-200 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:bg-teal-950/50 dark:text-teal-100 dark:ring-teal-800 dark:hover:bg-teal-900/60"
+                className="text-xs font-medium text-teal-700 underline underline-offset-2 dark:text-teal-400"
               >
-                Tap to capture weather 🌤️
+                Retry
               </button>
-            </>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleCaptureWeather}
+              className="inline-flex items-center justify-center self-start rounded-full bg-teal-100 px-4 py-2 text-sm font-medium text-teal-800 ring-1 ring-teal-200 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:bg-teal-950/50 dark:text-teal-100 dark:ring-teal-800 dark:hover:bg-teal-900/60"
+            >
+              Tap to capture weather 🌤️
+            </button>
           )}
         </div>
 
@@ -734,7 +711,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
             <button
               type="button"
               onClick={handleAddFlavour}
-              className="inline-flex items-center justify-center rounded-full bg-[#FF7F50] px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className="inline-flex items-center justify-center rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-teal-300"
             >
               + Add flavour
             </button>
@@ -765,7 +742,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
                     <button
                       type="button"
                       onClick={() => handleRemoveFlavour(flavour.id)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-xs font-semibold text-zinc-500 shadow-sm ring-1 ring-orange-100 transition hover:text-red-500 dark:bg-zinc-900 dark:ring-zinc-700"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-semibold text-red-500 ring-1 ring-red-200 transition hover:bg-red-50 dark:bg-zinc-900 dark:ring-zinc-700 dark:text-red-400"
                       aria-label="Remove flavour"
                     >
                       ×
@@ -897,7 +874,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
                   className={
                     selected
                       ? "flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-sm transition bg-[#D97706] text-white"
-                      : "flex flex-1 items-center justify-center gap-2 rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm font-medium text-zinc-500 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                      : "flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
                   }
                 >
                   <span>{emoji}</span>
@@ -983,7 +960,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex h-11 items-center justify-center rounded-full bg-[#FF7F50] px-6 text-sm font-semibold text-white shadow-lg shadow-orange-300/50 transition hover:brightness-105 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-orange-50 disabled:opacity-60 dark:bg-orange-500 dark:shadow-none dark:focus:ring-offset-zinc-950"
+        className="inline-flex h-11 w-full items-center justify-center rounded-full bg-orange-600 px-6 text-sm font-semibold text-white transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 disabled:opacity-60"
       >
         {submitting ? "Scooping…" : "Opslaan"}
       </button>

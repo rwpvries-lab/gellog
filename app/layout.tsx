@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { BottomNav } from "./components/BottomNav";
+import { SplashWrapper } from "./components/SplashWrapper";
 import { createClient } from "@/src/lib/supabase/server";
 
 const inter = Inter({
@@ -35,6 +36,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} font-sans antialiased`}>
+        <SplashWrapper />
         <div className="min-h-screen pb-20">{children}</div>
         {user ? <BottomNav /> : null}
       </body>

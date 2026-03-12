@@ -34,7 +34,8 @@ export default async function IceCreamFeedPage() {
       log_flavours (
         id,
         flavour_name,
-        rating
+        rating,
+        tags
       )
     `,
     )
