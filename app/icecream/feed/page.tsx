@@ -1,6 +1,7 @@
 import { createClient } from "@/src/lib/supabase/server";
 import Link from "next/link";
-import { IceCreamFeedClient, type IceCreamLog } from "./IceCreamFeedClient";
+import { IceCreamFeedClient } from "./IceCreamFeedClient";
+import type { IceCreamLog } from "@/src/components/FeedCard";
 
 export const dynamic = "force-dynamic";
 
@@ -9,11 +10,14 @@ const PAGE_SIZE = 20;
 export default async function IceCreamFeedPage() {
   const supabase = await createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from("ice_cream_logs")
     .select(
       `
       id,
+      user_id,
       salon_name,
       salon_lat,
       salon_lng,
@@ -35,7 +39,11 @@ export default async function IceCreamFeedPage() {
         id,
         flavour_name,
         rating,
-        tags
+        tags,
+        rating_texture,
+        rating_originality,
+        rating_intensity,
+        rating_presentation
       )
     `,
     )
@@ -63,7 +71,7 @@ export default async function IceCreamFeedPage() {
           </div>
         </header>
 
-        <IceCreamFeedClient initialLogs={logs} pageSize={PAGE_SIZE} />
+        <IceCreamFeedClient initialLogs={logs} pageSize={PAGE_SIZE} currentUserId={user?.id} />
       </div>
 
       <Link

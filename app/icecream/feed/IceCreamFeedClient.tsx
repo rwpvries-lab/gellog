@@ -1,126 +1,28 @@
 'use client';
 
-import { RatingStarsDisplay } from "@/app/components/RatingStars";
+import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
 import { createClient } from "@/src/lib/supabase/client";
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
-const DIETARY_TAG_SET = new Set(["Sugar-free", "Dairy-free", "Vegan", "Nut-free", "Gluten-free"]);
-
-type LogFlavour = {
-  id: string;
-  flavour_name: string;
-  rating: number | null;
-  tags: string[] | null;
-};
-
-type LogProfile = {
-  username: string | null;
-  avatar_url: string | null;
-};
-
-export type IceCreamLog = {
-  id: string;
-  salon_name: string;
-  salon_lat: number | null;
-  salon_lng: number | null;
-  salon_place_id: string | null;
-  overall_rating: number;
-  notes: string | null;
-  photo_url: string | null;
-  visited_at: string;
-  vessel: "cup" | "cone" | null;
-  price_paid: number | null;
-  weather_temp: number | null;
-  weather_condition: string | null;
-  profiles: LogProfile | null;
-  log_flavours: LogFlavour[];
-};
+export type { IceCreamLog };
 
 type IceCreamFeedClientProps = {
   initialLogs: IceCreamLog[];
   pageSize: number;
+  currentUserId?: string;
 };
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-
-function getPhotoUrl(path: string | null): string | null {
-  if (!path) return null;
-  if (path.startsWith("http://") || path.startsWith("https://")) return path;
-  if (!supabaseUrl) return path;
-  return `${supabaseUrl}/storage/v1/object/public/log-photos/${path}`;
-}
-
-function formatTimeAgo(isoDate: string): string {
-  const date = new Date(isoDate);
-  const now = new Date();
-
-  const diffMs = now.getTime() - date.getTime();
-  const diffSeconds = Math.round(diffMs / 1000);
-
-  const minutes = Math.round(diffSeconds / 60);
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
-
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-
-  const days = Math.round(hours / 24);
-  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
-
-  const weeks = Math.round(days / 7);
-  if (weeks < 4) return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
-
-  const months = Math.round(days / 30);
-  if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`;
-
-  const years = Math.round(days / 365);
-  return `${years} year${years === 1 ? "" : "s"} ago`;
-}
-
-function formatWeather(log: IceCreamLog): string | null {
-  const hasWeather =
-    log.weather_temp != null || (log.weather_condition?.trim().length ?? 0) > 0;
-
-  if (!hasWeather) return null;
-
-  const tempNumber =
-    typeof log.weather_temp === "number"
-      ? log.weather_temp
-      : log.weather_temp != null
-        ? Number(log.weather_temp)
-        : null;
-
-  const tempPart =
-    tempNumber != null && Number.isFinite(tempNumber)
-      ? `${Math.round(tempNumber)}°C`
-      : null;
-
-  const conditionPart =
-    log.weather_condition && log.weather_condition.trim().length > 0
-      ? log.weather_condition.trim()
-      : null;
-
-  const pieces = [tempPart, conditionPart].filter(
-    (piece): piece is string => Boolean(piece),
-  );
-
-  if (pieces.length === 0) return null;
-
-  return pieces.join(" · ");
-}
 
 export function IceCreamFeedClient({
   initialLogs,
   pageSize,
+  currentUserId,
 }: IceCreamFeedClientProps) {
   const [logs, setLogs] = useState<IceCreamLog[]>(initialLogs);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(initialLogs.length === pageSize);
   const [page, setPage] = useState(1);
-  const [openDirectionsId, setOpenDirectionsId] = useState<string | null>(null);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -161,6 +63,7 @@ export function IceCreamFeedClient({
       .select(
         `
         id,
+        user_id,
         salon_name,
         salon_lat,
         salon_lng,
@@ -182,7 +85,11 @@ export function IceCreamFeedClient({
           id,
           flavour_name,
           rating,
-          tags
+          tags,
+          rating_texture,
+          rating_originality,
+          rating_intensity,
+          rating_presentation
         )
       `,
       )
@@ -207,255 +114,14 @@ export function IceCreamFeedClient({
 
   return (
     <div className="flex flex-col gap-4">
-      {logs.map((log) => {
-        const profile = log.profiles;
-        const displayName = profile?.username ?? "Unknown user";
-        const timeAgo = formatTimeAgo(log.visited_at);
-        const photoUrl = getPhotoUrl(log.photo_url);
-        const weather = formatWeather(log);
-
-        const ratingBorderClass =
-          log.overall_rating >= 4
-            ? "border-l-4 border-l-orange-400 dark:border-l-orange-500"
-            : log.overall_rating >= 3
-              ? "border-l-4 border-l-teal-500 dark:border-l-teal-400"
-              : "border-l-4 border-l-zinc-200 dark:border-l-zinc-700";
-
-        const numericFlavourRatings = log.log_flavours
-          .map((flavour) =>
-            typeof flavour.rating === "number" ? flavour.rating : null,
-          )
-          .filter((value): value is number => value != null);
-
-        const highestFlavourRating =
-          numericFlavourRatings.length > 0
-            ? Math.max(...numericFlavourRatings)
-            : null;
-
-        return (
-          <article
-            key={log.id}
-            className={`overflow-hidden rounded-3xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 backdrop-blur-sm dark:bg-zinc-900 dark:ring-zinc-800 ${ratingBorderClass}`}
-          >
-            {photoUrl ? (
-              <div className="relative aspect-[8/5] w-full overflow-hidden rounded-2xl">
-                <Image
-                  src={photoUrl}
-                  alt={`Photo from ${log.salon_name}`}
-                  width={800}
-                  height={500}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            ) : null}
-
-            <div className="mt-3 flex flex-col gap-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex flex-col">
-                  <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
-                    {log.salon_name}
-                    {log.vessel === "cone" ? (
-                      <span className="ml-1.5 text-sm font-normal">🍦</span>
-                    ) : log.vessel === "cup" ? (
-                      <span className="ml-1.5 text-sm font-normal">🍧</span>
-                    ) : null}
-                  </h2>
-                  {weather ? (
-                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                      <span className="mr-1">☀️</span>
-                      {weather}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <RatingStarsDisplay value={log.overall_rating} size="lg" />
-                  <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                    {log.overall_rating.toFixed(1)}/5
-                  </span>
-                </div>
-              </div>
-
-              {log.log_flavours && log.log_flavours.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {log.log_flavours.map((flavour) => {
-                    const isTopFlavour =
-                      highestFlavourRating != null &&
-                      typeof flavour.rating === "number" &&
-                      flavour.rating === highestFlavourRating;
-
-                    const flavourClass = isTopFlavour
-                      ? "bg-orange-50 text-orange-700 ring-orange-100 dark:bg-orange-500/10 dark:text-orange-200 dark:ring-orange-800/60"
-                      : "bg-zinc-50 text-zinc-700 ring-zinc-100 dark:bg-zinc-900/70 dark:text-zinc-100 dark:ring-zinc-700";
-
-                    return (
-                      <div
-                        key={flavour.id}
-                        className={`inline-flex flex-wrap items-center gap-1 rounded-full px-3 py-1 text-xs font-medium shadow-sm ${flavourClass}`}
-                      >
-                        <span>{flavour.flavour_name}</span>
-                        {flavour.rating != null ? (
-                          <span className="flex items-center text-[10px] opacity-80">
-                            <span className="mr-0.5">★</span>
-                            {flavour.rating}
-                          </span>
-                        ) : null}
-                        {flavour.tags && flavour.tags.length > 0
-                          ? flavour.tags.map((tag) =>
-                              DIETARY_TAG_SET.has(tag) ? (
-                                <span
-                                  key={tag}
-                                  className="rounded-full bg-teal-100 px-1.5 py-0 text-[10px] font-medium text-teal-700 dark:bg-teal-900/50 dark:text-teal-200"
-                                >
-                                  {tag}
-                                </span>
-                              ) : (
-                                <span
-                                  key={tag}
-                                  className="rounded-full bg-orange-100 px-1.5 py-0 text-[10px] font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-200"
-                                >
-                                  {tag}
-                                </span>
-                              )
-                            )
-                          : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : null}
-
-              {log.notes ? (
-                <p className="rounded-2xl bg-zinc-50 px-3 py-2 text-sm text-zinc-700 ring-1 ring-zinc-100 dark:bg-zinc-900/80 dark:text-zinc-200 dark:ring-zinc-800">
-                  {log.notes}
-                </p>
-              ) : null}
-
-              <footer className="mt-1 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
-                <div className="flex items-center gap-2">
-                  {profile?.avatar_url ? (
-                    <Image
-                      src={profile.avatar_url}
-                      alt={displayName}
-                      width={28}
-                      height={28}
-                      className="h-7 w-7 rounded-full object-cover"
-                    />
-                  ) : (() => {
-                    const colours = ['#4D97D6', '#60B488', '#C13A2D', '#D02E2E', '#3531B7'];
-                    const idx = profile?.username ? profile.username.charCodeAt(0) % colours.length : 0;
-                    return (
-                      <div
-                        className="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white"
-                        style={{ backgroundColor: colours[idx] }}
-                      >
-                        {displayName.charAt(0).toUpperCase()}
-                      </div>
-                    );
-                  })()}
-                  <span className="font-medium">{displayName}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  {log.price_paid != null ? (
-                    <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-600 ring-1 ring-orange-100 dark:bg-zinc-900 dark:text-orange-300 dark:ring-zinc-700">
-                      €{log.price_paid.toFixed(2)}
-                    </span>
-                  ) : null}
-                  <span>{timeAgo}</span>
-                  {log.salon_lat != null && log.salon_lng != null ? (
-                    <button
-                      type="button"
-                      onClick={() => setOpenDirectionsId(log.id)}
-                      className="flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-xs font-medium text-teal-700 ring-1 ring-teal-100 transition hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60 dark:hover:bg-teal-900/50"
-                    >
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                        <circle cx="12" cy="9" r="2.5"/>
-                      </svg>
-                      Directions
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled
-                      title="No location saved for this visit"
-                      className="flex cursor-not-allowed items-center gap-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-400 ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-600 dark:ring-zinc-700"
-                    >
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                        <circle cx="12" cy="9" r="2.5"/>
-                      </svg>
-                      Directions
-                    </button>
-                  )}
-                </div>
-              </footer>
-            </div>
-          </article>
-        );
-      })}
-
-      {openDirectionsId ? (() => {
-        const directionsLog = logs.find((l) => l.id === openDirectionsId);
-        if (!directionsLog || directionsLog.salon_lat == null || directionsLog.salon_lng == null) return null;
-        const lat = directionsLog.salon_lat;
-        const lng = directionsLog.salon_lng;
-        const placeId = directionsLog.salon_place_id;
-        const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}${placeId ? `&destination_place_id=${placeId}` : ""}`;
-        const appleUrl = `maps://maps.apple.com/?daddr=${lat},${lng}`;
-        const wazeUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-end"
-            onClick={() => setOpenDirectionsId(null)}
-          >
-            <div
-              className="w-full rounded-t-3xl bg-white p-6 shadow-2xl ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mb-4 flex items-center justify-between">
-                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                  Get directions to {directionsLog.salon_name}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setOpenDirectionsId(null)}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-xs text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-                  aria-label="Close"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="flex flex-col gap-2">
-                <a
-                  href={appleUrl}
-                  className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
-                >
-                  <span className="text-lg">🗺️</span>
-                  Open in Apple Maps
-                </a>
-                <a
-                  href={googleUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
-                >
-                  <span className="text-lg">🌐</span>
-                  Open in Google Maps
-                </a>
-                <a
-                  href={wazeUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
-                >
-                  <span className="text-lg">🚗</span>
-                  Open in Waze
-                </a>
-              </div>
-            </div>
-          </div>
-        );
-      })() : null}
+      {logs.map((log) => (
+        <FeedCard
+          key={log.id}
+          log={log}
+          currentUserId={currentUserId}
+          onDelete={(id) => setLogs((prev) => prev.filter((l) => l.id !== id))}
+        />
+      ))}
 
       {isEmpty ? (
         <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-white px-8 py-12 text-center text-sm text-zinc-600 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800">
@@ -501,4 +167,3 @@ export function IceCreamFeedClient({
     </div>
   );
 }
-

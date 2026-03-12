@@ -43,14 +43,14 @@ export function SalonInput({ value, onPlaceSelect, userId }: SalonInputProps) {
   const [recentSalons, setRecentSalons] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const userLocationRef = useRef<{ lat: number; lng: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (pos) => { userLocationRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
         () => {}
       );
     }
@@ -92,9 +92,9 @@ export function SalonInput({ value, onPlaceSelect, userId }: SalonInputProps) {
   async function fetchPredictions(input: string) {
     const url = new URL("/api/places/autocomplete", window.location.origin);
     url.searchParams.set("input", input);
-    if (userLocation) {
-      url.searchParams.set("location", `${userLocation.lat},${userLocation.lng}`);
-      url.searchParams.set("radius", "50000");
+    const loc = userLocationRef.current;
+    if (loc) {
+      url.searchParams.set("locationBias", `circle:50000@${loc.lat},${loc.lng}`);
     }
     try {
       const response = await fetch(url.toString());

@@ -9,8 +9,7 @@ export async function GET(req: NextRequest) {
   }
 
   const input = req.nextUrl.searchParams.get("input");
-  const location = req.nextUrl.searchParams.get("location");
-  const radius = req.nextUrl.searchParams.get("radius");
+  const locationBias = req.nextUrl.searchParams.get("locationBias");
 
   if (!input) {
     return NextResponse.json({ error: "missing input" }, { status: 400 });
@@ -25,8 +24,7 @@ export async function GET(req: NextRequest) {
   url.searchParams.set("input", input);
   url.searchParams.set("types", "establishment");
   url.searchParams.set("key", key);
-  if (location) url.searchParams.set("location", location);
-  if (radius) url.searchParams.set("radius", radius);
+  if (locationBias) url.searchParams.set("locationbias", locationBias);
 
   const res = await fetch(url.toString());
   const data = await res.json();
