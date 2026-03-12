@@ -42,7 +42,7 @@ export default async function IceCreamFeedPage() {
     .order("visited_at", { ascending: false })
     .limit(PAGE_SIZE);
 
-  const logs = (data ?? []) as IceCreamLog[];
+  const logs = (data ?? []) as unknown as IceCreamLog[];
 
   if (error) {
     // eslint-disable-next-line no-console

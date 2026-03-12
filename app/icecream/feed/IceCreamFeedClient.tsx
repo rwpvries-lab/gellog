@@ -16,7 +16,6 @@ type LogFlavour = {
 };
 
 type LogProfile = {
-  id?: string;
   username: string | null;
   avatar_url: string | null;
 };
@@ -196,7 +195,7 @@ export function IceCreamFeedClient({
       return;
     }
 
-    const newLogs = (data ?? []) as IceCreamLog[];
+    const newLogs = (data ?? []) as unknown as IceCreamLog[];
 
     setLogs((prev) => [...prev, ...newLogs]);
     setHasMore(newLogs.length === pageSize);
@@ -343,7 +342,7 @@ export function IceCreamFeedClient({
                     />
                   ) : (() => {
                     const colours = ['#4D97D6', '#60B488', '#C13A2D', '#D02E2E', '#3531B7'];
-                    const idx = profile?.id ? profile.id.charCodeAt(0) % colours.length : 0;
+                    const idx = profile?.username ? profile.username.charCodeAt(0) % colours.length : 0;
                     return (
                       <div
                         className="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white"
