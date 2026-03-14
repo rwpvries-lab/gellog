@@ -1,9 +1,10 @@
 import { LogoutButton } from "@/app/components/LogoutButton";
 import { createClient } from "@/src/lib/supabase/server";
+import type { IceCreamLog as FeedIceCreamLog } from "@/src/components/FeedCard";
 import Image from "next/image";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { IceCreamHeatmap, type HeatmapDayData } from "./IceCreamHeatmap";
+import { ProfileFeedClient } from "./ProfileFeedClient";
 
 type Profile = {
   id: string;
@@ -57,17 +58,6 @@ type RankedFlavour = {
   avgIntensity: number | null;
   avgPresentation: number | null;
 };
-
-function formatDate(isoDate: string): string {
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-}
 
 function formatAverageRating(value: number | null): string {
   if (value == null || !Number.isFinite(value)) return "—";
@@ -224,13 +214,6 @@ function deriveStats(logs: IceCreamLog[]) {
       ? Array.from(weatherCounts.entries()).sort((a, b) => b[1] - a[1])[0][0]
       : null;
 
-  const recentLogs = [...logs]
-    .sort(
-      (a, b) =>
-        new Date(b.visited_at).getTime() - new Date(a.visited_at).getTime(),
-    )
-    .slice(0, 6);
-
   const logsWithPrice = logs.filter((log) => log.price_paid != null);
   const totalSpent =
     logsWithPrice.length >= 3
@@ -247,26 +230,12 @@ function deriveStats(logs: IceCreamLog[]) {
     rankedFlavours,
     mostVisitedSalon,
     bestWeather,
-    recentLogs,
     totalSpent,
     averagePerVisit,
   };
 }
 
-function getTopFlavourForLog(log: IceCreamLog): LogFlavour | null {
-  const flavours = log.log_flavours ?? [];
-  if (flavours.length === 0) return null;
-
-  const withRating = flavours.filter((flavour) => flavour.rating != null);
-  const source = withRating.length > 0 ? withRating : flavours;
-
-  return [...source].sort((a, b) => {
-    const aRating = a.rating ?? 0;
-    const bRating = b.rating ?? 0;
-    if (bRating !== aRating) return bRating - aRating;
-    return a.flavour_name.localeCompare(b.flavour_name);
-  })[0];
-}
+const FEED_PAGE_SIZE = 10;
 
 export default async function IceCreamProfilePage() {
   const supabase = await createClient();
@@ -314,6 +283,47 @@ export default async function IceCreamProfilePage() {
     console.error("Failed to load user ice cream logs:", logsError);
   }
 
+  const { data: feedLogsData } = await supabase
+    .from("ice_cream_logs")
+    .select(
+      `
+        id,
+        user_id,
+        salon_name,
+        salon_lat,
+        salon_lng,
+        salon_place_id,
+        overall_rating,
+        notes,
+        photo_url,
+        visited_at,
+        vessel,
+        price_paid,
+        weather_temp,
+        weather_condition,
+        profiles (
+          id,
+          username,
+          avatar_url
+        ),
+        log_flavours (
+          id,
+          flavour_name,
+          rating,
+          tags,
+          rating_texture,
+          rating_originality,
+          rating_intensity,
+          rating_presentation
+        )
+      `,
+    )
+    .eq("user_id", user.id)
+    .order("visited_at", { ascending: false })
+    .limit(FEED_PAGE_SIZE);
+
+  const feedLogs = (feedLogsData ?? []) as unknown as FeedIceCreamLog[];
+
   const {
     totalAllTime,
     totalThisYear,
@@ -322,7 +332,6 @@ export default async function IceCreamProfilePage() {
     rankedFlavours,
     mostVisitedSalon,
     bestWeather,
-    recentLogs,
     totalSpent,
     averagePerVisit,
   } = deriveStats(logs);
@@ -569,60 +578,20 @@ export default async function IceCreamProfilePage() {
             </div>
           </section>
 
-          <section aria-labelledby="recent-logs-heading">
+          <section aria-labelledby="your-logs-heading">
             <div className="mb-2 flex items-baseline justify-between gap-2">
               <h2
-                id="recent-logs-heading"
+                id="your-logs-heading"
                 className="text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300"
               >
-                Recent logs
+                Your logs
               </h2>
-              {logs.length > 0 ? (
-                <Link
-                  href="/icecream/feed"
-                  className="text-xs font-medium text-teal-700 underline-offset-2 hover:underline dark:text-teal-300"
-                >
-                  View full feed
-                </Link>
-              ) : null}
             </div>
-            <div className="rounded-3xl bg-white/90 p-4 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-              {recentLogs.length === 0 ? (
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  No logs yet – log a scoop to see your history here.
-                </p>
-              ) : (
-                <ul className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {recentLogs.map((log) => {
-                    const topFlavour = getTopFlavourForLog(log);
-
-                    return (
-                      <li
-                        key={log.id}
-                        className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-                      >
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                            {log.salon_name}
-                          </span>
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                            {topFlavour ? topFlavour.flavour_name : "No flavours"}
-                          </span>
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <span className="inline-flex items-center rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-500 ring-1 ring-orange-100 dark:bg-zinc-900 dark:text-orange-300 dark:ring-zinc-700">
-                            {log.overall_rating.toFixed(1)} ★
-                          </span>
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                            {formatDate(log.visited_at)}
-                          </span>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
+            <ProfileFeedClient
+              initialLogs={feedLogs}
+              pageSize={FEED_PAGE_SIZE}
+              currentUserId={user.id}
+            />
           </section>
         </div>
       </main>

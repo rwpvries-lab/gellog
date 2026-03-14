@@ -2,6 +2,7 @@
 
 import { RatingStarsDisplay } from "@/app/components/RatingStars";
 import { createClient } from "@/src/lib/supabase/client";
+import { formatVisitDate } from "@/src/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -52,25 +53,6 @@ function getPhotoUrl(path: string | null): string | null {
   return `${supabaseUrl}/storage/v1/object/public/log-photos/${path}`;
 }
 
-function formatTimeAgo(isoDate: string): string {
-  const date = new Date(isoDate);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffSeconds = Math.round(diffMs / 1000);
-  const minutes = Math.round(diffSeconds / 60);
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  const days = Math.round(hours / 24);
-  if (days < 7) return `${days} day${days === 1 ? "" : "s"} ago`;
-  const weeks = Math.round(days / 7);
-  if (weeks < 4) return `${weeks} week${weeks === 1 ? "" : "s"} ago`;
-  const months = Math.round(days / 30);
-  if (months < 12) return `${months} month${months === 1 ? "" : "s"} ago`;
-  const years = Math.round(days / 365);
-  return `${years} year${years === 1 ? "" : "s"} ago`;
-}
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -222,7 +204,7 @@ export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
 
   const profile = log.profiles;
   const displayName = profile?.username ?? "Unknown user";
-  const timeAgo = formatTimeAgo(log.visited_at);
+  const timeAgo = formatVisitDate(log.visited_at);
   const photoUrl = getPhotoUrl(log.photo_url);
   const weather = formatWeather(log);
   const fullDate = formatFullDate(log.visited_at);

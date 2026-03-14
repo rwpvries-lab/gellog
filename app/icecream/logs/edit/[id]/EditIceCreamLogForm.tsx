@@ -273,6 +273,8 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   const [weatherUnavailable, setWeatherUnavailable] = useState(false);
   const [weatherUnsupported, setWeatherUnsupported] = useState(false);
   const [weatherLoading, setWeatherLoading] = useState(false);
+  const [showFlavourPrompt, setShowFlavourPrompt] = useState(false);
+  const [priceWarning, setPriceWarning] = useState<number | null>(null);
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
 
@@ -299,11 +301,19 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
     setSheetOpen(false);
   }
 
-  function handleAddFlavour() {
+  function addFlavour() {
     setFlavours((prev) => [
       ...prev,
       { id: prev.length + 1, name: "", rating: null, tags: [], ratingTexture: null, ratingOriginality: null, ratingIntensity: null, ratingPresentation: null },
     ]);
+  }
+
+  function handleAddFlavour() {
+    if (flavours.length >= 3) {
+      setShowFlavourPrompt(true);
+      return;
+    }
+    addFlavour();
   }
 
   function handleRemoveFlavour(id: number) {
@@ -554,6 +564,30 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
             </button>
           </div>
 
+          {showFlavourPrompt ? (
+            <div className="rounded-2xl bg-zinc-50 px-3 py-2.5 ring-1 ring-zinc-200 dark:bg-zinc-800/60 dark:ring-zinc-700">
+              <p className="text-sm italic text-zinc-500 dark:text-zinc-400">
+                That&apos;s already quite a lot of gelato 🍦 — are you sure you want to add another flavour?
+              </p>
+              <div className="mt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { addFlavour(); setShowFlavourPrompt(false); }}
+                  className="rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-orange-700"
+                >
+                  Yes, add it
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowFlavourPrompt(false)}
+                  className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : null}
+
           <div className="flex flex-col gap-3">
             {flavours.map((flavour, index) => (
               <div key={flavour.id} className="flex flex-col gap-2 rounded-2xl bg-orange-50/60 p-3 ring-1 ring-orange-100 dark:bg-zinc-900/80 dark:ring-zinc-700">
@@ -706,11 +740,38 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
               type="text"
               inputMode="decimal"
               value={pricePaid}
-              onChange={(e) => setPricePaid(e.target.value)}
+              onChange={(e) => { setPricePaid(e.target.value); setPriceWarning(null); }}
+              onBlur={() => {
+                const val = parseFloat(pricePaid.replace(",", "."));
+                if (!isNaN(val) && val >= 20) setPriceWarning(val >= 100 ? val / 100 : val / 10);
+              }}
               placeholder="0.00"
               className="w-full rounded-2xl bg-transparent px-2 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100"
             />
           </div>
+          {priceWarning != null ? (
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <p className="text-sm italic text-zinc-500 dark:text-zinc-400">
+                That seems high — did you mean €{priceWarning.toFixed(2)}? Gelato usually costs a few euros.
+              </p>
+              <div className="flex gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => { setPricePaid(priceWarning.toFixed(2)); setPriceWarning(null); }}
+                  className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                >
+                  Yes, use €{priceWarning.toFixed(2)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPriceWarning(null)}
+                  className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                >
+                  No, keep €{pricePaid}
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         {/* Notes */}
