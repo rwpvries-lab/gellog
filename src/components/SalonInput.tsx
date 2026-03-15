@@ -27,6 +27,7 @@ type SalonInputProps = {
   value: string;
   onPlaceSelect: (data: SalonData) => void;
   userId: string;
+  onOpenMap?: () => void;
 };
 
 type DropdownItem =
@@ -38,7 +39,7 @@ function hasIceCreamKeyword(name: string): boolean {
   return ICE_CREAM_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-export function SalonInput({ value, onPlaceSelect, userId }: SalonInputProps) {
+export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInputProps) {
   const [items, setItems] = useState<DropdownItem[]>([]);
   const [recentSalons, setRecentSalons] = useState<string[]>([]);
   const [open, setOpen] = useState(false);
@@ -220,8 +221,18 @@ export function SalonInput({ value, onPlaceSelect, userId }: SalonInputProps) {
         onKeyDown={handleKeyDown}
         placeholder="e.g. Gelateria Roma"
         autoComplete="off"
-        className="w-full rounded-2xl border border-orange-100 bg-white/80 px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
+        className={`w-full rounded-2xl border border-orange-100 bg-white/80 px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100${onOpenMap ? " pr-10" : ""}`}
       />
+      {onOpenMap && (
+        <button
+          type="button"
+          onClick={onOpenMap}
+          title="Find nearby salons on map"
+          className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-xl text-base transition hover:bg-zinc-100 dark:hover:bg-zinc-800"
+        >
+          🗺
+        </button>
+      )}
       {open && items.length > 0 && (
         <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-black/5">
           {showRecentHeader && (

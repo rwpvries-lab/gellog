@@ -10,6 +10,8 @@ const PAGE_SIZE = 20;
 export default async function IceCreamFeedPage() {
   const supabase = await createClient();
 
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from("ice_cream_logs")
     .select(
@@ -45,6 +47,7 @@ export default async function IceCreamFeedPage() {
       )
     `,
     )
+    .eq("visibility", "public")
     .order("visited_at", { ascending: false })
     .limit(PAGE_SIZE);
 
@@ -69,7 +72,7 @@ export default async function IceCreamFeedPage() {
           </div>
         </header>
 
-        <IceCreamFeedClient initialLogs={logs} pageSize={PAGE_SIZE} />
+        <IceCreamFeedClient initialLogs={logs} pageSize={PAGE_SIZE} currentUserId={user?.id} />
       </div>
 
       <Link

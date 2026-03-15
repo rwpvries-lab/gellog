@@ -2,6 +2,7 @@
 
 import { StarRating } from "@/app/components/RatingStars";
 import { SalonInput, type SalonData } from "@/src/components/SalonInput";
+import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
 import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -34,6 +35,7 @@ type LogRow = {
   price_paid: number | null;
   weather_temp: number | null;
   weather_condition: string | null;
+  visibility: Visibility;
   log_flavours: LogFlavourRow[];
 };
 
@@ -275,6 +277,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [showFlavourPrompt, setShowFlavourPrompt] = useState(false);
   const [priceWarning, setPriceWarning] = useState<number | null>(null);
+  const [visibility, setVisibility] = useState<Visibility>(log.visibility ?? "public");
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
 
@@ -400,6 +403,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           weather_condition: weather
             ? `${weather.emoji} ${weather.label}`
             : log.weather_condition,
+          visibility,
         })
         .eq("id", log.id)
         .eq("user_id", userId);
@@ -788,6 +792,13 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
             className="w-full rounded-2xl border border-orange-100 bg-white/80 px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+          Visibility
+        </label>
+        <VisibilityPicker value={visibility} onChange={setVisibility} />
       </div>
 
       <button

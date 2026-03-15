@@ -7,17 +7,54 @@ import { useEffect, useRef, useState } from "react";
 
 export type { IceCreamLog };
 
+type Tab = "everyone" | "friends";
+
 type IceCreamFeedClientProps = {
   initialLogs: IceCreamLog[];
   pageSize: number;
   currentUserId?: string;
 };
 
+const SELECT_FIELDS = `
+  id,
+  user_id,
+  salon_name,
+  salon_lat,
+  salon_lng,
+  salon_place_id,
+  overall_rating,
+  notes,
+  photo_url,
+  visited_at,
+  vessel,
+  price_paid,
+  weather_temp,
+  weather_condition,
+  profiles (
+    id,
+    username,
+    avatar_url
+  ),
+  log_flavours (
+    id,
+    flavour_name,
+    rating,
+    tags,
+    rating_texture,
+    rating_originality,
+    rating_intensity,
+    rating_presentation
+  )
+`;
+
 export function IceCreamFeedClient({
   initialLogs,
   pageSize,
   currentUserId,
 }: IceCreamFeedClientProps) {
+  const [tab, setTab] = useState<Tab>("everyone");
+  const tabRef = useRef<Tab>("everyone");
+
   const [logs, setLogs] = useState<IceCreamLog[]>(initialLogs);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,11 +83,12 @@ export function IceCreamFeedClient({
 
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMore, loading, sentinelRef.current]);
+  }, [hasMore, loading, tab, sentinelRef.current]);
 
   async function fetchMore(): Promise<void> {
     if (loading || !hasMore) return;
 
+    const currentTab = tabRef.current;
     setLoading(true);
     setError(null);
 
@@ -58,43 +96,17 @@ export function IceCreamFeedClient({
     const from = page * pageSize;
     const to = from + pageSize - 1;
 
-    const { data, error: fetchError } = await supabase
+    let query = supabase
       .from("ice_cream_logs")
-      .select(
-        `
-        id,
-        user_id,
-        salon_name,
-        salon_lat,
-        salon_lng,
-        salon_place_id,
-        overall_rating,
-        notes,
-        photo_url,
-        visited_at,
-        vessel,
-        price_paid,
-        weather_temp,
-        weather_condition,
-        profiles (
-          id,
-          username,
-          avatar_url
-        ),
-        log_flavours (
-          id,
-          flavour_name,
-          rating,
-          tags,
-          rating_texture,
-          rating_originality,
-          rating_intensity,
-          rating_presentation
-        )
-      `,
-      )
+      .select(SELECT_FIELDS)
       .order("visited_at", { ascending: false })
       .range(from, to);
+
+    if (currentTab === "everyone") {
+      query = query.eq("visibility", "public");
+    }
+
+    const { data, error: fetchError } = await query;
 
     if (fetchError) {
       setError("Could not load more logs. Please try again.");
@@ -110,10 +122,68 @@ export function IceCreamFeedClient({
     setLoading(false);
   }
 
+  async function switchTab(newTab: Tab) {
+    if (newTab === tab) return;
+
+    tabRef.current = newTab;
+    setTab(newTab);
+
+    if (newTab === "everyone") {
+      setLogs(initialLogs);
+      setPage(1);
+      setHasMore(initialLogs.length === pageSize);
+      return;
+    }
+
+    // Friends tab: load first page (RLS handles visibility)
+    setLogs([]);
+    setPage(0);
+    setHasMore(true);
+    setLoading(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { data, error: fetchError } = await supabase
+      .from("ice_cream_logs")
+      .select(SELECT_FIELDS)
+      .order("visited_at", { ascending: false })
+      .range(0, pageSize - 1);
+
+    if (fetchError) {
+      setError("Could not load logs. Please try again.");
+      setLoading(false);
+      return;
+    }
+
+    const newLogs = (data ?? []) as unknown as IceCreamLog[];
+    setLogs(newLogs);
+    setPage(1);
+    setHasMore(newLogs.length === pageSize);
+    setLoading(false);
+  }
+
   const isEmpty = !loading && logs.length === 0;
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Tab toggle */}
+      <div className="flex rounded-2xl bg-zinc-100 p-0.5 dark:bg-zinc-800">
+        {(["everyone", "friends"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => void switchTab(t)}
+            className={`flex flex-1 items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition ${
+              tab === t
+                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-50"
+                : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+            }`}
+          >
+            {t === "everyone" ? "Everyone" : "Friends"}
+          </button>
+        ))}
+      </div>
+
       {logs.map((log) => (
         <FeedCard
           key={log.id}

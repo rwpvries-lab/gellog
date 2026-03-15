@@ -12,6 +12,16 @@ export default async function NewIceCreamLogPage() {
     redirect("/login?next=/icecream/logs/new");
   }
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("default_visibility")
+    .eq("id", user.id)
+    .single();
+
+  const defaultVisibility =
+    (profile?.default_visibility as "public" | "friends" | "private") ??
+    "public";
+
   return (
     <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-orange-100 via-orange-50 to-teal-100 px-4 py-8 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40">
       <main className="w-full max-w-md">
@@ -24,7 +34,7 @@ export default async function NewIceCreamLogPage() {
             New scoop, who this?
           </p>
         </div>
-        <NewIceCreamLogForm userId={user.id} />
+        <NewIceCreamLogForm userId={user.id} defaultVisibility={defaultVisibility} />
       </main>
     </div>
   );

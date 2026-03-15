@@ -2,12 +2,15 @@
 
 import { StarRating } from "@/app/components/RatingStars";
 import { SalonInput, type SalonData } from "@/src/components/SalonInput";
+import { SalonMapPicker } from "@/src/components/SalonMapPicker";
+import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
 import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
 
 type NewIceCreamLogFormProps = {
   userId: string;
+  defaultVisibility?: Visibility;
 };
 
 type Flavour = {
@@ -263,7 +266,7 @@ function ScrollDrum({
   );
 }
 
-export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
+export function NewIceCreamLogForm({ userId, defaultVisibility = "public" }: NewIceCreamLogFormProps) {
   const router = useRouter();
   const [salonName, setSalonName] = useState("");
   const [salonPlaceId, setSalonPlaceId] = useState<string | null>(null);
@@ -295,6 +298,8 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [showFlavourPrompt, setShowFlavourPrompt] = useState(false);
   const [priceWarning, setPriceWarning] = useState<number | null>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [visibility, setVisibility] = useState<Visibility>(defaultVisibility);
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
 
@@ -375,6 +380,7 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
           weather_condition: weather
             ? `${weather.emoji} ${weather.label}`
             : null,
+          visibility,
         })
         .select("id")
         .single();
@@ -593,7 +599,14 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
             value={salonName}
             onPlaceSelect={handlePlaceSelect}
             userId={userId}
+            onOpenMap={() => setMapOpen(true)}
           />
+          {mapOpen && (
+            <SalonMapPicker
+              onSelect={handlePlaceSelect}
+              onClose={() => setMapOpen(false)}
+            />
+          )}
           <p className="text-xs text-zinc-500 dark:text-zinc-500">
             Start typing and we’ll remember your favourites later.
           </p>
@@ -1016,6 +1029,13 @@ export function NewIceCreamLogForm({ userId }: NewIceCreamLogFormProps) {
             className="w-full rounded-2xl border border-orange-100 bg-white/80 px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
           />
         </div>
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+          Visibility
+        </label>
+        <VisibilityPicker value={visibility} onChange={setVisibility} />
       </div>
 
       <button

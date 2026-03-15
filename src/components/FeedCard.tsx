@@ -120,7 +120,13 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
   const placeId = log.salon_place_id;
   const googleUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}${placeId ? `&destination_place_id=${placeId}` : ""}`;
   const appleUrl = `maps://maps.apple.com/?daddr=${lat},${lng}`;
-  const wazeUrl = `https://waze.com/ul?ll=${lat},${lng}&navigate=yes`;
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopyLocation() {
+    await navigator.clipboard.writeText(`${lat},${lng}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   return (
     <div
@@ -161,15 +167,14 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
             <span className="text-lg">🌐</span>
             Open in Google Maps
           </a>
-          <a
-            href={wazeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => void handleCopyLocation()}
             className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
           >
-            <span className="text-lg">🚗</span>
-            Open in Waze
-          </a>
+            <span className="text-lg">{copied ? "✅" : "📋"}</span>
+            {copied ? "Copied!" : "Copy location"}
+          </button>
         </div>
       </div>
     </div>

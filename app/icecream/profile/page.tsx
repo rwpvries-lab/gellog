@@ -2,6 +2,7 @@ import { LogoutButton } from "@/app/components/LogoutButton";
 import { createClient } from "@/src/lib/supabase/server";
 import type { IceCreamLog as FeedIceCreamLog } from "@/src/components/FeedCard";
 import Image from "next/image";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { IceCreamHeatmap, type HeatmapDayData } from "./IceCreamHeatmap";
 import { ProfileFeedClient } from "./ProfileFeedClient";
@@ -385,12 +386,12 @@ export default async function IceCreamProfilePage() {
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">
-              <button
-                type="button"
+              <Link
+                href="/settings"
                 className="inline-flex h-8 items-center justify-center rounded-full border border-zinc-300 bg-white px-3 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-orange-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-950"
               >
-                Edit profile
-              </button>
+                ⚙️ Settings
+              </Link>
               <LogoutButton />
             </div>
           </header>
