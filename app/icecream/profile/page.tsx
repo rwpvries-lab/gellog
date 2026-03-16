@@ -248,34 +248,77 @@ export default async function IceCreamProfilePage() {
     redirect("/login?next=/icecream/profile");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, username, display_name, avatar_url")
-    .eq("id", user.id)
-    .single<Profile>();
-
-  const { data: logsData, error: logsError } = await supabase
-    .from("ice_cream_logs")
-    .select(
-      `
-        id,
-        salon_name,
-        overall_rating,
-        visited_at,
-        price_paid,
-        weather_condition,
-        log_flavours (
+  const [
+    { data: profile },
+    { data: logsData, error: logsError },
+    { data: feedLogsData },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .eq("id", user.id)
+      .single<Profile>(),
+    supabase
+      .from("ice_cream_logs")
+      .select(
+        `
           id,
-          flavour_name,
-          rating,
-          rating_texture,
-          rating_originality,
-          rating_intensity,
-          rating_presentation
-        )
-      `,
-    )
-    .eq("user_id", user.id);
+          salon_name,
+          overall_rating,
+          visited_at,
+          price_paid,
+          weather_condition,
+          log_flavours (
+            id,
+            flavour_name,
+            rating,
+            rating_texture,
+            rating_originality,
+            rating_intensity,
+            rating_presentation
+          )
+        `,
+      )
+      .eq("user_id", user.id),
+    supabase
+      .from("ice_cream_logs")
+      .select(
+        `
+          id,
+          user_id,
+          salon_name,
+          salon_lat,
+          salon_lng,
+          salon_place_id,
+          overall_rating,
+          notes,
+          photo_url,
+          visited_at,
+          vessel,
+          price_paid,
+          weather_temp,
+          weather_condition,
+          profiles (
+            id,
+            username,
+            avatar_url
+          ),
+          log_flavours (
+            id,
+            flavour_name,
+            rating,
+            tags,
+            rating_texture,
+            rating_originality,
+            rating_intensity,
+            rating_presentation
+          )
+        `,
+      )
+      .eq("user_id", user.id)
+      .order("visited_at", { ascending: false })
+      .limit(FEED_PAGE_SIZE),
+  ]);
 
   const logs = (logsData ?? []) as IceCreamLog[];
 
@@ -283,45 +326,6 @@ export default async function IceCreamProfilePage() {
     // eslint-disable-next-line no-console
     console.error("Failed to load user ice cream logs:", logsError);
   }
-
-  const { data: feedLogsData } = await supabase
-    .from("ice_cream_logs")
-    .select(
-      `
-        id,
-        user_id,
-        salon_name,
-        salon_lat,
-        salon_lng,
-        salon_place_id,
-        overall_rating,
-        notes,
-        photo_url,
-        visited_at,
-        vessel,
-        price_paid,
-        weather_temp,
-        weather_condition,
-        profiles (
-          id,
-          username,
-          avatar_url
-        ),
-        log_flavours (
-          id,
-          flavour_name,
-          rating,
-          tags,
-          rating_texture,
-          rating_originality,
-          rating_intensity,
-          rating_presentation
-        )
-      `,
-    )
-    .eq("user_id", user.id)
-    .order("visited_at", { ascending: false })
-    .limit(FEED_PAGE_SIZE);
 
   const feedLogs = (feedLogsData ?? []) as unknown as FeedIceCreamLog[];
 

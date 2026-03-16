@@ -14,13 +14,13 @@ export const metadata: Metadata = {
   title: "Gellog",
   description:
     "Log every ice cream. Track your flavours. Find the best spots.",
-  themeColor: "#D97706",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  themeColor: "#D97706",
 };
 
 export default async function RootLayout({

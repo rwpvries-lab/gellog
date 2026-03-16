@@ -3,9 +3,9 @@ import Link from "next/link";
 import { IceCreamFeedClient } from "./IceCreamFeedClient";
 import type { IceCreamLog } from "@/src/components/FeedCard";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 30;
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 export default async function IceCreamFeedPage() {
   const supabase = await createClient();

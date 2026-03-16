@@ -273,9 +273,12 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
             <div
               style={{
                 position: 'fixed',
-                left: Math.min(hoverTooltip.rect.left, window.innerWidth - 200),
+                ...(hoverTooltip.rect.left + 200 > window.innerWidth
+                  ? { right: window.innerWidth - hoverTooltip.rect.right }
+                  : { left: hoverTooltip.rect.left }),
                 top: hoverTooltip.rect.top - 10,
                 transform: 'translateY(-100%)',
+                maxWidth: 'min(200px, 90vw)',
                 zIndex: 50,
                 pointerEvents: 'none',
               }}
