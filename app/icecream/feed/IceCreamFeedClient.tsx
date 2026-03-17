@@ -55,6 +55,7 @@ export function IceCreamFeedClient({
 }: IceCreamFeedClientProps) {
   const [tab, setTab] = useState<Tab>("everyone");
   const tabRef = useRef<Tab>("everyone");
+  const followingIdsRef = useRef<string[]>([]);
 
   const [logs, setLogs] = useState<IceCreamLog[]>(initialLogs);
   const [loading, setLoading] = useState(false);
@@ -105,6 +106,14 @@ export function IceCreamFeedClient({
 
     if (currentTab === "everyone") {
       query = query.eq("visibility", "public");
+    } else {
+      const ids = followingIdsRef.current;
+      if (ids.length === 0) {
+        setHasMore(false);
+        setLoading(false);
+        return;
+      }
+      query = query.in("user_id", ids).in("visibility", ["public", "friends"]);
     }
 
     const { data, error: fetchError } = await query;
@@ -136,17 +145,33 @@ export function IceCreamFeedClient({
       return;
     }
 
-    // Friends tab: load first page (RLS handles visibility)
+    // Friends tab: fetch who the user follows, then load their logs
     setLogs([]);
     setPage(0);
-    setHasMore(true);
+    setHasMore(false);
     setLoading(true);
     setError(null);
 
     const supabase = createClient();
+
+    const { data: friendships } = await supabase
+      .from("friendships")
+      .select("following_id")
+      .eq("follower_id", currentUserId);
+
+    const ids = (friendships ?? []).map((f) => f.following_id);
+    followingIdsRef.current = ids;
+
+    if (ids.length === 0) {
+      setLoading(false);
+      return;
+    }
+
     const { data, error: fetchError } = await supabase
       .from("ice_cream_logs")
       .select(SELECT_FIELDS)
+      .in("user_id", ids)
+      .in("visibility", ["public", "friends"])
       .order("visited_at", { ascending: false })
       .range(0, pageSize - 1);
 
@@ -194,7 +219,7 @@ export function IceCreamFeedClient({
         />
       ))}
 
-      {isEmpty ? (
+      {isEmpty && tab === "everyone" ? (
         <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-white px-8 py-12 text-center text-sm text-zinc-600 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800">
           <span className="mb-4 text-5xl">😋</span>
           <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
@@ -208,6 +233,22 @@ export function IceCreamFeedClient({
             className="mt-5 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-teal-500 px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-300/50 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-white dark:shadow-none dark:focus:ring-offset-zinc-950"
           >
             Log a sweet trip
+          </Link>
+        </div>
+      ) : isEmpty && tab === "friends" ? (
+        <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-white px-8 py-12 text-center text-sm text-zinc-600 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800">
+          <span className="mb-4 text-5xl">👥</span>
+          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+            No logs from friends yet
+          </p>
+          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            Follow people to see their scoops here.
+          </p>
+          <Link
+            href="/search"
+            className="mt-5 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-teal-500 px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-300/50 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-white dark:shadow-none dark:focus:ring-offset-zinc-950"
+          >
+            Find people to follow
           </Link>
         </div>
       ) : null}
