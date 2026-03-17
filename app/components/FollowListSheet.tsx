@@ -40,7 +40,12 @@ export function FollowListSheet({ userId, type, count, currentUserId }: FollowLi
           .eq("follower_id", userId);
 
     const fetched: FollowProfile[] = (data ?? [])
-      .map((row: { profiles: FollowProfile | null }) => row.profiles)
+      .map((row) => {
+        const p = (row as { profiles: FollowProfile | FollowProfile[] | null }).profiles;
+        if (!p) return null;
+        if (Array.isArray(p)) return p[0] ?? null;
+        return p;
+      })
       .filter((p): p is FollowProfile => p != null);
 
     setProfiles(fetched);
