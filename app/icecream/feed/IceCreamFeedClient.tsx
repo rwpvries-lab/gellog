@@ -30,6 +30,7 @@ const SELECT_FIELDS = `
   price_paid,
   weather_temp,
   weather_condition,
+  visibility,
   profiles (
     id,
     username,

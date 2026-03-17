@@ -18,6 +18,12 @@ const navItems: NavItem[] = [
     matchPrefixes: ["/feed", "/icecream/feed"],
   },
   {
+    href: "/search",
+    label: "Search",
+    icon: "🔍",
+    matchPrefixes: ["/search"],
+  },
+  {
     href: "/log",
     label: "Log",
     icon: "＋",

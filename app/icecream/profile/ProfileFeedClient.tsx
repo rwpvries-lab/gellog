@@ -50,6 +50,7 @@ export function ProfileFeedClient({
         price_paid,
         weather_temp,
         weather_condition,
+        visibility,
         profiles (
           id,
           username,

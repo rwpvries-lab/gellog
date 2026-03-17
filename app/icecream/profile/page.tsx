@@ -1,4 +1,5 @@
 import { LogoutButton } from "@/app/components/LogoutButton";
+import { FollowListSheet } from "@/app/components/FollowListSheet";
 import { createClient } from "@/src/lib/supabase/server";
 import type { IceCreamLog as FeedIceCreamLog } from "@/src/components/FeedCard";
 import Image from "next/image";
@@ -252,6 +253,8 @@ export default async function IceCreamProfilePage() {
     { data: profile },
     { data: logsData, error: logsError },
     { data: feedLogsData },
+    { count: followerCount },
+    { count: followingCount },
   ] = await Promise.all([
     supabase
       .from("profiles")
@@ -298,6 +301,7 @@ export default async function IceCreamProfilePage() {
           price_paid,
           weather_temp,
           weather_condition,
+          visibility,
           profiles (
             id,
             username,
@@ -318,6 +322,14 @@ export default async function IceCreamProfilePage() {
       .eq("user_id", user.id)
       .order("visited_at", { ascending: false })
       .limit(FEED_PAGE_SIZE),
+    supabase
+      .from("friendships")
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", user.id),
+    supabase
+      .from("friendships")
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", user.id),
   ]);
 
   const logs = (logsData ?? []) as IceCreamLog[];
@@ -387,6 +399,20 @@ export default async function IceCreamProfilePage() {
                 <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
                   {displayName}
                 </h1>
+                <div className="mt-0.5 flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                  <FollowListSheet
+                    userId={user.id}
+                    type="followers"
+                    count={followerCount ?? 0}
+                    currentUserId={user.id}
+                  />
+                  <FollowListSheet
+                    userId={user.id}
+                    type="following"
+                    count={followingCount ?? 0}
+                    currentUserId={user.id}
+                  />
+                </div>
               </div>
             </div>
             <div className="flex flex-col items-end gap-2">

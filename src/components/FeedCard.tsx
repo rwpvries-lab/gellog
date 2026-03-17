@@ -4,6 +4,7 @@ import { RatingStarsDisplay } from "@/app/components/RatingStars";
 import { createClient } from "@/src/lib/supabase/client";
 import { formatVisitDate } from "@/src/lib/utils";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -42,6 +43,7 @@ export type IceCreamLog = {
   price_paid: number | null;
   weather_temp: number | null;
   weather_condition: string | null;
+  visibility: "public" | "friends" | "private";
   profiles: LogProfile | null;
   log_flavours: LogFlavour[];
 };
@@ -236,7 +238,7 @@ export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
   return (
     <>
       <article
-        className={`overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-zinc-100 backdrop-blur-sm dark:bg-zinc-900 dark:ring-zinc-800 ${ratingBorderClass}`}
+        className={`overflow-hidden rounded-3xl bg-white shadow-sm backdrop-blur-sm dark:bg-zinc-900 ${ratingBorderClass} ${isOwnLog ? "ring-1 ring-orange-200 dark:ring-orange-900/50" : "ring-1 ring-zinc-100 dark:ring-zinc-800"}`}
         onClick={() => setExpanded((e) => !e)}
         style={{ cursor: "pointer" }}
       >
@@ -244,27 +246,66 @@ export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
         <div className="p-3">
           {/* Header: avatar · username · time ago [· edit/delete] */}
           <div className="mb-2.5 flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-            {profile?.avatar_url ? (
-              <Image
-                src={profile.avatar_url}
-                alt={displayName}
-                width={22}
-                height={22}
-                className="h-5.5 w-5.5 rounded-full object-cover"
-              />
-            ) : (
-              <div
-                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
-                style={{ backgroundColor: avatarColour }}
+            {profile?.username ? (
+              <Link
+                href={isOwnLog ? "/icecream/profile" : `/profile/${profile.username}`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex items-center gap-2"
               >
-                {displayName.charAt(0).toUpperCase()}
-              </div>
+                {profile.avatar_url ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={displayName}
+                    width={22}
+                    height={22}
+                    className="h-5.5 w-5.5 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
+                    style={{ backgroundColor: avatarColour }}
+                  >
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                  {displayName}
+                </span>
+              </Link>
+            ) : (
+              <>
+                {profile?.avatar_url ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={displayName}
+                    width={22}
+                    height={22}
+                    className="h-5.5 w-5.5 rounded-full object-cover"
+                  />
+                ) : (
+                  <div
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
+                    style={{ backgroundColor: avatarColour }}
+                  >
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                  {displayName}
+                </span>
+              </>
             )}
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">
-              {displayName}
-            </span>
             <span>·</span>
             <span>{timeAgo}</span>
+            {log.visibility === "friends" ? (
+              <span className="rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-medium text-teal-600 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-400 dark:ring-teal-800/50">
+                Friends
+              </span>
+            ) : log.visibility === "private" ? (
+              <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:ring-zinc-700">
+                Private
+              </span>
+            ) : null}
             {isOwnLog ? (
               <div className="ml-auto flex items-center gap-1">
                 <button

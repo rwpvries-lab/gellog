@@ -30,6 +30,7 @@ export default async function IceCreamFeedPage() {
       price_paid,
       weather_temp,
       weather_condition,
+      visibility,
       profiles (
         id,
         username,
