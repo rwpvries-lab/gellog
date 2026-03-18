@@ -43,6 +43,7 @@ export type IceCreamLog = {
   price_paid: number | null;
   weather_temp: number | null;
   weather_condition: string | null;
+  weather_uv_index: number | null;
   visibility: "public" | "friends" | "private";
   profiles: LogProfile | null;
   log_flavours: LogFlavour[];
@@ -92,7 +93,13 @@ function formatWeather(log: IceCreamLog): string | null {
       ? log.weather_condition.trim()
       : null;
 
-  const pieces = [tempPart, conditionPart].filter((p): p is string => Boolean(p));
+  const uv = log.weather_uv_index;
+  const uvPart =
+    uv != null && uv >= 3
+      ? `UV ${Math.round(uv)} · ${uv <= 2 ? "Low" : uv <= 5 ? "Moderate" : uv <= 7 ? "High" : uv <= 10 ? "Very High" : "Extreme"}`
+      : null;
+
+  const pieces = [tempPart, conditionPart, uvPart].filter((p): p is string => Boolean(p));
   if (pieces.length === 0) return null;
   return pieces.join(" · ");
 }
@@ -345,7 +352,17 @@ export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
           {/* Salon name + vessel + overall rating */}
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
-              {log.salon_name}
+              {log.salon_place_id ? (
+                <Link
+                  href={`/salon/${log.salon_place_id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 text-teal-800 ring-1 ring-teal-100 transition hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60 dark:hover:bg-teal-900/50"
+                >
+                  {log.salon_name}
+                </Link>
+              ) : (
+                log.salon_name
+              )}
               {log.vessel === "cone" ? (
                 <span className="ml-1.5 text-sm font-normal">🍦</span>
               ) : log.vessel === "cup" ? (

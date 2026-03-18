@@ -8,6 +8,7 @@ type SalonProfile = {
   id: string;
   place_id: string;
   is_claimed: boolean;
+  owner_id: string | null;
   salon_name: string;
   salon_lat: number | null;
   salon_lng: number | null;
@@ -132,10 +133,26 @@ export default async function SalonPage({
 
   const recentLogs = allLogs.slice(0, 10);
   const isClaimed = salonProfile?.is_claimed ?? false;
+  const isOwner = user != null && salonProfile?.owner_id === user.id;
   const displayName = salonProfile?.salon_name ?? allLogs[0].salon_name;
 
   return (
     <main className="mx-auto max-w-lg px-4 py-8">
+      {/* Owner dashboard button */}
+      {isOwner && (
+        <div className="mb-5 flex items-center justify-between rounded-2xl bg-teal-50 px-4 py-3 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:ring-teal-800">
+          <span className="text-sm text-teal-800 dark:text-teal-300">
+            You manage this salon
+          </span>
+          <Link
+            href={`/salon/${place_id}/dashboard`}
+            className="text-sm font-semibold text-teal-700 hover:underline dark:text-teal-400"
+          >
+            Go to dashboard →
+          </Link>
+        </div>
+      )}
+
       {/* Claim banner */}
       {!isClaimed && (
         <div className="mb-5 flex items-center justify-between rounded-2xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200 dark:bg-amber-950/30 dark:ring-amber-800">

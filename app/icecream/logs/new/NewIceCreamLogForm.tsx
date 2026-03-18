@@ -38,7 +38,16 @@ type WeatherData = {
   code: number;
   label: string;
   emoji: string;
+  uvIndex: number | null;
 };
+
+function uvLabel(uv: number): string {
+  if (uv <= 2) return "Low";
+  if (uv <= 5) return "Moderate";
+  if (uv <= 7) return "High";
+  if (uv <= 10) return "Very High";
+  return "Extreme";
+}
 
 function describeWeatherCode(code: number): { label: string; emoji: string } {
   if (code === 0) {
@@ -380,6 +389,7 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public" }: New
           weather_condition: weather
             ? `${weather.emoji} ${weather.label}`
             : null,
+          weather_uv_index: weather?.uvIndex ?? null,
           visibility,
         })
         .select("id")
@@ -529,7 +539,7 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public" }: New
       url.searchParams.set("longitude", longitude.toString());
       url.searchParams.set(
         "current",
-        "temperature_2m,apparent_temperature,weather_code"
+        "temperature_2m,apparent_temperature,weather_code,uv_index"
       );
       url.searchParams.set("temperature_unit", "celsius");
       url.searchParams.set("timezone", "auto");
@@ -564,6 +574,9 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public" }: New
         return;
       }
 
+      const uv =
+        typeof current.uv_index === "number" ? current.uv_index : null;
+
       const { label, emoji } = describeWeatherCode(code);
 
       setWeather({
@@ -572,6 +585,7 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public" }: New
         code,
         label,
         emoji,
+        uvIndex: uv,
       });
       setWeatherUnavailable(false);
     } catch {
@@ -728,6 +742,9 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public" }: New
               <span>
                 {Math.round(weather.temperature)}°C · Feels like{" "}
                 {Math.round(weather.apparentTemperature)}°C · {weather.label}
+                {weather.uvIndex != null && weather.uvIndex >= 3
+                  ? ` · UV ${Math.round(weather.uvIndex)}`
+                  : ""}
               </span>
             </div>
           ) : weatherLoading ? (
