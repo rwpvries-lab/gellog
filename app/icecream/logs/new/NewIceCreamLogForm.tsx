@@ -303,7 +303,7 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public" }: New
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
@@ -411,6 +411,48 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public" }: New
       }
 
       router.push("/feed");
+
+      // Fire-and-forget: suggest flavours to the salon if it's claimed
+      if (salonPlaceId) {
+        void (async () => {
+          try {
+            const { data: salonProfile } = await supabase
+              .from("salon_profiles")
+              .select("id")
+              .eq("place_id", salonPlaceId)
+              .maybeSingle();
+
+            if (!salonProfile) return;
+
+            const [{ data: existingFlavours }, { data: existingSuggestions }] = await Promise.all([
+              supabase.from("salon_flavours").select("name").eq("salon_id", salonProfile.id),
+              supabase.from("flavour_suggestions").select("name").eq("salon_id", salonProfile.id),
+            ]);
+
+            const skipNames = new Set([
+              ...(existingFlavours ?? []).map((f: { name: string }) => f.name.toLowerCase()),
+              ...(existingSuggestions ?? []).map((f: { name: string }) => f.name.toLowerCase()),
+            ]);
+
+            const toSuggest = activeFlavours.filter(
+              (f) => !skipNames.has(f.name.toLowerCase())
+            );
+
+            if (toSuggest.length === 0) return;
+
+            await supabase.from("flavour_suggestions").insert(
+              toSuggest.map((f) => ({
+                salon_id: salonProfile.id,
+                name: f.name,
+                suggested_by: userId,
+                status: "pending",
+              }))
+            );
+          } catch {
+            // Fire-and-forget — silently ignore failures
+          }
+        })();
+      }
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Something went wrong.";
