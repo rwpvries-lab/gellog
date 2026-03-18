@@ -24,6 +24,12 @@ const navItems: NavItem[] = [
     matchPrefixes: ["/search"],
   },
   {
+    href: "/map",
+    label: "Map",
+    icon: "🗺️",
+    matchPrefixes: ["/map"],
+  },
+  {
     href: "/log",
     label: "Log",
     icon: "＋",

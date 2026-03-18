@@ -292,6 +292,17 @@ export function DashboardClient({ salonProfile, stats, justClaimed, initialFlavo
         />
       </div>
 
+      {/* Vitrine Display — Coming Soon */}
+      <div className="mb-5 rounded-3xl border border-zinc-200 bg-zinc-50 px-6 py-5 dark:border-zinc-700 dark:bg-zinc-900/50">
+        <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
+          🪟 Vitrine Display — Coming Soon
+        </p>
+        <p className="mt-2 text-sm text-zinc-400 dark:text-zinc-500">
+          Let customers see your flavour cabinet inside the app. Your flavours
+          above will appear as coloured tubs in a row. Launching Week 6.
+        </p>
+      </div>
+
       {/* Profile settings */}
       <div className="rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
         <h2 className="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
