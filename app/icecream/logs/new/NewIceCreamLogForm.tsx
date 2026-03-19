@@ -11,6 +11,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 type NewIceCreamLogFormProps = {
   userId: string;
   defaultVisibility?: Visibility;
+  initialSalonData?: SalonData | null;
 };
 
 type Flavour = {
@@ -275,14 +276,14 @@ function ScrollDrum({
   );
 }
 
-export function NewIceCreamLogForm({ userId, defaultVisibility = "public" }: NewIceCreamLogFormProps) {
+export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initialSalonData }: NewIceCreamLogFormProps) {
   const router = useRouter();
-  const [salonName, setSalonName] = useState("");
-  const [salonPlaceId, setSalonPlaceId] = useState<string | null>(null);
-  const [salonAddress, setSalonAddress] = useState<string | null>(null);
-  const [salonLat, setSalonLat] = useState<number | null>(null);
-  const [salonLng, setSalonLng] = useState<number | null>(null);
-  const [salonCity, setSalonCity] = useState<string | null>(null);
+  const [salonName, setSalonName] = useState(initialSalonData?.salon_name ?? "");
+  const [salonPlaceId, setSalonPlaceId] = useState<string | null>(initialSalonData?.salon_place_id ?? null);
+  const [salonAddress, setSalonAddress] = useState<string | null>(initialSalonData?.salon_address ?? null);
+  const [salonLat, setSalonLat] = useState<number | null>(initialSalonData?.salon_lat ?? null);
+  const [salonLng, setSalonLng] = useState<number | null>(initialSalonData?.salon_lng ?? null);
+  const [salonCity, setSalonCity] = useState<string | null>(initialSalonData?.salon_city ?? null);
   const [selectedDay, setSelectedDay] = useState(todayDateStr);
   const [selectedHour, setSelectedHour] = useState(defaultHour);
   const [selectedMinute, setSelectedMinute] = useState(defaultMinute);

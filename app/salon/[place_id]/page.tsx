@@ -72,7 +72,6 @@ export default async function SalonPage({
     .order("visited_at", { ascending: false });
 
   const allLogs = (logsData ?? []) as unknown as IceCreamLog[];
-  if (allLogs.length === 0) notFound();
 
   // Fetch salon profile (may not exist yet)
   let { data: salonProfile } = await supabase
@@ -80,6 +79,91 @@ export default async function SalonPage({
     .select("*")
     .eq("place_id", place_id)
     .maybeSingle<SalonProfile>();
+
+  // === Undiscovered salon (no logs yet) ===
+  if (allLogs.length === 0) {
+    // Try Google Places to verify the place exists and get its name
+    const key =
+      process.env.GOOGLE_PLACES_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
+    let placeName: string | null = null;
+
+    if (key) {
+      try {
+        const url = new URL(
+          "https://maps.googleapis.com/maps/api/place/details/json",
+        );
+        url.searchParams.set("place_id", place_id);
+        url.searchParams.set("fields", "name");
+        url.searchParams.set("key", key);
+        const res = await fetch(url.toString(), { next: { revalidate: 3600 } });
+        const data = (await res.json()) as { result?: { name?: string } };
+        placeName = data.result?.name ?? null;
+      } catch {
+        // fall through to notFound
+      }
+    }
+
+    if (!placeName) notFound();
+
+    const isClaimed = salonProfile?.is_claimed ?? false;
+    const isOwner = user != null && salonProfile?.owner_id === user.id;
+
+    return (
+      <main className="mx-auto max-w-lg px-4 py-8">
+        {isOwner && (
+          <div className="mb-5 flex items-center justify-between rounded-2xl bg-teal-50 px-4 py-3 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:ring-teal-800">
+            <span className="text-sm text-teal-800 dark:text-teal-300">
+              You manage this salon
+            </span>
+            <Link
+              href={`/salon/${place_id}/dashboard`}
+              className="text-sm font-semibold text-teal-700 hover:underline dark:text-teal-400"
+            >
+              Go to dashboard →
+            </Link>
+          </div>
+        )}
+
+        {!isClaimed && (
+          <div className="mb-5 flex items-center justify-between rounded-2xl bg-amber-50 px-4 py-3 ring-1 ring-amber-200 dark:bg-amber-950/30 dark:ring-amber-800">
+            <span className="text-sm text-amber-800 dark:text-amber-300">
+              Is this your salon?
+            </span>
+            <Link
+              href={`/salon/${place_id}/claim`}
+              className="text-sm font-semibold text-amber-700 hover:underline dark:text-amber-400"
+            >
+              Claim this page →
+            </Link>
+          </div>
+        )}
+
+        {/* Header card */}
+        <div className="mb-5 rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
+            {placeName}
+          </h1>
+        </div>
+
+        {/* Empty state */}
+        <div className="rounded-3xl bg-white px-6 py-8 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+          <p className="mb-1 text-3xl">🍦</p>
+          <p className="mb-1 text-base font-semibold text-zinc-900 dark:text-zinc-50">
+            No visits logged yet
+          </p>
+          <p className="mb-5 text-sm text-zinc-500 dark:text-zinc-400">
+            Be the first to log a scoop here!
+          </p>
+          <Link
+            href={`/icecream/logs/new?place_id=${encodeURIComponent(place_id)}&salon_name=${encodeURIComponent(placeName)}`}
+            className="inline-block rounded-2xl bg-teal-500 px-6 py-3 text-sm font-semibold text-white hover:bg-teal-600"
+          >
+            Log a visit →
+          </Link>
+        </div>
+      </main>
+    );
+  }
 
   // Auto-create unclaimed profile from most recent log
   if (!salonProfile) {

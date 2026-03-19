@@ -13,6 +13,21 @@ type SearchProfile = {
   log_count: number;
 };
 
+type SalonResult = {
+  place_id: string;
+  salon_name: string;
+  is_claimed: boolean;
+  logo_url: string | null;
+  visit_count: number;
+  avg_rating: number;
+};
+
+type PlacesPrediction = {
+  place_id: string;
+  main_text: string;
+  secondary_text: string;
+};
+
 type FollowStatus = Record<string, boolean>;
 
 function SkeletonRow() {
@@ -29,11 +44,21 @@ function SkeletonRow() {
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"people" | "salons">("people");
+
+  // People state
   const [results, setResults] = useState<SearchProfile[]>([]);
   const [followStatus, setFollowStatus] = useState<FollowStatus>({});
   const [currentUserId, setCurrentUserId] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
+
+  // Salons state
+  const [salonResults, setSalonResults] = useState<SalonResult[]>([]);
+  const [placesResults, setPlacesResults] = useState<PlacesPrediction[]>([]);
+  const [salonLoading, setSalonLoading] = useState(false);
+  const [salonSearched, setSalonSearched] = useState(false);
+
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get current user once on mount
@@ -53,53 +78,75 @@ export default function SearchPage() {
       setFollowStatus({});
       setSearched(false);
       setLoading(false);
+      setSalonResults([]);
+      setPlacesResults([]);
+      setSalonLoading(false);
+      setSalonSearched(false);
       return;
     }
 
     setLoading(true);
+    setSalonLoading(true);
 
     debounceRef.current = setTimeout(() => {
       void (async () => {
         const supabase = createClient();
 
-        const { data: profilesData } = await supabase
-          .from("profiles")
-          .select("id, username, avatar_url")
-          .ilike("username", `%${trimmed}%`)
-          .limit(10);
+        // People + Salons search run in parallel
+        const [profilesRes, salonsRes, placesRes] = await Promise.all([
+          // People
+          supabase
+            .from("profiles")
+            .select("id, username, avatar_url")
+            .ilike("username", `%${trimmed}%`)
+            .limit(10),
+          // Gellog salons
+          supabase
+            .from("salon_profiles")
+            .select("place_id, salon_name, is_claimed, logo_url")
+            .ilike("salon_name", `%${trimmed}%`)
+            .limit(10),
+          // Google Places
+          fetch(`/api/places/autocomplete?input=${encodeURIComponent(trimmed)}`).then(
+            (r) => r.json() as Promise<{ predictions?: Array<{ place_id: string; structured_formatting: { main_text: string; secondary_text: string } }> }>
+          ).catch(() => ({ predictions: [] })),
+        ]);
 
-        const profiles = profilesData ?? [];
+        // --- People ---
+        const profiles = profilesRes.data ?? [];
 
-        // Fetch log counts for all results in parallel
-        const countResults = await Promise.all(
-          profiles.map((p) =>
-            supabase
-              .from("ice_cream_logs")
-              .select("*", { count: "exact", head: true })
-              .eq("user_id", p.id)
-              .eq("visibility", "public"),
+        const [countResults, followResults] = await Promise.all([
+          Promise.all(
+            profiles.map((p) =>
+              supabase
+                .from("ice_cream_logs")
+                .select("*", { count: "exact", head: true })
+                .eq("user_id", p.id)
+                .eq("visibility", "public"),
+            ),
           ),
-        );
+          currentUserId
+            ? Promise.all(
+                profiles.map((p) =>
+                  supabase
+                    .from("friendships")
+                    .select("*", { count: "exact", head: true })
+                    .eq("follower_id", currentUserId)
+                    .eq("following_id", p.id),
+                ),
+              )
+            : Promise.resolve([]),
+        ]);
 
         const enriched: SearchProfile[] = profiles.map((p, i) => ({
           ...p,
           log_count: countResults[i].count ?? 0,
         }));
 
-        // Fetch follow status for each result if logged in
-        let newFollowStatus: FollowStatus = {};
+        const newFollowStatus: FollowStatus = {};
         if (currentUserId) {
-          const followResults = await Promise.all(
-            profiles.map((p) =>
-              supabase
-                .from("friendships")
-                .select("*", { count: "exact", head: true })
-                .eq("follower_id", currentUserId)
-                .eq("following_id", p.id),
-            ),
-          );
           profiles.forEach((p, i) => {
-            newFollowStatus[p.id] = (followResults[i].count ?? 0) > 0;
+            newFollowStatus[p.id] = ((followResults as { count: number | null }[])[i]?.count ?? 0) > 0;
           });
         }
 
@@ -107,6 +154,52 @@ export default function SearchPage() {
         setFollowStatus(newFollowStatus);
         setSearched(true);
         setLoading(false);
+
+        // --- Gellog salons + stats ---
+        const salons = salonsRes.data ?? [];
+
+        const salonStats = await Promise.all(
+          salons.map((s) =>
+            supabase
+              .from("ice_cream_logs")
+              .select("overall_rating")
+              .eq("salon_place_id", s.place_id)
+              .eq("visibility", "public"),
+          ),
+        );
+
+        const salonEnriched: SalonResult[] = salons.map((s, i) => {
+          const logs = salonStats[i].data ?? [];
+          const visit_count = logs.length;
+          const avg_rating = visit_count
+            ? logs.reduce((sum, l) => sum + l.overall_rating, 0) / visit_count
+            : 0;
+          return {
+            place_id: s.place_id,
+            salon_name: s.salon_name,
+            is_claimed: s.is_claimed,
+            logo_url: s.logo_url,
+            visit_count,
+            avg_rating,
+          };
+        });
+
+        // --- Google Places — filter out Gellog salons to avoid duplicates ---
+        const gellogPlaceIds = new Set(salons.map((s) => s.place_id));
+        const predictions = placesRes.predictions ?? [];
+        const newPlacesResults: PlacesPrediction[] = predictions
+          .filter((p) => !gellogPlaceIds.has(p.place_id))
+          .slice(0, 5)
+          .map((p) => ({
+            place_id: p.place_id,
+            main_text: p.structured_formatting.main_text,
+            secondary_text: p.structured_formatting.secondary_text,
+          }));
+
+        setSalonResults(salonEnriched);
+        setPlacesResults(newPlacesResults);
+        setSalonSearched(true);
+        setSalonLoading(false);
       })();
     }, 400);
 
@@ -115,86 +208,187 @@ export default function SearchPage() {
     };
   }, [query, currentUserId]);
 
+  const noSalonResults = salonSearched && salonResults.length === 0 && placesResults.length === 0;
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-teal-50 px-4 pb-24 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40">
       <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
         <header className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Find people
+            Search
           </h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Search for users to follow.
-          </p>
         </header>
 
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Find people..."
+          placeholder={activeTab === "people" ? "Find people…" : "Find salons…"}
           autoFocus
           className="w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm ring-1 ring-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-teal-400 dark:bg-zinc-900 dark:text-zinc-50 dark:ring-zinc-700 dark:placeholder:text-zinc-500 dark:focus:ring-teal-500"
         />
 
+        {/* Tabs */}
+        <div className="flex gap-1 rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800">
+          {(["people", "salons"] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-colors ${
+                activeTab === tab
+                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-50"
+                  : "text-zinc-500 dark:text-zinc-400"
+              }`}
+            >
+              {tab === "people" ? "People" : "Salons"}
+            </button>
+          ))}
+        </div>
+
         <div className="flex flex-col gap-3">
-          {loading ? (
+          {activeTab === "people" ? (
+            loading ? (
+              <>
+                <SkeletonRow />
+                <SkeletonRow />
+                <SkeletonRow />
+              </>
+            ) : searched && results.length === 0 ? (
+              <p className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+                No users found for &ldquo;{query.trim()}&rdquo;
+              </p>
+            ) : (
+              results.map((profile) => {
+                const displayName = profile.username ?? "Unknown";
+                const initial = displayName.charAt(0).toUpperCase();
+                const isOwnProfile = currentUserId === profile.id;
+
+                return (
+                  <div
+                    key={profile.id}
+                    className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+                  >
+                    <Link
+                      href={`/profile/${profile.username}`}
+                      className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500 text-white shadow-sm"
+                    >
+                      {profile.avatar_url ? (
+                        <Image
+                          src={profile.avatar_url}
+                          alt={displayName}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-full w-full items-center justify-center text-sm font-semibold">
+                          {initial}
+                        </span>
+                      )}
+                    </Link>
+
+                    <Link
+                      href={`/profile/${profile.username}`}
+                      className="flex flex-1 flex-col"
+                    >
+                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                        {displayName}
+                      </span>
+                      <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                        {profile.log_count} public scoop
+                        {profile.log_count !== 1 ? "s" : ""}
+                      </span>
+                    </Link>
+
+                    {!isOwnProfile && currentUserId ? (
+                      <FollowButton
+                        currentUserId={currentUserId}
+                        targetUserId={profile.id}
+                        initialIsFollowing={followStatus[profile.id] ?? false}
+                      />
+                    ) : null}
+                  </div>
+                );
+              })
+            )
+          ) : salonLoading ? (
             <>
               <SkeletonRow />
               <SkeletonRow />
               <SkeletonRow />
             </>
-          ) : searched && results.length === 0 ? (
+          ) : noSalonResults ? (
             <p className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-              No users found for &ldquo;{query.trim()}&rdquo;
+              No salons found for &ldquo;{query.trim()}&rdquo;
             </p>
-          ) : (
-            results.map((profile) => {
-              const displayName = profile.username ?? "Unknown";
-              const initial = displayName.charAt(0).toUpperCase();
-              const isOwnProfile = currentUserId === profile.id;
-
-              return (
-                <div
-                  key={profile.id}
+          ) : !salonSearched ? null : (
+            <>
+              {/* Gellog salons */}
+              {salonResults.map((salon) => (
+                <Link
+                  key={salon.place_id}
+                  href={`/salon/${salon.place_id}`}
                   className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
                 >
-                  <Link
-                    href={`/profile/${profile.username}`}
-                    className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500 text-white shadow-sm"
-                  >
-                    {profile.avatar_url ? (
+                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-teal-50 dark:bg-teal-950/30">
+                    {salon.logo_url && salon.is_claimed ? (
                       <Image
-                        src={profile.avatar_url}
-                        alt={displayName}
+                        src={salon.logo_url}
+                        alt={salon.salon_name}
                         fill
                         className="object-cover"
                       />
                     ) : (
-                      <span className="flex h-full w-full items-center justify-center text-sm font-semibold">
-                        {initial}
+                      <span className="flex h-full w-full items-center justify-center text-lg">
+                        🍦
                       </span>
                     )}
-                  </Link>
+                  </div>
 
-                  <Link href={`/profile/${profile.username}`} className="flex flex-1 flex-col">
-                    <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                      {displayName}
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      {salon.salon_name}
                     </span>
                     <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {profile.log_count} public scoop{profile.log_count !== 1 ? "s" : ""}
+                      ★ {salon.avg_rating.toFixed(1)} · {salon.visit_count}{" "}
+                      {salon.visit_count === 1 ? "visit" : "visits"}
                     </span>
-                  </Link>
+                  </div>
 
-                  {!isOwnProfile && currentUserId ? (
-                    <FollowButton
-                      currentUserId={currentUserId}
-                      targetUserId={profile.id}
-                      initialIsFollowing={followStatus[profile.id] ?? false}
-                    />
-                  ) : null}
-                </div>
-              );
-            })
+                  {salon.is_claimed && (
+                    <span className="flex-shrink-0 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-900/40 dark:text-teal-400">
+                      Claimed
+                    </span>
+                  )}
+                </Link>
+              ))}
+
+              {/* Google Places salons not yet on Gellog */}
+              {placesResults.map((place) => (
+                <Link
+                  key={place.place_id}
+                  href={`/salon/${place.place_id}`}
+                  className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+                >
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                    <span className="text-lg">🍦</span>
+                  </div>
+
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      {place.main_text}
+                    </span>
+                    <span className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                      {place.secondary_text}
+                    </span>
+                  </div>
+
+                  <span className="flex-shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                    Not on Gellog yet
+                  </span>
+                </Link>
+              ))}
+            </>
           )}
         </div>
       </div>
