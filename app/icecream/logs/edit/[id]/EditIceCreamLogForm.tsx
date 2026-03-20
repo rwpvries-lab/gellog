@@ -2,6 +2,10 @@
 
 import { StarRating } from "@/app/components/RatingStars";
 import { SalonInput, type SalonData } from "@/src/components/SalonInput";
+import {
+  PhotoVisibilityPicker,
+  type PhotoVisibility,
+} from "@/src/components/PhotoVisibilityPicker";
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
 import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -36,6 +40,8 @@ type LogRow = {
   weather_temp: number | null;
   weather_condition: string | null;
   visibility: Visibility;
+  photo_visibility?: PhotoVisibility;
+  price_hidden_from_others?: boolean;
   log_flavours: LogFlavourRow[];
 };
 
@@ -278,6 +284,12 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   const [showFlavourPrompt, setShowFlavourPrompt] = useState(false);
   const [priceWarning, setPriceWarning] = useState<number | null>(null);
   const [visibility, setVisibility] = useState<Visibility>(log.visibility ?? "public");
+  const [photoVisibility, setPhotoVisibility] = useState<PhotoVisibility>(
+    log.photo_visibility ?? "public",
+  );
+  const [hidePriceFromOthers, setHidePriceFromOthers] = useState(
+    log.price_hidden_from_others ?? false,
+  );
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
 
@@ -399,6 +411,8 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           visited_at: new Date(visitedAt).toISOString(),
           vessel: vessel ?? null,
           price_paid: pricePaid !== "" ? parseFloat(pricePaid.replace(",", ".")) : null,
+          price_hidden_from_others: hidePriceFromOthers,
+          photo_visibility: log.photo_url ? photoVisibility : "public",
           weather_temp: weather?.temperature ?? log.weather_temp,
           weather_condition: weather
             ? `${weather.emoji} ${weather.label}`
@@ -619,6 +633,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
                 </div>
 
                 <StarRating
+                  id={`flavour-${flavour.id}-rating`}
                   label="Flavour rating"
                   value={flavour.rating}
                   onChange={(value) => setFlavours((prev) => prev.map((item) => item.id === flavour.id ? { ...item, rating: value } : item))}
@@ -645,6 +660,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
                       ).map(({ key, label }) => (
                         <StarRating
                           key={key}
+                          id={`flavour-${flavour.id}-${key}`}
                           label={label}
                           value={flavour[key]}
                           onChange={(value) => setFlavours((prev) => prev.map((item) => item.id === flavour.id ? { ...item, [key]: value } : item))}
@@ -697,6 +713,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
         </div>
 
         <StarRating
+          id="log-overall-visit-rating"
           label="Overall visit rating"
           value={overallRating}
           onChange={(value) => setOverallRating(value)}
@@ -753,6 +770,15 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
               className="w-full rounded-2xl bg-transparent px-2 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100"
             />
           </div>
+          <label className="mt-2 flex cursor-pointer items-start gap-2 text-xs text-zinc-600 dark:text-zinc-300">
+            <input
+              type="checkbox"
+              checked={hidePriceFromOthers}
+              onChange={(e) => setHidePriceFromOthers(e.target.checked)}
+              className="mt-0.5 rounded border-zinc-300 text-teal-600 focus:ring-teal-500 dark:border-zinc-600"
+            />
+            <span>Hide this price from other people (only you will see it)</span>
+          </label>
           {priceWarning != null ? (
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <p className="text-sm italic text-zinc-500 dark:text-zinc-400">
@@ -777,6 +803,21 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
             </div>
           ) : null}
         </div>
+
+        {log.photo_url ? (
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+              Who can see this photo?
+            </span>
+            <PhotoVisibilityPicker
+              value={photoVisibility}
+              onChange={setPhotoVisibility}
+            />
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Followers are people who follow you on Gellog.
+            </p>
+          </div>
+        ) : null}
 
         {/* Notes */}
         <div className="flex flex-col gap-1">

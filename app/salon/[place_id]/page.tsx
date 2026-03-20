@@ -34,6 +34,8 @@ const FEED_FIELDS = `
   weather_temp,
   weather_condition,
   visibility,
+  photo_visibility,
+  price_hidden_from_others,
   profiles (
     id,
     username,
@@ -216,6 +218,18 @@ export default async function SalonPage({
     .slice(0, 5);
 
   const recentLogs = allLogs.slice(0, 10);
+  const authorIds = [...new Set(recentLogs.map((l) => l.user_id))];
+  let followingAuthorIds = new Set<string>();
+  if (user && authorIds.length > 0) {
+    const { data: friendRows } = await supabase
+      .from("friendships")
+      .select("following_id")
+      .eq("follower_id", user.id)
+      .in("following_id", authorIds);
+    followingAuthorIds = new Set(
+      (friendRows ?? []).map((r) => r.following_id),
+    );
+  }
   const isClaimed = salonProfile?.is_claimed ?? false;
   const isOwner = user != null && salonProfile?.owner_id === user.id;
   const displayName = salonProfile?.salon_name ?? allLogs[0].salon_name;
@@ -352,7 +366,12 @@ export default async function SalonPage({
       </h2>
       <div className="flex flex-col gap-4">
         {recentLogs.map((log) => (
-          <FeedCard key={log.id} log={log} currentUserId={user?.id} />
+          <FeedCard
+            key={log.id}
+            log={log}
+            currentUserId={user?.id}
+            viewerFollowsAuthor={followingAuthorIds.has(log.user_id)}
+          />
         ))}
       </div>
     </main>

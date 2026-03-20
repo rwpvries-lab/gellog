@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useState } from "react";
 
 type StarSize = "display-sm" | "display-lg" | "input";
 
@@ -12,9 +12,10 @@ type StarIconProps = {
 
 type StarRatingProps = {
   label?: string;
+  /** When set with `label`, ids are stable for `aria-labelledby` (avoids useId SSR mismatches). */
+  id?: string;
   value: number | null;
   onChange: (value: number) => void;
-  id?: string;
 };
 
 type RatingStarsDisplayProps = {
@@ -69,7 +70,7 @@ function StarIcon({ active, preview = false, size }: StarIconProps) {
 
 export function StarRating({ label, value, onChange, id }: StarRatingProps) {
   const [hoveredValue, setHoveredValue] = useState<number | null>(null);
-  const labelId = useId();
+  const labelId = id ? `${id}__label` : undefined;
 
   return (
     <div className="flex flex-col gap-1">
@@ -84,7 +85,8 @@ export function StarRating({ label, value, onChange, id }: StarRatingProps) {
       <div
         id={id}
         role="radiogroup"
-        aria-labelledby={label ? labelId : undefined}
+        aria-labelledby={labelId}
+        aria-label={label && !labelId ? label : undefined}
         className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 shadow-sm ring-1 ring-orange-100 backdrop-blur dark:bg-zinc-900/70 dark:ring-zinc-700"
       >
         {STAR_VALUES.map((star) => {

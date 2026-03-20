@@ -302,6 +302,8 @@ export default async function IceCreamProfilePage() {
           weather_temp,
           weather_condition,
           visibility,
+          photo_visibility,
+          price_hidden_from_others,
           profiles (
             id,
             username,

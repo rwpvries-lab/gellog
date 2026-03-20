@@ -1,16 +1,15 @@
 "use client";
 
 import { createClient } from "@/src/lib/supabase/client";
+import { ICE_CREAM_AUTOCOMPLETE_DESCRIPTION_TERMS } from "@/src/lib/looksLikeIceCreamSalon";
 import { useEffect, useRef, useState } from "react";
-
-const ICE_CREAM_KEYWORDS = ["gelato", "ijssalon", "ice cream"];
 
 type Prediction = {
   place_id: string;
-  description: string;
-  structured_formatting: {
-    main_text: string;
-    secondary_text: string;
+  description?: string;
+  structured_formatting?: {
+    main_text?: string;
+    secondary_text?: string;
   };
 };
 
@@ -34,9 +33,26 @@ type DropdownItem =
   | { type: "place"; prediction: Prediction }
   | { type: "recent"; name: string };
 
-function hasIceCreamKeyword(name: string): boolean {
-  const lower = name.toLowerCase();
-  return ICE_CREAM_KEYWORDS.some((kw) => lower.includes(kw));
+function predictionMainText(p: Prediction): string {
+  return (
+    p.structured_formatting?.main_text?.trim() ||
+    p.description?.split(",")[0]?.trim() ||
+    "Salon"
+  );
+}
+
+function predictionSecondaryText(p: Prediction): string {
+  return p.structured_formatting?.secondary_text?.trim() ?? "";
+}
+
+function narrowAutocompletePredictions(raw: Prediction[]): Prediction[] {
+  const filtered = raw.filter((r) => {
+    const desc = (r.description ?? "").toLowerCase();
+    return ICE_CREAM_AUTOCOMPLETE_DESCRIPTION_TERMS.some((term) =>
+      desc.includes(term),
+    );
+  });
+  return filtered.length > 0 ? filtered : raw;
 }
 
 export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInputProps) {
@@ -102,7 +118,8 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
       if (!response.ok) return;
       const data = await response.json();
       if (data.status !== "OK" && data.status !== "ZERO_RESULTS") return;
-      const predictions: Prediction[] = (data.predictions ?? []).slice(0, 5);
+      const raw: Prediction[] = data.predictions ?? [];
+      const predictions = narrowAutocompletePredictions(raw).slice(0, 5);
       setItems(predictions.map((p) => ({ type: "place" as const, prediction: p })));
       setActiveIdx(-1);
       setOpen(true);
@@ -201,7 +218,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
       e.preventDefault();
       const item = items[activeIdx];
       if (item.type === "place") {
-        selectPlace(item.prediction.place_id, item.prediction.structured_formatting.main_text);
+        selectPlace(item.prediction.place_id, predictionMainText(item.prediction));
       } else {
         selectRecent(item.name);
       }
@@ -257,8 +274,8 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                 </button>
               );
             }
-            const main = item.prediction.structured_formatting.main_text;
-            const secondary = item.prediction.structured_formatting.secondary_text;
+            const main = predictionMainText(item.prediction);
+            const secondary = predictionSecondaryText(item.prediction);
             return (
               <button
                 key={item.prediction.place_id}
@@ -271,7 +288,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                 }`}
               >
                 <span className="flex items-center gap-1.5 font-semibold text-zinc-900">
-                  {hasIceCreamKeyword(main) && <span>🍦</span>}
+                  <span>🍦</span>
                   {main}
                 </span>
                 <span className="text-xs text-zinc-400">{secondary}</span>

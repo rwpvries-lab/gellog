@@ -13,6 +13,8 @@ type IceCreamFeedClientProps = {
   initialLogs: IceCreamLog[];
   pageSize: number;
   currentUserId?: string;
+  /** User IDs the current user follows (for friends-only photos). */
+  initialFollowingUserIds?: string[];
 };
 
 const SELECT_FIELDS = `
@@ -31,6 +33,8 @@ const SELECT_FIELDS = `
   weather_temp,
   weather_condition,
   visibility,
+  photo_visibility,
+  price_hidden_from_others,
   profiles (
     id,
     username,
@@ -52,10 +56,14 @@ export function IceCreamFeedClient({
   initialLogs,
   pageSize,
   currentUserId,
+  initialFollowingUserIds = [],
 }: IceCreamFeedClientProps) {
   const [tab, setTab] = useState<Tab>("everyone");
   const tabRef = useRef<Tab>("everyone");
   const followingIdsRef = useRef<string[]>([]);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(
+    () => new Set(initialFollowingUserIds),
+  );
 
   const [logs, setLogs] = useState<IceCreamLog[]>(initialLogs);
   const [loading, setLoading] = useState(false);
@@ -64,6 +72,26 @@ export function IceCreamFeedClient({
   const [page, setPage] = useState(1);
 
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setFollowingIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("friendships")
+        .select("following_id")
+        .eq("follower_id", currentUserId);
+      if (cancelled) return;
+      setFollowingIds(new Set((data ?? []).map((r) => r.following_id)));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId]);
 
   useEffect(() => {
     if (!hasMore || loading) return;
@@ -161,6 +189,7 @@ export function IceCreamFeedClient({
 
     const ids = (friendships ?? []).map((f) => f.following_id);
     followingIdsRef.current = ids;
+    setFollowingIds(new Set(ids));
 
     if (ids.length === 0) {
       setLoading(false);
@@ -215,7 +244,7 @@ export function IceCreamFeedClient({
           key={log.id}
           log={log}
           currentUserId={currentUserId}
-          onDelete={(id) => setLogs((prev) => prev.filter((l) => l.id !== id))}
+          viewerFollowsAuthor={followingIds.has(log.user_id)}
         />
       ))}
 

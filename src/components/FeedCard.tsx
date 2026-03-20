@@ -45,6 +45,8 @@ export type IceCreamLog = {
   weather_condition: string | null;
   weather_uv_index: number | null;
   visibility: "public" | "friends" | "private";
+  photo_visibility?: "public" | "friends";
+  price_hidden_from_others?: boolean;
   profiles: LogProfile | null;
   log_flavours: LogFlavour[];
 };
@@ -193,10 +195,20 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
 type FeedCardProps = {
   log: IceCreamLog;
   currentUserId?: string;
+  /** True if the viewer follows the log author (used for friends-only photos on public logs). */
+  viewerFollowsAuthor?: boolean;
+  /** Edit/delete controls only when true (e.g. your profile); hidden in the main feed. */
+  showOwnerActions?: boolean;
   onDelete?: (id: string) => void;
 };
 
-export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
+export function FeedCard({
+  log,
+  currentUserId,
+  viewerFollowsAuthor = false,
+  showOwnerActions = false,
+  onDelete,
+}: FeedCardProps) {
   const router = useRouter();
   const [expanded, setExpanded] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
@@ -220,6 +232,16 @@ export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
   const displayName = profile?.username ?? "Unknown user";
   const timeAgo = formatVisitDate(log.visited_at);
   const photoUrl = getPhotoUrl(log.photo_url);
+  const photoVisibility = log.photo_visibility ?? "public";
+  const canSeePhoto =
+    Boolean(photoUrl) &&
+    (isOwnLog ||
+      photoVisibility === "public" ||
+      (photoVisibility === "friends" && viewerFollowsAuthor));
+  const showPhotoPlaceholder = Boolean(photoUrl) && !canSeePhoto;
+  const pricePaid = log.price_paid;
+  const canSeePrice =
+    pricePaid != null && (!log.price_hidden_from_others || isOwnLog);
   const weather = formatWeather(log);
   const fullDate = formatFullDate(log.visited_at);
 
@@ -313,7 +335,7 @@ export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
                 Private
               </span>
             ) : null}
-            {isOwnLog ? (
+            {isOwnLog && showOwnerActions ? (
               <div className="ml-auto flex items-center gap-1">
                 <button
                   type="button"
@@ -378,7 +400,7 @@ export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
           </div>
 
           {/* Photo */}
-          {photoUrl ? (
+          {canSeePhoto && photoUrl ? (
             <div className="relative mt-2.5 aspect-[8/5] w-full overflow-hidden rounded-2xl">
               <Image
                 src={photoUrl}
@@ -387,6 +409,15 @@ export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
                 height={500}
                 className="h-full w-full object-cover"
               />
+            </div>
+          ) : showPhotoPlaceholder ? (
+            <div className="mt-2.5 flex aspect-[8/5] w-full flex-col items-center justify-center gap-1 rounded-2xl bg-zinc-100 ring-1 ring-zinc-200 dark:bg-zinc-800/80 dark:ring-zinc-700">
+              <span className="text-2xl" aria-hidden>
+                👥
+              </span>
+              <p className="px-4 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                Photo visible to followers only
+              </p>
             </div>
           ) : null}
 
@@ -500,10 +531,10 @@ export function FeedCard({ log, currentUserId, onDelete }: FeedCardProps) {
               ) : null}
 
               {/* Price */}
-              {log.price_paid != null ? (
+              {canSeePrice && pricePaid != null ? (
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
                   <span className="font-medium text-orange-600 dark:text-orange-300">
-                    €{log.price_paid.toFixed(2)}
+                    €{pricePaid.toFixed(2)}
                   </span>{" "}
                   paid
                 </p>

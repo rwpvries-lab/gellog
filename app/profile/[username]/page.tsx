@@ -29,6 +29,8 @@ const FEED_FIELDS = `
   weather_temp,
   weather_condition,
   visibility,
+  photo_visibility,
+  price_hidden_from_others,
   profiles (
     id,
     username,
@@ -204,7 +206,12 @@ export default async function UserProfilePage({
         ) : (
           <div className="flex flex-col gap-4">
             {logs.map((log) => (
-              <FeedCard key={log.id} log={log} currentUserId={user?.id} />
+              <FeedCard
+                key={log.id}
+                log={log}
+                currentUserId={user?.id}
+                viewerFollowsAuthor={isOwnProfile || isFollowing}
+              />
             ))}
           </div>
         )}

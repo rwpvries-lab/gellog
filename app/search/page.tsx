@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { FollowButton } from "@/app/profile/[username]/FollowButton";
+import { autocompletePassesSalonFilter } from "@/src/lib/looksLikeIceCreamSalon";
 
 type SearchProfile = {
   id: string;
@@ -107,9 +108,24 @@ export default function SearchPage() {
             .ilike("salon_name", `%${trimmed}%`)
             .limit(10),
           // Google Places
-          fetch(`/api/places/autocomplete?input=${encodeURIComponent(trimmed)}`).then(
-            (r) => r.json() as Promise<{ predictions?: Array<{ place_id: string; structured_formatting: { main_text: string; secondary_text: string } }> }>
-          ).catch(() => ({ predictions: [] })),
+          fetch(
+            `/api/places/autocomplete?input=${encodeURIComponent(trimmed)}`,
+          )
+            .then(
+              (r) =>
+                r.json() as Promise<{
+                  predictions?: Array<{
+                    place_id: string;
+                    description?: string;
+                    types?: string[];
+                    structured_formatting: {
+                      main_text: string;
+                      secondary_text: string;
+                    };
+                  }>;
+                }>,
+            )
+            .catch(() => ({ predictions: [] })),
         ]);
 
         // --- People ---
@@ -184,12 +200,13 @@ export default function SearchPage() {
           };
         });
 
-        // --- Google Places — filter out Gellog salons to avoid duplicates ---
-        const gellogPlaceIds = new Set(salons.map((s) => s.place_id));
+        // --- Google Places: establishments not already in merged Gellog list ---
+        const gellogPlaceIds = new Set(salonEnriched.map((s) => s.place_id));
         const predictions = placesRes.predictions ?? [];
         const newPlacesResults: PlacesPrediction[] = predictions
           .filter((p) => !gellogPlaceIds.has(p.place_id))
-          .slice(0, 5)
+          .filter((p) => autocompletePassesSalonFilter(p))
+          .slice(0, 10)
           .map((p) => ({
             place_id: p.place_id,
             main_text: p.structured_formatting.main_text,
@@ -327,7 +344,7 @@ export default function SearchPage() {
               {salonResults.map((salon) => (
                 <Link
                   key={salon.place_id}
-                  href={`/salon/${salon.place_id}`}
+                  href={`/salon/${encodeURIComponent(salon.place_id)}`}
                   className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
                 >
                   <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-teal-50 dark:bg-teal-950/30">
@@ -367,7 +384,7 @@ export default function SearchPage() {
               {placesResults.map((place) => (
                 <Link
                   key={place.place_id}
-                  href={`/salon/${place.place_id}`}
+                  href={`/salon/${encodeURIComponent(place.place_id)}`}
                   className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
                 >
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
@@ -378,13 +395,15 @@ export default function SearchPage() {
                     <span className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                       {place.main_text}
                     </span>
-                    <span className="truncate text-xs text-zinc-500 dark:text-zinc-400">
-                      {place.secondary_text}
-                    </span>
+                    {place.secondary_text ? (
+                      <span className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                        {place.secondary_text}
+                      </span>
+                    ) : null}
                   </div>
 
                   <span className="flex-shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-                    Not on Gellog yet
+                    Not yet on Gellog
                   </span>
                 </Link>
               ))}

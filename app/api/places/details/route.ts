@@ -21,7 +21,10 @@ export async function GET(req: NextRequest) {
 
   const url = new URL("https://maps.googleapis.com/maps/api/place/details/json");
   url.searchParams.set("place_id", placeId);
-  url.searchParams.set("fields", "name,formatted_address,geometry,address_components");
+  url.searchParams.set(
+    "fields",
+    "name,place_id,formatted_address,geometry,address_components",
+  );
   url.searchParams.set("key", key);
 
   const res = await fetch(url.toString());

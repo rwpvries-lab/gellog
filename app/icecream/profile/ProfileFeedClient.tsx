@@ -51,6 +51,8 @@ export function ProfileFeedClient({
         weather_temp,
         weather_condition,
         visibility,
+        photo_visibility,
+        price_hidden_from_others,
         profiles (
           id,
           username,
@@ -112,6 +114,7 @@ export function ProfileFeedClient({
           key={log.id}
           log={log}
           currentUserId={currentUserId}
+          showOwnerActions
           onDelete={(id) => setLogs((prev) => prev.filter((l) => l.id !== id))}
         />
       ))}

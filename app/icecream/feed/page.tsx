@@ -12,7 +12,16 @@ export default async function IceCreamFeedPage() {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  const { data, error } = await supabase
+  const followingQuery =
+    user != null
+      ? supabase
+          .from("friendships")
+          .select("following_id")
+          .eq("follower_id", user.id)
+      : Promise.resolve({ data: null as { following_id: string }[] | null });
+
+  const [{ data, error }, { data: followingRows }] = await Promise.all([
+    supabase
     .from("ice_cream_logs")
     .select(
       `
@@ -31,6 +40,8 @@ export default async function IceCreamFeedPage() {
       weather_temp,
       weather_condition,
       visibility,
+      photo_visibility,
+      price_hidden_from_others,
       profiles (
         id,
         username,
@@ -50,9 +61,12 @@ export default async function IceCreamFeedPage() {
     )
     .eq("visibility", "public")
     .order("visited_at", { ascending: false })
-    .limit(PAGE_SIZE);
+    .limit(PAGE_SIZE),
+    followingQuery,
+  ]);
 
   const logs = (data ?? []) as unknown as IceCreamLog[];
+  const initialFollowingUserIds = (followingRows ?? []).map((r) => r.following_id);
 
   if (error) {
     // eslint-disable-next-line no-console
@@ -73,7 +87,12 @@ export default async function IceCreamFeedPage() {
           </div>
         </header>
 
-        <IceCreamFeedClient initialLogs={logs} pageSize={PAGE_SIZE} currentUserId={user?.id} />
+        <IceCreamFeedClient
+          initialLogs={logs}
+          pageSize={PAGE_SIZE}
+          currentUserId={user?.id}
+          initialFollowingUserIds={initialFollowingUserIds}
+        />
       </div>
 
       <Link

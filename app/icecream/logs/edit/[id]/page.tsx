@@ -39,6 +39,8 @@ export default async function EditIceCreamLogPage({
       weather_temp,
       weather_condition,
       visibility,
+      photo_visibility,
+      price_hidden_from_others,
       log_flavours (
         id,
         flavour_name,

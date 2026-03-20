@@ -1,19 +1,43 @@
 "use client";
 
+import { shouldShowIceCreamMapMarker } from "@/src/lib/looksLikeIceCreamSalon";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { SalonPin } from "./page";
 
-declare global { interface Window { google: any; } }
+declare global {
+  interface Window {
+    google: any;
+  }
+}
 
 const AMSTERDAM = { lat: 52.3676, lng: 4.9041 };
+const MAP_ICE_TEXT_QUERY = "ijssalon gelato ice cream";
 
-function makePinSvg(size: number, highlighted = false): string {
-  const color = highlighted ? "#f97316" : "#0d9488";
+type MapSelection =
+  | (SalonPin & { kind: "logged" })
+  | {
+      kind: "unlogged";
+      place_id: string;
+      name: string;
+      lat: number;
+      lng: number;
+      address: string;
+    };
+
+function makePinSvg(
+  size: number,
+  highlighted = false,
+  pinKind: "logged" | "unlogged" = "logged",
+): string {
+  let color: string;
+  if (highlighted) color = "#f97316";
+  else if (pinKind === "unlogged") color = "#9CA3AF";
+  else color = "#0d9488";
   const h = Math.round(size * 1.22);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${h}" viewBox="0 0 36 44">
     <path fill="${color}" d="M18 0C8.06 0 0 8.06 0 18c0 13.97 18 26 18 26S36 31.97 36 18 27.94 0 18 0z"/>
-    <text x="18" y="25" text-anchor="middle" font-size="18" font-family="Arial,sans-serif">🍦</text>
+       <text x="18" y="25" text-anchor="middle" font-size="18" font-family="Arial,sans-serif">🍦</text>
   </svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
@@ -22,10 +46,15 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
   const pinSizesRef = useRef<Map<string, number>>(new Map());
+  const unloggedIdsRef = useRef<Set<string>>(new Set());
+  const placedIdsRef = useRef<Set<string>>(new Set());
+  const salonsRef = useRef(salons);
+  salonsRef.current = salons;
+  const idleListenerRef = useRef<{ remove: () => void } | null>(null);
   const dragStartY = useRef<number | null>(null);
   const markerJustTapped = useRef(false);
 
-  const [selected, setSelected] = useState<SalonPin | null>(null);
+  const [selected, setSelected] = useState<MapSelection | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [showDirections, setShowDirections] = useState(false);
   const [mapReady, setMapReady] = useState(false);
@@ -35,7 +64,9 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, []);
 
   // One-time toast
@@ -55,8 +86,11 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
       const isSelected = selected?.place_id === place_id;
       const size = isSelected ? Math.round(base * 1.3) : base;
       const h = Math.round(size * 1.22);
+      const pinKind = unloggedIdsRef.current.has(place_id)
+        ? "unlogged"
+        : "logged";
       marker.setIcon({
-        url: makePinSvg(size, isSelected),
+        url: makePinSvg(size, isSelected, pinKind),
         scaledSize: new window.google.maps.Size(size, h),
         anchor: new window.google.maps.Point(size / 2, h),
       });
@@ -64,12 +98,32 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
     }
   }, [selected]);
 
-  // Init map
+  // Init map + Places (grey pins for salons not yet on Gellog)
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
 
+    function cleanupIdle() {
+      if (idleListenerRef.current && window.google?.maps?.event) {
+        window.google.maps.event.removeListener(idleListenerRef.current);
+        idleListenerRef.current = null;
+      }
+    }
+
+    function clearMarkers() {
+      for (const m of markersRef.current.values()) {
+        m.setMap(null);
+      }
+      markersRef.current.clear();
+      pinSizesRef.current.clear();
+      unloggedIdsRef.current.clear();
+      placedIdsRef.current.clear();
+    }
+
     function initMap(center: { lat: number; lng: number }) {
       if (!mapRef.current || !window.google?.maps) return;
+
+      cleanupIdle();
+      clearMarkers();
 
       const map = new window.google.maps.Map(mapRef.current, {
         center,
@@ -79,14 +133,75 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
         gestureHandling: "greedy",
       });
 
-      const counts = salons.map((s) => s.visit_count);
+      const service = new window.google.maps.places.PlacesService(map);
+      const PlacesStatus = window.google.maps.places.PlacesServiceStatus;
+
+      function handleResults(results: any[] | null, status: string) {
+        if (status !== PlacesStatus.OK && status !== PlacesStatus.ZERO_RESULTS) {
+          return;
+        }
+
+        const loggedIds = new Set(salonsRef.current.map((s) => s.place_id));
+
+        for (const place of results ?? []) {
+          if (!place.place_id) continue;
+          if (placedIdsRef.current.has(place.place_id)) continue;
+          if (loggedIds.has(place.place_id)) continue;
+          if (!shouldShowIceCreamMapMarker(place)) continue;
+          if (!place.geometry?.location) continue;
+
+          const pinSize = 26;
+          const pinH = Math.round(pinSize * 1.22);
+          pinSizesRef.current.set(place.place_id, pinSize);
+          unloggedIdsRef.current.add(place.place_id);
+
+          const marker = new window.google.maps.Marker({
+            map,
+            position: place.geometry.location,
+            icon: {
+              url: makePinSvg(pinSize, false, "unlogged"),
+              scaledSize: new window.google.maps.Size(pinSize, pinH),
+              anchor: new window.google.maps.Point(pinSize / 2, pinH),
+            },
+            title: place.name,
+          });
+
+          markersRef.current.set(place.place_id, marker);
+          placedIdsRef.current.add(place.place_id);
+
+          const address =
+            place.formatted_address ?? place.vicinity ?? "";
+
+          marker.addListener("click", () => {
+            markerJustTapped.current = true;
+            setTimeout(() => {
+              markerJustTapped.current = false;
+            }, 300);
+            setShowDirections(false);
+            setExpanded(false);
+            setSelected({
+              kind: "unlogged",
+              place_id: place.place_id!,
+              name: place.name ?? "Salon",
+              lat: place.geometry!.location!.lat(),
+              lng: place.geometry!.location!.lng(),
+              address,
+            });
+          });
+        }
+      }
+
+      const counts = salonsRef.current.map((s) => s.visit_count);
       const minCount = counts.length ? Math.min(...counts) : 1;
       const maxCount = counts.length ? Math.max(...counts) : 1;
 
-      for (const salon of salons) {
-        const t = maxCount > minCount
-          ? (salon.visit_count - minCount) / (maxCount - minCount)
-          : 0;
+      for (const salon of salonsRef.current) {
+        placedIdsRef.current.add(salon.place_id);
+
+        const t =
+          maxCount > minCount
+            ? (salon.visit_count - minCount) / (maxCount - minCount)
+            : 0;
         const pinSize = Math.round(32 + t * 16);
         const pinH = Math.round(pinSize * 1.22);
         pinSizesRef.current.set(salon.place_id, pinSize);
@@ -95,7 +210,7 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
           map,
           position: { lat: salon.lat, lng: salon.lng },
           icon: {
-            url: makePinSvg(pinSize),
+            url: makePinSvg(pinSize, false, "logged"),
             scaledSize: new window.google.maps.Size(pinSize, pinH),
             anchor: new window.google.maps.Point(pinSize / 2, pinH),
           },
@@ -106,10 +221,12 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
 
         marker.addListener("click", () => {
           markerJustTapped.current = true;
-          setTimeout(() => { markerJustTapped.current = false; }, 300);
+          setTimeout(() => {
+            markerJustTapped.current = false;
+          }, 300);
           setShowDirections(false);
           setExpanded(false);
-          setSelected(salon);
+          setSelected({ kind: "logged", ...salon });
         });
       }
 
@@ -121,33 +238,77 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
       });
 
       setMapReady(true);
+
+      service.textSearch(
+        {
+          query: MAP_ICE_TEXT_QUERY,
+          location: map.getCenter(),
+          radius: 3000,
+        },
+        (results: any[] | null, status: string) => {
+          handleResults(results, status);
+
+          if (idleListenerRef.current) {
+            window.google.maps.event.removeListener(idleListenerRef.current);
+            idleListenerRef.current = null;
+          }
+
+          idleListenerRef.current = map.addListener("idle", () => {
+            const bounds = map.getBounds();
+            if (!bounds) return;
+            service.textSearch(
+              {
+                query: MAP_ICE_TEXT_QUERY,
+                bounds,
+              },
+              handleResults,
+            );
+          });
+        },
+      );
     }
 
     function getUserLocationAndInit() {
-      if (!navigator.geolocation) { initMap(AMSTERDAM); return; }
+      if (!navigator.geolocation) {
+        initMap(AMSTERDAM);
+        return;
+      }
       navigator.geolocation.getCurrentPosition(
-        (pos) => initMap({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        (pos) =>
+          initMap({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
         () => initMap(AMSTERDAM),
       );
     }
 
-    if (window.google?.maps) { getUserLocationAndInit(); return; }
+    if (window.google?.maps) {
+      getUserLocationAndInit();
+    } else {
+      const existingScript = document.querySelector(
+        `script[src*="maps.googleapis.com/maps/api/js"]`,
+      );
+      if (existingScript) {
+        const interval = setInterval(() => {
+          if (window.google?.maps) {
+            clearInterval(interval);
+            getUserLocationAndInit();
+          }
+        }, 100);
+        return () => {
+          clearInterval(interval);
+          cleanupIdle();
+        };
+      }
 
-    const existingScript = document.querySelector(
-      `script[src*="maps.googleapis.com/maps/api/js"]`
-    );
-    if (existingScript) {
-      const interval = setInterval(() => {
-        if (window.google?.maps) { clearInterval(interval); getUserLocationAndInit(); }
-      }, 100);
-      return () => clearInterval(interval);
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
+      script.async = true;
+      script.onload = getUserLocationAndInit;
+      document.head.appendChild(script);
     }
 
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
-    script.async = true;
-    script.onload = getUserLocationAndInit;
-    document.head.appendChild(script);
+    return () => {
+      cleanupIdle();
+    };
   }, [salons]);
 
   function handleTouchStart(e: React.TouchEvent) {
@@ -160,8 +321,12 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
     if (delta > 40) {
       setExpanded(true);
     } else if (delta < -40) {
-      if (expanded) { setExpanded(false); setShowDirections(false); }
-      else { setSelected(null); }
+      if (expanded) {
+        setExpanded(false);
+        setShowDirections(false);
+      } else {
+        setSelected(null);
+      }
     }
   }
 
@@ -172,44 +337,36 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
     ? `maps://maps.apple.com/?daddr=${selected.lat},${selected.lng}`
     : "";
 
-  // How tall the bottom nav is (matches your pb-20 / h-20 nav)
   const NAV_HEIGHT = 80;
 
   return (
-    // FIX: use a portal-like pattern by rendering into document.body via a
-    // wrapper that sits outside the clipping overflow-hidden ancestor.
-    // The simplest fix without a portal library: make THIS root div
-    // position:fixed covering the full viewport, so it is never clipped.
     <div className="fixed inset-0" style={{ zIndex: 10 }}>
-      {/* Map canvas */}
       <div ref={mapRef} className="absolute inset-0 bg-zinc-100 dark:bg-zinc-900" />
 
-      {/* Loading spinner */}
       {!mapReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-zinc-900/80">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-400 border-t-transparent" />
         </div>
       )}
 
-      {/* One-finger toast */}
       {showToast && (
-        <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center" style={{ zIndex: 50 }}>
+        <div
+          className="pointer-events-none absolute inset-x-0 top-3 flex justify-center"
+          style={{ zIndex: 50 }}
+        >
           <div className="rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm">
             Use one finger to move the map
           </div>
         </div>
       )}
 
-      {/* Bottom sheet — absolutely positioned so it is never clipped */}
       {selected && (
         <div
           className="absolute inset-x-0 rounded-t-3xl bg-white shadow-2xl dark:bg-zinc-900"
-          // Sit just above the nav bar
           style={{ bottom: NAV_HEIGHT, zIndex: 40 }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Collapsed header — always visible */}
           <button
             type="button"
             className="w-full px-5 pb-3 pt-4 text-left"
@@ -221,10 +378,16 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
                 <p className="truncate text-base font-bold text-zinc-900 dark:text-zinc-50">
                   {selected.name}
                 </p>
-                <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
-                  ★ {selected.avg_rating.toFixed(1)} · {selected.visit_count}{" "}
-                  {selected.visit_count === 1 ? "visit" : "visits"}
-                </p>
+                {selected.kind === "logged" ? (
+                  <p className="mt-0.5 text-sm text-zinc-500 dark:text-zinc-400">
+                    ★ {selected.avg_rating.toFixed(1)} · {selected.visit_count}{" "}
+                    {selected.visit_count === 1 ? "visit" : "visits"}
+                  </p>
+                ) : (
+                  <p className="mt-0.5 truncate text-sm text-zinc-500 dark:text-zinc-400">
+                    {selected.address || "Ice cream spot"}
+                  </p>
+                )}
               </div>
               <span
                 className={`flex-shrink-0 text-lg text-zinc-400 transition-transform duration-200 ${
@@ -236,45 +399,71 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
             </div>
           </button>
 
-          {/* Expanded body */}
           <div
             className={`overflow-hidden transition-all duration-300 ease-in-out ${
               expanded ? "max-h-[60vh]" : "max-h-0"
             }`}
           >
             <div className="overflow-y-auto px-5 pb-6">
-              {selected.top_flavours.length > 0 && (
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {selected.top_flavours.map((f) => (
-                    <span
-                      key={f}
-                      className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600"
+              {selected.kind === "logged" ? (
+                <>
+                  {selected.top_flavours.length > 0 && (
+                    <div className="mb-4 flex flex-wrap gap-2">
+                      {selected.top_flavours.map((f) => (
+                        <span
+                          key={f}
+                          className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                        >
+                          {f}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <Link
+                      href={`/salon/${encodeURIComponent(selected.place_id)}`}
+                      className="flex-1 rounded-2xl bg-teal-500 px-4 py-3 text-center text-sm font-semibold text-white"
                     >
-                      {f}
-                    </span>
-                  ))}
-                </div>
+                      View salon page →
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setShowDirections((v) => !v)}
+                      className="flex-1 rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+                    >
+                      Get directions
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href={`/salon/${encodeURIComponent(selected.place_id)}`}
+                    className="mb-3 block w-full rounded-2xl bg-teal-500/15 px-4 py-3 text-center text-sm font-medium text-teal-800 transition hover:bg-teal-500/25 dark:bg-teal-500/20 dark:text-teal-200 dark:hover:bg-teal-500/30"
+                  >
+                    No logs here yet — visit salon page
+                  </Link>
+                  <Link
+                    href={`/salon/${encodeURIComponent(selected.place_id)}`}
+                    className="mb-3 block w-full rounded-2xl bg-teal-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-teal-600"
+                  >
+                    View salon page →
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setShowDirections((v) => !v)}
+                    className="w-full rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+                  >
+                    Get directions
+                  </button>
+                </>
               )}
-              <div className="flex gap-3">
-                <Link
-                  href={`/salon/${selected.place_id}`}
-                  className="flex-1 rounded-2xl bg-teal-500 px-4 py-3 text-center text-sm font-semibold text-white"
-                >
-                  View salon page →
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setShowDirections((v) => !v)}
-                  className="flex-1 rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700"
-                >
-                  Get directions
-                </button>
-              </div>
+
               {showDirections && (
                 <div className="mt-3 flex flex-col gap-2">
                   <a
                     href={appleUrl}
-                    className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100"
+                    className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 dark:bg-zinc-800/60 dark:text-zinc-100 dark:ring-zinc-700"
                   >
                     🗺️ Open in Apple Maps
                   </a>
@@ -282,7 +471,7 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
                     href={googleUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100"
+                    className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 dark:bg-zinc-800/60 dark:text-zinc-100 dark:ring-zinc-700"
                   >
                     🌐 Open in Google Maps
                   </a>
