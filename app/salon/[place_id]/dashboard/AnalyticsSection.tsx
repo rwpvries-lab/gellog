@@ -125,7 +125,7 @@ export function AnalyticsSection({
               />
               <YAxis hide allowDecimals={false} />
               <Tooltip
-                formatter={(v: unknown) => [v, "visits"]}
+                formatter={(v: unknown) => [String(v), "visits"]}
                 labelFormatter={formatWeek}
                 contentStyle={{
                   fontSize: 11,
@@ -214,7 +214,7 @@ export function AnalyticsSection({
                 />
                 <YAxis hide domain={[0, 5]} />
                 <Tooltip
-                  formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(2) : v, "avg rating"]}
+                  formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(2) : String(v), "avg rating"]}
                   labelFormatter={formatMonth}
                   contentStyle={{
                     fontSize: 11,
