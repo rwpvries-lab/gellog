@@ -2,9 +2,27 @@
 
 import { useEffect, useState } from "react";
 
+// ─── Token type ───────────────────────────────────────────────────────────────
+
+export type ThemeTokens = {
+  readonly primaryOrange: string;
+  readonly primaryTeal: string;
+  readonly orangeLightBg: string;
+  readonly tealLightBg: string;
+  readonly surface: string;
+  readonly surfaceAlt: string;
+  readonly surfaceTinted: string;
+  readonly borderDefault: string;
+  readonly borderStrong: string;
+  readonly textPrimary: string;
+  readonly textSecondary: string;
+  readonly textTertiary: string;
+  readonly destructive: string;
+};
+
 // ─── Light mode tokens ────────────────────────────────────────────────────────
 
-const light = {
+const light: ThemeTokens = {
   primaryOrange:  "#FD7706",
   primaryTeal:    "#3D948B",
 
@@ -23,11 +41,11 @@ const light = {
   textTertiary:   "#9CA3AF",
 
   destructive:    "#DC2626",
-} as const;
+};
 
 // ─── Dark mode tokens ─────────────────────────────────────────────────────────
 
-const dark = {
+const dark: ThemeTokens = {
   primaryOrange:  "#F97316",
   primaryTeal:    "#2A9D8F",
 
@@ -46,7 +64,7 @@ const dark = {
   textTertiary:   "#6B7280",
 
   destructive:    "#F87171",
-} as const;
+};
 
 // ─── Shared tokens ────────────────────────────────────────────────────────────
 
@@ -63,7 +81,8 @@ export const shadow = {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type Theme = typeof light;
+/** @deprecated Use ThemeTokens instead */
+export type Theme = ThemeTokens;
 
 // ─── useTheme hook ────────────────────────────────────────────────────────────
 
@@ -72,7 +91,7 @@ function getIsDark(): boolean {
   return document.documentElement.classList.contains("dark");
 }
 
-export function useTheme(): Theme {
+export function useTheme(): ThemeTokens {
   const [isDark, setIsDark] = useState(getIsDark);
 
   useEffect(() => {
