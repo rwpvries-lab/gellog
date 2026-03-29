@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { BottomNav } from "./components/BottomNav";
 import { SplashWrapper } from "./components/SplashWrapper";
+import { ThemeProvider } from "@/src/app/ThemeProvider";
 import { createClient } from "@/src/lib/supabase/server";
 
 const inter = Inter({
@@ -34,13 +35,22 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Blocking script: sets .dark/.light before React hydrates to prevent flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('gellog-theme');var d=s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.add(d?'dark':'light');}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <SplashWrapper />
-        <div className="min-h-screen pb-20">{children}</div>
-        {user ? <BottomNav /> : null}
+        <ThemeProvider>
+          <SplashWrapper />
+          <div className="min-h-screen pb-20">{children}</div>
+          {user ? <BottomNav /> : null}
+        </ThemeProvider>
       </body>
     </html>
   );
 }
-

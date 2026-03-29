@@ -4,6 +4,13 @@ import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPi
 import { createClient } from "@/src/lib/supabase/client";
 import { deletePushSubscription, subscribeToPush } from "@/src/lib/push";
 import { useState } from "react";
+import { useThemeToggle, type ThemeMode } from "@/src/app/ThemeProvider";
+
+const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
+  { value: "light", label: "Light" },
+  { value: "dark",  label: "Dark"  },
+  { value: "system", label: "System" },
+];
 
 export function SettingsClient({
   userId,
@@ -14,6 +21,8 @@ export function SettingsClient({
   initialDefaultVisibility: Visibility;
   initialNotificationsEnabled: boolean;
 }) {
+  const { mode: themeMode, setMode: setThemeMode } = useThemeToggle();
+
   const [defaultVisibility, setDefaultVisibility] = useState<Visibility>(
     initialDefaultVisibility,
   );
@@ -65,6 +74,33 @@ export function SettingsClient({
 
   return (
     <>
+      <div className="flex flex-col gap-4 rounded-3xl border border-orange-100 bg-white/90 p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/90">
+        <div className="flex flex-col gap-0.5">
+          <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+            Appearance
+          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+            Choose your preferred colour scheme.
+          </p>
+        </div>
+        <div className="flex rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800">
+          {THEME_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setThemeMode(value)}
+              className={`flex-1 rounded-xl py-1.5 text-xs font-medium transition ${
+                themeMode === value
+                  ? "bg-white shadow-sm text-zinc-900 dark:bg-zinc-700 dark:text-zinc-100"
+                  : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex flex-col gap-4 rounded-3xl border border-orange-100 bg-white/90 p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/90">
         <div className="flex flex-col gap-0.5">
           <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100">

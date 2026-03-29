@@ -1,8 +1,36 @@
 @import "tailwindcss";
 
+/* Switch Tailwind's dark: variant to class-based */
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  --color-surface:        #F9F9F9;
+  --color-surface-alt:    #F4F4F5;
+  --color-text-primary:   #111827;
+  --color-text-secondary: #6B7280;
+  --color-border:         #E5E7EB;
+  --color-orange:         #FD7706;
+  --color-teal:           #3D948B;
+  --color-orange-bg:      #FEF3E7;
+  --color-teal-bg:        #EEF7F6;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+
+  --color-surface:        #1C1C1E;
+  --color-surface-alt:    #2C2C2E;
+  --color-text-primary:   #F9F9F9;
+  --color-text-secondary: #AEAEB2;
+  --color-border:         #3A3A3C;
+  --color-orange:         #F97316;
+  --color-teal:           #2A9D8F;
+  --color-orange-bg:      #291A09;
+  --color-teal-bg:        #042F2E;
 }
 
 @theme inline {
@@ -10,13 +38,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: ui-monospace, monospace;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
