@@ -9,7 +9,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  type ValueType,
 } from "recharts";
 
 export type WeeklyVisit = { week: string; visits: number };
@@ -126,7 +125,7 @@ export function AnalyticsSection({
               />
               <YAxis hide allowDecimals={false} />
               <Tooltip
-                formatter={(v: ValueType) => [v, "visits"]}
+                formatter={(v: unknown) => [v, "visits"]}
                 labelFormatter={formatWeek}
                 contentStyle={{
                   fontSize: 11,
@@ -215,7 +214,7 @@ export function AnalyticsSection({
                 />
                 <YAxis hide domain={[0, 5]} />
                 <Tooltip
-                  formatter={(v: ValueType) => [typeof v === "number" ? v.toFixed(2) : v, "avg rating"]}
+                  formatter={(v: unknown) => [typeof v === "number" ? v.toFixed(2) : v, "avg rating"]}
                   labelFormatter={formatMonth}
                   contentStyle={{
                     fontSize: 11,
