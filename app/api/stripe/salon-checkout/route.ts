@@ -12,10 +12,33 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const priceId = process.env.STRIPE_PRICE_ID_ICECREAM_PLUS;
+  const { place_id, tier } = (await req.json()) as {
+    place_id: string;
+    tier: "basic" | "pro";
+  };
+
+  if (!place_id || !["basic", "pro"].includes(tier)) {
+    return NextResponse.json({ error: "invalid request" }, { status: 400 });
+  }
+
+  const { data: salon } = await supabase
+    .from("salon_profiles")
+    .select("id, owner_id")
+    .eq("place_id", place_id)
+    .maybeSingle();
+
+  if (!salon || salon.owner_id !== user.id) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
+  const priceId =
+    tier === "basic"
+      ? process.env.STRIPE_PRICE_ID_SALON_BASIC
+      : process.env.STRIPE_PRICE_ID_SALON_PRO;
+
   if (!priceId) {
     return NextResponse.json(
-      { error: "Stripe price is not configured (STRIPE_PRICE_ID_ICECREAM_PLUS)" },
+      { error: `Stripe price not configured for salon ${tier}` },
       { status: 500 },
     );
   }
@@ -28,17 +51,21 @@ export async function POST(req: NextRequest) {
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
     payment_method_types: ["card", "ideal", "bancontact"],
-    success_url: `${origin}/settings?upgrade=success`,
-    cancel_url: `${origin}/settings`,
+    success_url: `${origin}/salon/${place_id}/dashboard?upgrade=success`,
+    cancel_url: `${origin}/salon/${place_id}/dashboard`,
     client_reference_id: user.id,
     customer_email: user.email ?? undefined,
     metadata: {
       supabase_user_id: user.id,
+      salon_id: salon.id,
+      salon_tier: tier,
       ...(user.email ? { user_email: user.email } : {}),
     },
     subscription_data: {
       metadata: {
         supabase_user_id: user.id,
+        salon_id: salon.id,
+        salon_tier: tier,
       },
     },
   });

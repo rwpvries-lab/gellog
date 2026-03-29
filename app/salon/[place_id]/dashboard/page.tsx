@@ -16,6 +16,8 @@ type SalonProfile = {
   bio: string | null;
   phone: string | null;
   website: string | null;
+  salon_subscription_tier: "free" | "basic" | "pro" | null;
+  salon_subscription_expires_at: string | null;
 };
 
 type Stats = {
@@ -30,10 +32,11 @@ export default async function SalonDashboardPage({
   searchParams,
 }: {
   params: Promise<{ place_id: string }>;
-  searchParams: Promise<{ claimed?: string }>;
+  searchParams: Promise<{ claimed?: string; upgrade?: string }>;
 }) {
   const { place_id } = await params;
-  const { claimed } = await searchParams;
+  const { claimed, upgrade } = await searchParams;
+  const justUpgraded = upgrade === "success";
   const supabase = await createClient();
 
   const {
@@ -120,6 +123,7 @@ export default async function SalonDashboardPage({
       salonProfile={salonProfile}
       stats={stats}
       justClaimed={claimed === "1"}
+      justUpgraded={justUpgraded}
       initialFlavours={(salonFlavoursData ?? []) as Flavour[]}
       initialSuggestions={(suggestionsData ?? []) as Suggestion[]}
     />

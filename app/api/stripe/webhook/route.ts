@@ -32,6 +32,40 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as Stripe.Checkout.Session;
         if (session.mode !== "subscription") break;
 
+        // ── Salon subscription ──────────────────────────────────────────────
+        const salonId = session.metadata?.salon_id;
+        const salonTier = session.metadata?.salon_tier as "basic" | "pro" | undefined;
+        if (salonId && salonTier) {
+          const salonCustomerId =
+            typeof session.customer === "string"
+              ? session.customer
+              : session.customer?.id;
+          let salonExpiresAt: string | null = null;
+          const salonSubId =
+            typeof session.subscription === "string"
+              ? session.subscription
+              : session.subscription?.id;
+          if (salonSubId) {
+            const sub = await stripe.subscriptions.retrieve(salonSubId);
+            const periodEnd = sub.items.data[0]?.current_period_end;
+            if (periodEnd) salonExpiresAt = new Date(periodEnd * 1000).toISOString();
+          }
+          const { error: salonError } = await admin
+            .from("salon_profiles")
+            .update({
+              salon_subscription_tier: salonTier,
+              salon_stripe_customer_id: salonCustomerId ?? null,
+              salon_subscription_expires_at: salonExpiresAt,
+            })
+            .eq("id", salonId);
+          if (salonError) {
+            console.error("[stripe/webhook] salon_profiles update failed:", salonError);
+            return NextResponse.json({ error: "database error" }, { status: 500 });
+          }
+          break;
+        }
+
+        // ── User subscription ───────────────────────────────────────────────
         const userId =
           session.metadata?.supabase_user_id ?? session.client_reference_id;
         if (!userId) {
@@ -75,6 +109,25 @@ export async function POST(req: NextRequest) {
       }
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
+
+        // ── Salon subscription ──────────────────────────────────────────────
+        const salonIdDel = subscription.metadata?.salon_id;
+        if (salonIdDel) {
+          const { error } = await admin
+            .from("salon_profiles")
+            .update({
+              salon_subscription_tier: "free",
+              salon_subscription_expires_at: null,
+            })
+            .eq("id", salonIdDel);
+          if (error) {
+            console.error("[stripe/webhook] salon subscription deleted update failed:", error);
+            return NextResponse.json({ error: "database error" }, { status: 500 });
+          }
+          break;
+        }
+
+        // ── User subscription ───────────────────────────────────────────────
         const userId = subscription.metadata?.supabase_user_id;
         const customerId =
           typeof subscription.customer === "string"

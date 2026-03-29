@@ -4,7 +4,7 @@ import { createClient } from "@/src/lib/supabase/client";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FlavourBoard, type Flavour, type Suggestion } from "./FlavourBoard";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -29,6 +29,8 @@ type SalonProfile = {
   bio: string | null;
   phone: string | null;
   website: string | null;
+  salon_subscription_tier: "free" | "basic" | "pro" | null;
+  salon_subscription_expires_at: string | null;
 };
 
 type Stats = {
@@ -42,12 +44,60 @@ type Props = {
   salonProfile: SalonProfile;
   stats: Stats;
   justClaimed: boolean;
+  justUpgraded: boolean;
   initialFlavours: Flavour[];
   initialSuggestions: Suggestion[];
 };
 
-export function DashboardClient({ salonProfile, stats, justClaimed, initialFlavours, initialSuggestions }: Props) {
+function SalonUpgradeButton({
+  place_id,
+  tier,
+  label,
+  className,
+}: {
+  place_id: string;
+  tier: "basic" | "pro";
+  label: string;
+  className: string;
+}) {
+  const [loading, setLoading] = useState(false);
+
+  async function handleClick() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/stripe/salon-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ place_id, tier }),
+      });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (data.url) window.location.href = data.url;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={loading}
+      className={`flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white shadow-sm transition disabled:opacity-70 ${className}`}
+    >
+      {loading && (
+        <span
+          className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-white border-t-transparent"
+          aria-hidden
+        />
+      )}
+      {loading ? "Redirecting…" : label}
+    </button>
+  );
+}
+
+export function DashboardClient({ salonProfile, stats, justClaimed, justUpgraded, initialFlavours, initialSuggestions }: Props) {
   const router = useRouter();
+  const tier = salonProfile.salon_subscription_tier ?? "free";
   const [salonName, setSalonName] = useState(salonProfile.salon_name);
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(salonProfile.salon_name);
@@ -65,6 +115,13 @@ export function DashboardClient({ salonProfile, stats, justClaimed, initialFlavo
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [showClaimed, setShowClaimed] = useState(justClaimed);
+  const [showUpgraded, setShowUpgraded] = useState(justUpgraded);
+
+  useEffect(() => {
+    if (justUpgraded) {
+      router.replace(`/salon/${salonProfile.place_id}/dashboard`);
+    }
+  }, []);
 
   async function saveName() {
     const trimmed = nameInput.trim();
@@ -173,6 +230,27 @@ export function DashboardClient({ salonProfile, stats, justClaimed, initialFlavo
         </div>
       )}
 
+      {/* Success banner after upgrading */}
+      {showUpgraded && (
+        <div className="mb-5 flex items-start justify-between gap-3 rounded-2xl bg-teal-50 px-4 py-3 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:ring-teal-800">
+          <div>
+            <p className="text-sm font-semibold text-teal-800 dark:text-teal-300">
+              Subscription active!
+            </p>
+            <p className="mt-0.5 text-xs text-teal-700 dark:text-teal-400">
+              Your salon plan has been upgraded. Thank you!
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowUpgraded(false)}
+            className="mt-0.5 text-teal-500 hover:text-teal-700 dark:text-teal-400"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Header card */}
       <div className="mb-5 rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
         <div className="flex items-start gap-4">
@@ -249,6 +327,19 @@ export function DashboardClient({ salonProfile, stats, justClaimed, initialFlavo
                   Pending verification
                 </span>
               )}
+              {tier === "pro" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700 ring-1 ring-orange-100 dark:bg-orange-900/30 dark:text-orange-300 dark:ring-orange-800/60">
+                  Salon Pro — €29/mo
+                </span>
+              ) : tier === "basic" ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60">
+                  Salon Basic — €9/mo
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                  Free plan
+                </span>
+              )}
               <Link
                 href={`/salon/${salonProfile.place_id}`}
                 className="text-xs text-teal-700 hover:underline dark:text-teal-400"
@@ -301,6 +392,82 @@ export function DashboardClient({ salonProfile, stats, justClaimed, initialFlavo
           Let customers see your flavour cabinet inside the app. Your flavours
           above will appear as coloured tubs in a row. Launching Week 6.
         </p>
+      </div>
+
+      {/* Billing */}
+      <div className="mb-5 rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+        <h2 className="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+          Billing
+        </h2>
+
+        {/* Plan comparison table */}
+        <div className="mb-5 overflow-hidden rounded-2xl ring-1 ring-zinc-100 dark:ring-zinc-800">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="bg-zinc-50 dark:bg-zinc-800/60">
+                <th className="px-3 py-2 text-left font-semibold text-zinc-500 dark:text-zinc-400">
+                  Feature
+                </th>
+                <th className="px-3 py-2 text-center font-semibold text-teal-700 dark:text-teal-400">
+                  Basic
+                </th>
+                <th className="px-3 py-2 text-center font-semibold text-orange-600 dark:text-orange-400">
+                  Pro
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+              {(
+                [
+                  ["Claimed profile and flavour board", "Yes", "Yes"],
+                  ["Visit analytics", "Basic", "Full"],
+                  ["Loyalty stamp system", "No", "Yes"],
+                  ["Featured placement in discovery map", "No", "Yes"],
+                  ["Review responses", "No", "Yes"],
+                ] as const
+              ).map(([feature, basic, pro]) => (
+                <tr key={feature} className="bg-white dark:bg-zinc-900">
+                  <td className="px-3 py-2 text-zinc-600 dark:text-zinc-300">
+                    {feature}
+                  </td>
+                  <td className="px-3 py-2 text-center text-zinc-500 dark:text-zinc-400">
+                    {basic}
+                  </td>
+                  <td className="px-3 py-2 text-center text-zinc-500 dark:text-zinc-400">
+                    {pro}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Upgrade buttons */}
+        {tier !== "basic" && tier !== "pro" && (
+          <SalonUpgradeButton
+            place_id={salonProfile.place_id}
+            tier="basic"
+            label="Upgrade to Salon Basic — €9/mo"
+            className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600"
+          />
+        )}
+        {tier !== "pro" && (
+          <SalonUpgradeButton
+            place_id={salonProfile.place_id}
+            tier="pro"
+            label="Upgrade to Salon Pro — €29/mo"
+            className="mt-2 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500"
+          />
+        )}
+
+        {tier !== "free" && salonProfile.salon_subscription_expires_at && (
+          <p className="mt-3 text-center text-xs text-zinc-400 dark:text-zinc-500">
+            Renews{" "}
+            {new Date(
+              salonProfile.salon_subscription_expires_at,
+            ).toLocaleDateString("en-GB")}
+          </p>
+        )}
       </div>
 
       {/* Profile settings */}
