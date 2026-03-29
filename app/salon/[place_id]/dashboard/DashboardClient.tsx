@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FlavourBoard, type Flavour, type Suggestion } from "./FlavourBoard";
+import { AnalyticsSection, type MonthlyRating, type TopFlavour, type WeatherStat, type WeeklyVisit } from "./AnalyticsSection";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -47,6 +48,10 @@ type Props = {
   justUpgraded: boolean;
   initialFlavours: Flavour[];
   initialSuggestions: Suggestion[];
+  weeklyVisits: WeeklyVisit[];
+  topFlavours: TopFlavour[];
+  weatherStats: WeatherStat[];
+  monthlyRatings: MonthlyRating[];
 };
 
 function SalonUpgradeButton({
@@ -95,7 +100,7 @@ function SalonUpgradeButton({
   );
 }
 
-export function DashboardClient({ salonProfile, stats, justClaimed, justUpgraded, initialFlavours, initialSuggestions }: Props) {
+export function DashboardClient({ salonProfile, stats, justClaimed, justUpgraded, initialFlavours, initialSuggestions, weeklyVisits, topFlavours, weatherStats, monthlyRatings }: Props) {
   const router = useRouter();
   const tier = salonProfile.salon_subscription_tier ?? "free";
   const [salonName, setSalonName] = useState(salonProfile.salon_name);
@@ -370,6 +375,16 @@ export function DashboardClient({ salonProfile, stats, justClaimed, justUpgraded
           </div>
         ))}
       </div>
+
+      {/* Analytics */}
+      <AnalyticsSection
+        tier={tier}
+        placeId={salonProfile.place_id}
+        weeklyVisits={weeklyVisits}
+        topFlavours={topFlavours}
+        weatherStats={weatherStats}
+        monthlyRatings={monthlyRatings}
+      />
 
       {/* Flavour Board */}
       <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">

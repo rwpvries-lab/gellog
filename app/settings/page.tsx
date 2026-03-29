@@ -21,13 +21,18 @@ export default async function SettingsPage({
     redirect("/login?next=/settings");
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select(
-      "default_visibility, subscription_tier, subscription_expires_at",
-    )
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { data: pushSub }] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("default_visibility, subscription_tier, subscription_expires_at")
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("push_subscriptions")
+      .select("id")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ]);
 
   const defaultVisibility =
     (profile?.default_visibility as "public" | "friends" | "private") ??
@@ -104,6 +109,7 @@ export default async function SettingsPage({
         <SettingsClient
           userId={user.id}
           initialDefaultVisibility={defaultVisibility}
+          initialNotificationsEnabled={!!pushSub}
         />
       </div>
     </main>

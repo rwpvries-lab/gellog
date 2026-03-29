@@ -2,6 +2,7 @@ import { createClient } from "@/src/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardClient } from "./DashboardClient";
 import type { Flavour, Suggestion } from "./FlavourBoard";
+import type { MonthlyRating, TopFlavour, WeatherStat, WeeklyVisit } from "./AnalyticsSection";
 
 type SalonProfile = {
   id: string;
@@ -62,12 +63,22 @@ export default async function SalonDashboardPage({
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
+  const tier = salonProfile.salon_subscription_tier ?? "free";
+  const isBasicOrPro = tier === "basic" || tier === "pro";
+  const isPro = tier === "pro";
+
+  const twelveWeeksAgo = new Date(now.getTime() - 12 * 7 * 24 * 60 * 60 * 1000).toISOString();
+
   const [
     { data: logsData },
     { data: flavourData },
     { count: monthCount },
     { data: salonFlavoursData },
     { data: suggestionsData },
+    { data: weeklyVisitsRaw },
+    { data: topFlavoursRaw },
+    { data: weatherRaw },
+    { data: monthlyRatingsRaw },
   ] = await Promise.all([
     supabase
       .from("ice_cream_logs")
@@ -93,6 +104,22 @@ export default async function SalonDashboardPage({
       .eq("salon_id", salonProfile.id)
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
+    // Visits by week (all tiers)
+    isBasicOrPro
+      ? supabase.rpc("salon_visits_by_week", { p_place_id: place_id, p_since: twelveWeeksAgo })
+      : Promise.resolve({ data: [] }),
+    // Top flavours (all tiers)
+    isBasicOrPro
+      ? supabase.rpc("salon_top_flavours", { p_place_id: place_id })
+      : Promise.resolve({ data: [] }),
+    // Weather stats (basic+)
+    isBasicOrPro
+      ? supabase.rpc("salon_weather_stats", { p_place_id: place_id })
+      : Promise.resolve({ data: [] }),
+    // Monthly ratings (pro only)
+    isPro
+      ? supabase.rpc("salon_monthly_ratings", { p_place_id: place_id })
+      : Promise.resolve({ data: [] }),
   ]);
 
   const logs = logsData ?? [];
@@ -126,6 +153,10 @@ export default async function SalonDashboardPage({
       justUpgraded={justUpgraded}
       initialFlavours={(salonFlavoursData ?? []) as Flavour[]}
       initialSuggestions={(suggestionsData ?? []) as Suggestion[]}
+      weeklyVisits={(weeklyVisitsRaw ?? []) as WeeklyVisit[]}
+      topFlavours={(topFlavoursRaw ?? []) as TopFlavour[]}
+      weatherStats={(weatherRaw ?? []) as WeatherStat[]}
+      monthlyRatings={(monthlyRatingsRaw ?? []) as MonthlyRating[]}
     />
   );
 }
