@@ -1,6 +1,5 @@
 import { createClient } from "@/src/lib/supabase/server";
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
-import { FollowListSheet } from "@/app/components/FollowListSheet";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -152,18 +151,22 @@ export default async function UserProfilePage({
               ) : null}
 
               <div className="mt-1 flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                <FollowListSheet
-                  userId={profile.id}
-                  type="followers"
-                  count={followerCount ?? 0}
-                  currentUserId={user?.id}
-                />
-                <FollowListSheet
-                  userId={profile.id}
-                  type="following"
-                  count={followingCount ?? 0}
-                  currentUserId={user?.id}
-                />
+                <Link
+                  href={`/profile/${profile.username}/connections?tab=followers`}
+                  className="flex flex-col items-center gap-0.5 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  style={{ textDecoration: "none" }}
+                >
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-50">{followerCount ?? 0}</span>
+                  <span>Followers</span>
+                </Link>
+                <Link
+                  href={`/profile/${profile.username}/connections?tab=following`}
+                  className="flex flex-col items-center gap-0.5 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  style={{ textDecoration: "none" }}
+                >
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-50">{followingCount ?? 0}</span>
+                  <span>Following</span>
+                </Link>
               </div>
             </div>
           </div>

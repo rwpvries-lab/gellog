@@ -1,12 +1,13 @@
-import { LogoutButton } from "@/app/components/LogoutButton";
-import { FollowListSheet } from "@/app/components/FollowListSheet";
 import { createClient } from "@/src/lib/supabase/server";
 import type { IceCreamLog as FeedIceCreamLog } from "@/src/components/FeedCard";
-import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { IceCreamHeatmap, type HeatmapDayData } from "./IceCreamHeatmap";
 import { ProfileFeedClient } from "./ProfileFeedClient";
+import { ProfileHeader } from "./ProfileHeader";
+import { ActivitySection, type WeekData } from "./ActivitySection";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type Profile = {
   id: string;
@@ -61,6 +62,8 @@ type RankedFlavour = {
   avgPresentation: number | null;
 };
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function formatAverageRating(value: number | null): string {
   if (value == null || !Number.isFinite(value)) return "—";
   return `${value.toFixed(1)} ★`;
@@ -87,21 +90,20 @@ function deriveStats(logs: IceCreamLog[]) {
       const key = flavour.flavour_name.trim();
       if (!key) return;
 
-      const existing =
-        flavourMap.get(key) ?? {
-          name: key,
-          timesTried: 0,
-          ratingCount: 0,
-          ratingSum: 0,
-          textureSum: 0,
-          textureCount: 0,
-          originalitySum: 0,
-          originalityCount: 0,
-          intensitySum: 0,
-          intensityCount: 0,
-          presentationSum: 0,
-          presentationCount: 0,
-        };
+      const existing = flavourMap.get(key) ?? {
+        name: key,
+        timesTried: 0,
+        ratingCount: 0,
+        ratingSum: 0,
+        textureSum: 0,
+        textureCount: 0,
+        originalitySum: 0,
+        originalityCount: 0,
+        intensitySum: 0,
+        intensityCount: 0,
+        presentationSum: 0,
+        presentationCount: 0,
+      };
 
       existing.timesTried += 1;
       if (flavour.rating != null) {
@@ -131,28 +133,15 @@ function deriveStats(logs: IceCreamLog[]) {
 
   const allFlavourStats = Array.from(flavourMap.values()).map((stat) => ({
     ...stat,
-    averageRating: stat.ratingCount > 0 ? stat.ratingSum / stat.ratingCount : null,
+    averageRating:
+      stat.ratingCount > 0 ? stat.ratingSum / stat.ratingCount : null,
   }));
-
-  const favouriteFlavour =
-    allFlavourStats.length > 0
-      ? [...allFlavourStats].sort((a, b) => {
-          if (b.timesTried !== a.timesTried) {
-            return b.timesTried - a.timesTried;
-          }
-
-          const aAvg = a.averageRating ?? 0;
-          const bAvg = b.averageRating ?? 0;
-          return bAvg - aAvg;
-        })[0]
-      : null;
 
   const rankedFlavours: RankedFlavour[] = allFlavourStats
     .filter((stat) => stat.timesTried >= 2 && stat.averageRating != null)
     .sort((a, b) => {
       const aAvg = a.averageRating ?? 0;
       const bAvg = b.averageRating ?? 0;
-
       if (bAvg !== aAvg) return bAvg - aAvg;
       if (b.timesTried !== a.timesTried) return b.timesTried - a.timesTried;
       return a.name.localeCompare(b.name);
@@ -162,10 +151,20 @@ function deriveStats(logs: IceCreamLog[]) {
       name: stat.name,
       timesTried: stat.timesTried,
       averageRating: stat.averageRating ?? 0,
-      avgTexture: stat.textureCount > 0 ? stat.textureSum / stat.textureCount : null,
-      avgOriginality: stat.originalityCount > 0 ? stat.originalitySum / stat.originalityCount : null,
-      avgIntensity: stat.intensityCount > 0 ? stat.intensitySum / stat.intensityCount : null,
-      avgPresentation: stat.presentationCount > 0 ? stat.presentationSum / stat.presentationCount : null,
+      avgTexture:
+        stat.textureCount > 0 ? stat.textureSum / stat.textureCount : null,
+      avgOriginality:
+        stat.originalityCount > 0
+          ? stat.originalitySum / stat.originalityCount
+          : null,
+      avgIntensity:
+        stat.intensityCount > 0
+          ? stat.intensitySum / stat.intensityCount
+          : null,
+      avgPresentation:
+        stat.presentationCount > 0
+          ? stat.presentationSum / stat.presentationCount
+          : null,
     }));
 
   const salonMap = new Map<
@@ -176,19 +175,16 @@ function deriveStats(logs: IceCreamLog[]) {
   logs.forEach((log) => {
     const key = log.salon_name.trim();
     if (!key) return;
-
     const visited = new Date(log.visited_at);
     const existing = salonMap.get(key);
-
     if (!existing) {
       salonMap.set(key, { name: key, count: 1, lastVisited: visited });
     } else {
-      const lastVisited =
-        visited > existing.lastVisited ? visited : existing.lastVisited;
       salonMap.set(key, {
         name: existing.name,
         count: existing.count + 1,
-        lastVisited,
+        lastVisited:
+          visited > existing.lastVisited ? visited : existing.lastVisited,
       });
     }
   });
@@ -202,15 +198,11 @@ function deriveStats(logs: IceCreamLog[]) {
       : null;
 
   const weatherCounts = new Map<string, number>();
-
   logs.forEach((log) => {
     const condition = log.weather_condition?.trim();
     if (!condition) return;
-
-    const existing = weatherCounts.get(condition) ?? 0;
-    weatherCounts.set(condition, existing + 1);
+    weatherCounts.set(condition, (weatherCounts.get(condition) ?? 0) + 1);
   });
-
   const bestWeather =
     weatherCounts.size > 0
       ? Array.from(weatherCounts.entries()).sort((a, b) => b[1] - a[1])[0][0]
@@ -228,7 +220,6 @@ function deriveStats(logs: IceCreamLog[]) {
     totalAllTime,
     totalThisYear,
     averageOverallRating,
-    favouriteFlavour,
     rankedFlavours,
     mostVisitedSalon,
     bestWeather,
@@ -237,7 +228,115 @@ function deriveStats(logs: IceCreamLog[]) {
   };
 }
 
+function computeWeeklyData(logs: IceCreamLog[]): WeekData[] {
+  const now = new Date();
+  const result: WeekData[] = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const weekEnd = new Date(now);
+    weekEnd.setDate(now.getDate() - i * 7);
+    weekEnd.setHours(23, 59, 59, 999);
+
+    const weekStart = new Date(weekEnd);
+    weekStart.setDate(weekEnd.getDate() - 6);
+    weekStart.setHours(0, 0, 0, 0);
+
+    const weekLogs = logs.filter((log) => {
+      const d = new Date(log.visited_at);
+      return d >= weekStart && d <= weekEnd;
+    });
+
+    const flavoursSet = new Set<string>();
+    const salonsSet = new Set<string>();
+    weekLogs.forEach((log) => {
+      (log.log_flavours ?? []).forEach((f) => {
+        const name = f.flavour_name?.trim();
+        if (name) flavoursSet.add(name);
+      });
+      const salon = log.salon_name?.trim();
+      if (salon) salonsSet.add(salon);
+    });
+
+    result.push({
+      weekLabel: `${weekStart.toLocaleString("en-US", { month: "short" })} ${weekStart.getDate()}`,
+      logs: weekLogs.length,
+      flavours: flavoursSet.size,
+      salons: salonsSet.size,
+    });
+  }
+
+  return result;
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+function IconTrendingUp() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+      <polyline points="16 7 22 7 22 13" />
+    </svg>
+  );
+}
+
+function IconTrophy() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+  );
+}
+
+function IconGlobe() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+      <path d="M2 12h20" />
+    </svg>
+  );
+}
+
+function IconCalendar() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect width="18" height="18" x="3" y="4" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 const FEED_PAGE_SIZE = 10;
+
+const GRID_CARDS = [
+  { label: "Stats", href: "#stats-section", icon: <IconTrendingUp /> },
+  { label: "Flavour ranking", href: "#ranking-section", icon: <IconTrophy /> },
+  { label: "Passport", href: "/map", icon: <IconGlobe /> },
+  { label: "Calendar", href: "#calendar-section", icon: <IconCalendar /> },
+] as const;
+
+const SECTION_LABEL_STYLE: React.CSSProperties = {
+  color: "var(--color-text-secondary)",
+  fontSize: 13,
+  letterSpacing: "0.08em",
+  textTransform: "uppercase",
+  fontWeight: 600,
+};
+
+const CARD_STYLE: React.CSSProperties = {
+  background: "var(--color-surface)",
+  border: "1px solid var(--color-border)",
+  borderRadius: 20,
+};
 
 export default async function IceCreamProfilePage() {
   const supabase = await createClient();
@@ -264,62 +363,19 @@ export default async function IceCreamProfilePage() {
     supabase
       .from("ice_cream_logs")
       .select(
-        `
-          id,
-          salon_name,
-          overall_rating,
-          visited_at,
-          price_paid,
-          weather_condition,
-          log_flavours (
-            id,
-            flavour_name,
-            rating,
-            rating_texture,
-            rating_originality,
-            rating_intensity,
-            rating_presentation
-          )
-        `,
+        `id, salon_name, overall_rating, visited_at, price_paid, weather_condition,
+         log_flavours (id, flavour_name, rating, rating_texture, rating_originality, rating_intensity, rating_presentation)`,
       )
       .eq("user_id", user.id),
     supabase
       .from("ice_cream_logs")
       .select(
-        `
-          id,
-          user_id,
-          salon_name,
-          salon_lat,
-          salon_lng,
-          salon_place_id,
-          overall_rating,
-          notes,
-          photo_url,
-          visited_at,
-          vessel,
-          price_paid,
-          weather_temp,
-          weather_condition,
-          visibility,
-          photo_visibility,
-          price_hidden_from_others,
-          profiles (
-            id,
-            username,
-            avatar_url
-          ),
-          log_flavours (
-            id,
-            flavour_name,
-            rating,
-            tags,
-            rating_texture,
-            rating_originality,
-            rating_intensity,
-            rating_presentation
-          )
-        `,
+        `id, user_id, salon_name, salon_lat, salon_lng, salon_place_id,
+         overall_rating, notes, photo_url, visited_at, vessel, price_paid,
+         weather_temp, weather_condition, visibility, photo_visibility,
+         price_hidden_from_others,
+         profiles (id, username, avatar_url),
+         log_flavours (id, flavour_name, rating, tags, rating_texture, rating_originality, rating_intensity, rating_presentation)`,
       )
       .eq("user_id", user.id)
       .order("visited_at", { ascending: false })
@@ -347,13 +403,14 @@ export default async function IceCreamProfilePage() {
     totalAllTime,
     totalThisYear,
     averageOverallRating,
-    favouriteFlavour,
     rankedFlavours,
     mostVisitedSalon,
     bestWeather,
     totalSpent,
     averagePerVisit,
   } = deriveStats(logs);
+
+  const weeklyData = computeWeeklyData(logs);
 
   const heatmapData: Record<string, HeatmapDayData> = {};
   logs.forEach((log) => {
@@ -376,258 +433,208 @@ export default async function IceCreamProfilePage() {
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-teal-50 px-4 pb-24 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40">
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-6 pb-4">
-          <header className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="relative h-12 w-12 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500 text-white shadow-md ring-2 ring-white/80 dark:ring-zinc-900">
-                {profile?.avatar_url ? (
-                  <Image
-                    src={profile.avatar_url}
-                    alt={displayName}
-                    fill
-                    className="object-cover"
-                  />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center text-lg font-semibold">
-                    {initial}
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                  Personal stats
-                </span>
-                <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-                  {displayName}
-                </h1>
-                <div className="mt-0.5 flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-                  <FollowListSheet
-                    userId={user.id}
-                    type="followers"
-                    count={followerCount ?? 0}
-                    currentUserId={user.id}
-                  />
-                  <FollowListSheet
-                    userId={user.id}
-                    type="following"
-                    count={followingCount ?? 0}
-                    currentUserId={user.id}
-                  />
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2">
+    <main
+      style={{ background: "var(--color-surface-alt)", minHeight: "100vh" }}
+      className="px-4 pb-24 pt-6"
+    >
+      <div className="mx-auto flex w-full max-w-xl flex-col gap-5 pb-4">
+
+        {/* ── Section 1: Profile Header ── */}
+        <ProfileHeader
+          displayName={displayName}
+          initial={initial}
+          avatarUrl={profile?.avatar_url ?? null}
+          userId={user.id}
+          username={profile?.username ?? ""}
+          logCount={totalAllTime}
+          followerCount={followerCount ?? 0}
+          followingCount={followingCount ?? 0}
+        />
+
+        {/* ── Section 2: Activity Chart ── */}
+        <ActivitySection weeklyData={weeklyData} />
+
+        {/* ── Section 3: Quick Access Grid ── */}
+        <section>
+          <p style={SECTION_LABEL_STYLE} className="mb-3">
+            Your Gellog
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {GRID_CARDS.map(({ label, href, icon }) => (
               <Link
-                href="/settings"
-                className="inline-flex h-8 items-center justify-center rounded-full border border-zinc-300 bg-white px-3 text-xs font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-orange-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800 dark:focus:ring-offset-zinc-950"
+                key={label}
+                href={href}
+                style={{
+                  ...CARD_STYLE,
+                  padding: "20px 16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                }}
               >
-                ⚙️ Settings
+                <span style={{ color: "var(--color-orange)" }}>{icon}</span>
+                <span
+                  style={{
+                    color: "var(--color-text-primary)",
+                    fontSize: 14,
+                    fontWeight: 600,
+                  }}
+                >
+                  {label}
+                </span>
               </Link>
-              <LogoutButton />
-            </div>
-          </header>
+            ))}
+          </div>
+        </section>
 
-          <section aria-labelledby="profile-stats-heading">
-            <div className="flex items-baseline justify-between gap-2">
-              <h2
-                id="profile-stats-heading"
-                className="text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300"
-              >
-                Stats
-              </h2>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                All-time scoops
-              </span>
-            </div>
+        {/* ── Section 4: Recent Logs ── */}
+        <section>
+          <p style={SECTION_LABEL_STYLE} className="mb-3">
+            Recent Logs
+          </p>
+          <ProfileFeedClient
+            initialLogs={feedLogs}
+            pageSize={FEED_PAGE_SIZE}
+            currentUserId={user.id}
+          />
+        </section>
 
-            <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
-              <div className="min-w-[150px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Total scoops
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-                  {totalAllTime}
-                </p>
-              </div>
-
-              <div className="min-w-[150px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  This year
-                </p>
-                <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-                  {totalThisYear}
-                </p>
-              </div>
-
-              <div className="min-w-[170px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Favourite flavour
-                </p>
-                <p className="mt-1 truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                  {favouriteFlavour ? favouriteFlavour.name : "Not enough data"}
-                </p>
-                {favouriteFlavour ? (
-                  <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
-                    {favouriteFlavour.timesTried} scoop
-                    {favouriteFlavour.timesTried === 1 ? "" : "s"} ·{" "}
-                    {formatAverageRating(
-                      favouriteFlavour.averageRating ?? null,
-                    )}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="min-w-[170px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Most visited salon
-                </p>
-                <p className="mt-1 truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                  {mostVisitedSalon ? mostVisitedSalon.name : "Not yet"}
-                </p>
-                {mostVisitedSalon ? (
-                  <p className="mt-0.5 text-[11px] text-zinc-500 dark:text-zinc-400">
-                    {mostVisitedSalon.count} visit
-                    {mostVisitedSalon.count === 1 ? "" : "s"}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="min-w-[150px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Average rating
-                </p>
-                <p className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-                  {formatAverageRating(averageOverallRating)}
-                </p>
-              </div>
-
-              <div className="min-w-[180px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  Best weather
-                </p>
-                <p className="mt-1 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                  {bestWeather ?? "Not enough data"}
-                </p>
-              </div>
-
-              {totalSpent != null ? (
-                <div className="min-w-[150px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Total spent
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-                    €{totalSpent.toFixed(2)}
-                  </p>
-                </div>
-              ) : null}
-
-              {averagePerVisit != null ? (
-                <div className="min-w-[160px] snap-start rounded-2xl bg-white/90 p-3 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                    Average per visit
-                  </p>
-                  <p className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">
-                    €{averagePerVisit.toFixed(2)}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          </section>
-
-          <section aria-labelledby="activity-heatmap-heading">
-            <div className="mb-2 flex items-baseline justify-between gap-2">
-              <h2
-                id="activity-heatmap-heading"
-                className="text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300"
-              >
-                Activity
-              </h2>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                Last 12 months
-              </span>
-            </div>
-            <div className="rounded-3xl bg-white/90 p-4 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-              <IceCreamHeatmap data={heatmapData} />
-            </div>
-          </section>
-
-          <section aria-labelledby="flavour-ranking-heading">
-            <div className="mb-2 flex items-baseline justify-between gap-2">
-              <h2
-                id="flavour-ranking-heading"
-                className="text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300"
-              >
-                All-time flavour ranking
-              </h2>
-              <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                Min. 2 scoops to rank
-              </span>
-            </div>
-            <div className="rounded-3xl bg-white/90 p-4 shadow-sm ring-1 ring-orange-100 dark:bg-zinc-900/90 dark:ring-zinc-800">
-              {rankedFlavours.length === 0 ? (
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                  Keep logging – flavours appear here once you have tried them
-                  at least twice.
-                </p>
-              ) : (
-                <ul className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {rankedFlavours.map((flavour) => (
-                    <li
-                      key={flavour.name}
-                      className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+        {/* ── Stats details (linked from grid card) ── */}
+        <section id="stats-section" aria-labelledby="stats-heading">
+          <p id="stats-heading" style={SECTION_LABEL_STYLE} className="mb-3">
+            Stats
+          </p>
+          <div style={CARD_STYLE} className="p-4">
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: "Total scoops", value: String(totalAllTime) },
+                { label: "This year", value: String(totalThisYear) },
+                {
+                  label: "Average rating",
+                  value: formatAverageRating(averageOverallRating),
+                },
+                {
+                  label: "Most visited salon",
+                  value: mostVisitedSalon
+                    ? `${mostVisitedSalon.name} (${mostVisitedSalon.count}×)`
+                    : "—",
+                },
+                { label: "Best weather", value: bestWeather ?? "—" },
+                totalSpent != null
+                  ? {
+                      label: "Total spent",
+                      value: `€${totalSpent.toFixed(2)}`,
+                    }
+                  : null,
+                averagePerVisit != null
+                  ? {
+                      label: "Avg per visit",
+                      value: `€${averagePerVisit.toFixed(2)}`,
+                    }
+                  : null,
+              ]
+                .filter(Boolean)
+                .map((stat) => (
+                  <div key={stat!.label} className="flex flex-col gap-0.5">
+                    <p
+                      style={{
+                        color: "var(--color-text-secondary)",
+                        fontSize: 12,
+                      }}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-teal-500 text-xs font-semibold text-white shadow-sm">
-                          #{flavour.rank}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                            {flavour.name}
-                          </span>
-                          <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                            {flavour.timesTried} scoop
-                            {flavour.timesTried === 1 ? "" : "s"}
-                          </span>
-                          {(flavour.avgTexture != null || flavour.avgOriginality != null || flavour.avgIntensity != null || flavour.avgPresentation != null) ? (
-                            <span className="mt-0.5 text-[11px] text-zinc-400 dark:text-zinc-500">
-                              {[
-                                flavour.avgTexture != null && `Textuur: ${flavour.avgTexture.toFixed(1)}`,
-                                flavour.avgOriginality != null && `Originaliteit: ${flavour.avgOriginality.toFixed(1)}`,
-                                flavour.avgIntensity != null && `Intensiteit: ${flavour.avgIntensity.toFixed(1)}`,
-                                flavour.avgPresentation != null && `Presentatie: ${flavour.avgPresentation.toFixed(1)}`,
-                              ].filter(Boolean).join(" · ")}
-                            </span>
-                          ) : null}
-                        </div>
-                      </div>
-                      <span className="text-sm font-semibold text-orange-500 dark:text-orange-300">
-                        {flavour.averageRating.toFixed(1)} ★
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                      {stat!.label}
+                    </p>
+                    <p
+                      style={{
+                        color: "var(--color-text-primary)",
+                        fontSize: 16,
+                        fontWeight: 600,
+                      }}
+                      className="truncate"
+                    >
+                      {stat!.value}
+                    </p>
+                  </div>
+                ))}
             </div>
-          </section>
+          </div>
+        </section>
 
-          <section aria-labelledby="your-logs-heading">
-            <div className="mb-2 flex items-baseline justify-between gap-2">
-              <h2
-                id="your-logs-heading"
-                className="text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300"
+        {/* ── Flavour ranking (linked from grid card) ── */}
+        <section id="ranking-section" aria-labelledby="ranking-heading">
+          <p id="ranking-heading" style={SECTION_LABEL_STYLE} className="mb-3">
+            Flavour Ranking
+          </p>
+          <div style={CARD_STYLE} className="p-4">
+            {rankedFlavours.length === 0 ? (
+              <p
+                style={{ color: "var(--color-text-secondary)", fontSize: 14 }}
               >
-                Your logs
-              </h2>
-            </div>
-            <ProfileFeedClient
-              initialLogs={feedLogs}
-              pageSize={FEED_PAGE_SIZE}
-              currentUserId={user.id}
-            />
-          </section>
-        </div>
-      </main>
+                Keep logging — flavours appear here once you've tried them at
+                least twice.
+              </p>
+            ) : (
+              <ul className="flex flex-col divide-y" style={{ borderColor: "var(--color-border)" }}>
+                {rankedFlavours.map((flavour) => (
+                  <li
+                    key={flavour.name}
+                    className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
+                        style={{ background: "var(--color-orange)" }}
+                      >
+                        #{flavour.rank}
+                      </div>
+                      <div className="flex flex-col">
+                        <span
+                          style={{
+                            color: "var(--color-text-primary)",
+                            fontSize: 14,
+                            fontWeight: 500,
+                          }}
+                        >
+                          {flavour.name}
+                        </span>
+                        <span
+                          style={{
+                            color: "var(--color-text-secondary)",
+                            fontSize: 12,
+                          }}
+                        >
+                          {flavour.timesTried} scoop
+                          {flavour.timesTried === 1 ? "" : "s"}
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      style={{
+                        color: "var(--color-orange)",
+                        fontSize: 14,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {flavour.averageRating.toFixed(1)} ★
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+
+        {/* ── Activity heatmap / Calendar (linked from grid card) ── */}
+        <section id="calendar-section" aria-labelledby="calendar-heading">
+          <p id="calendar-heading" style={SECTION_LABEL_STYLE} className="mb-3">
+            Calendar
+          </p>
+          <div style={CARD_STYLE} className="p-4">
+            <IceCreamHeatmap data={heatmapData} />
+          </div>
+        </section>
+
+      </div>
+    </main>
   );
 }
-
