@@ -2,6 +2,7 @@
 
 import { RatingStarsDisplay } from "@/app/components/RatingStars";
 import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
+import { Toast, useToast, copyToClipboard } from "@/src/components/Toast";
 import { createClient } from "@/src/lib/supabase/client";
 import { formatVisitDate } from "@/src/lib/utils";
 import Image from "next/image";
@@ -50,6 +51,8 @@ export type IceCreamLog = {
   price_hidden_from_others?: boolean;
   profiles: LogProfile | null;
   log_flavours: LogFlavour[];
+  like_count?: number;
+  user_has_liked?: boolean;
 };
 
 function getPhotoUrl(path: string | null): string | null {
@@ -216,7 +219,53 @@ export function FeedCard({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const [likeCount, setLikeCount] = useState(log.like_count ?? 0);
+  const [liked, setLiked] = useState(log.user_has_liked ?? false);
+  const [likeLoading, setLikeLoading] = useState(false);
+
+  const { toast, showToast, dismissToast } = useToast();
+
   const isOwnLog = currentUserId != null && log.user_id === currentUserId;
+
+  async function handleLike(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!currentUserId || likeLoading) return;
+    setLikeLoading(true);
+    const supabase = createClient();
+    if (liked) {
+      await supabase
+        .from("log_likes")
+        .delete()
+        .eq("log_id", log.id)
+        .eq("user_id", currentUserId);
+      setLiked(false);
+      setLikeCount((c) => Math.max(0, c - 1));
+    } else {
+      await supabase
+        .from("log_likes")
+        .insert({ log_id: log.id, user_id: currentUserId });
+      setLiked(true);
+      setLikeCount((c) => c + 1);
+    }
+    setLikeLoading(false);
+  }
+
+  async function handleShare(e: React.MouseEvent) {
+    e.stopPropagation();
+    const url = `https://gellog.app/log/${log.id}`;
+    const title = `${log.profiles?.username ?? "Someone"} at ${log.salon_name} on Gellog`;
+    const text = `Check out this gelato log on Gellog!`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+      } else {
+        copyToClipboard(url);
+        showToast("Link copied to clipboard!");
+      }
+    } catch {
+      // user cancelled share — do nothing
+    }
+  }
 
   async function handleDelete() {
     setDeleting(true);
@@ -591,6 +640,66 @@ export function FeedCard({
           </div>
         </div>
 
+        {/* ── Action row: like · comment count · [spacer] · share ── */}
+        <div
+          className="flex items-center gap-3 border-t border-zinc-100 px-3 py-2 dark:border-zinc-800"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Like */}
+          <button
+            type="button"
+            onClick={(e) => void handleLike(e)}
+            disabled={!currentUserId || likeLoading}
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition hover:bg-zinc-50 disabled:cursor-default dark:hover:bg-zinc-800"
+            style={{ color: liked ? "var(--color-orange, #F97316)" : "var(--color-text-secondary)" }}
+            aria-label={liked ? "Unlike" : "Like"}
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill={liked ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            {likeCount > 0 && <span>{likeCount}</span>}
+          </button>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Share */}
+          <button
+            type="button"
+            onClick={(e) => void handleShare(e)}
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            style={{ color: "var(--color-text-secondary)" }}
+            aria-label="Share"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+              <polyline points="16 6 12 2 8 6" />
+              <line x1="12" y1="2" x2="12" y2="15" />
+            </svg>
+            Share
+          </button>
+        </div>
+
         {/* ── Toggle label ── */}
         <div
           className="flex items-center justify-center gap-1 py-2 text-[10px] font-medium text-zinc-400 dark:text-zinc-500"
@@ -609,6 +718,10 @@ export function FeedCard({
           )}
         </div>
       </article>
+
+      {toast && (
+        <Toast key={toast.id} message={toast.message} onDismiss={dismissToast} />
+      )}
 
       {showDirections && log.salon_lat != null && log.salon_lng != null ? (
         <DirectionsSheet log={log} onClose={() => setShowDirections(false)} />

@@ -65,8 +65,39 @@ export default async function IceCreamFeedPage() {
     followingQuery,
   ]);
 
-  const logs = (data ?? []) as unknown as IceCreamLog[];
+  const rawLogs = (data ?? []) as unknown as IceCreamLog[];
   const initialFollowingUserIds = (followingRows ?? []).map((r) => r.following_id);
+
+  // Fetch like counts + user's own likes for the fetched log ids
+  const logIds = rawLogs.map((l) => l.id);
+  let likeCounts: Record<string, number> = {};
+  let likedIds = new Set<string>();
+
+  if (logIds.length > 0) {
+    const [{ data: likesData }, { data: userLikesData }] = await Promise.all([
+      supabase
+        .from("log_likes")
+        .select("log_id")
+        .in("log_id", logIds),
+      user
+        ? supabase
+            .from("log_likes")
+            .select("log_id")
+            .in("log_id", logIds)
+            .eq("user_id", user.id)
+        : Promise.resolve({ data: null }),
+    ]);
+    for (const row of likesData ?? []) {
+      likeCounts[row.log_id] = (likeCounts[row.log_id] ?? 0) + 1;
+    }
+    likedIds = new Set((userLikesData ?? []).map((r) => r.log_id));
+  }
+
+  const logs: IceCreamLog[] = rawLogs.map((l) => ({
+    ...l,
+    like_count: likeCounts[l.id] ?? 0,
+    user_has_liked: likedIds.has(l.id),
+  }));
 
   if (error) {
     // eslint-disable-next-line no-console

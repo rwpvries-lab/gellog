@@ -115,6 +115,32 @@ export function IceCreamFeedClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, loading, tab, sentinelRef.current]);
 
+  async function enrichWithLikes(rawLogs: IceCreamLog[]): Promise<IceCreamLog[]> {
+    if (rawLogs.length === 0) return rawLogs;
+    const supabase = createClient();
+    const ids = rawLogs.map((l) => l.id);
+    const [{ data: likesData }, { data: userLikesData }] = await Promise.all([
+      supabase.from("log_likes").select("log_id").in("log_id", ids),
+      currentUserId
+        ? supabase
+            .from("log_likes")
+            .select("log_id")
+            .in("log_id", ids)
+            .eq("user_id", currentUserId)
+        : Promise.resolve({ data: null }),
+    ]);
+    const counts: Record<string, number> = {};
+    for (const row of likesData ?? []) {
+      counts[row.log_id] = (counts[row.log_id] ?? 0) + 1;
+    }
+    const liked = new Set((userLikesData ?? []).map((r: { log_id: string }) => r.log_id));
+    return rawLogs.map((l) => ({
+      ...l,
+      like_count: counts[l.id] ?? 0,
+      user_has_liked: liked.has(l.id),
+    }));
+  }
+
   async function fetchMore(): Promise<void> {
     if (loading || !hasMore) return;
 
@@ -152,7 +178,8 @@ export function IceCreamFeedClient({
       return;
     }
 
-    const newLogs = (data ?? []) as unknown as IceCreamLog[];
+    const raw = (data ?? []) as unknown as IceCreamLog[];
+    const newLogs = await enrichWithLikes(raw);
 
     setLogs((prev) => [...prev, ...newLogs]);
     setHasMore(newLogs.length === pageSize);
@@ -210,7 +237,8 @@ export function IceCreamFeedClient({
       return;
     }
 
-    const newLogs = (data ?? []) as unknown as IceCreamLog[];
+    const raw = (data ?? []) as unknown as IceCreamLog[];
+    const newLogs = await enrichWithLikes(raw);
     setLogs(newLogs);
     setPage(1);
     setHasMore(newLogs.length === pageSize);

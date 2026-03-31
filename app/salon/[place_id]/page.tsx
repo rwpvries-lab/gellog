@@ -1,5 +1,6 @@
 import { createClient } from "@/src/lib/supabase/server";
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
+import { SalonShareButton } from "./SalonShareButton";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -280,9 +281,16 @@ export default async function SalonPage({
           </div>
         )}
 
-        <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
-          {displayName}
-        </h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
+            {displayName}
+          </h1>
+          <SalonShareButton
+            salonName={displayName}
+            placeId={place_id}
+            visitCount={totalVisits}
+          />
+        </div>
 
         {isClaimed && salonProfile?.bio && (
           <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
