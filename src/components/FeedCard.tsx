@@ -53,6 +53,7 @@ export type IceCreamLog = {
   log_flavours: LogFlavour[];
   like_count?: number;
   user_has_liked?: boolean;
+  comment_count?: number;
 };
 
 function getPhotoUrl(path: string | null): string | null {
@@ -204,6 +205,8 @@ type FeedCardProps = {
   /** Edit/delete controls only when true (e.g. your profile); hidden in the main feed. */
   showOwnerActions?: boolean;
   onDelete?: (id: string) => void;
+  /** When true: always expanded, non-collapsible (used on the log detail page). */
+  isDetailPage?: boolean;
 };
 
 export function FeedCard({
@@ -212,9 +215,10 @@ export function FeedCard({
   viewerFollowsAuthor = false,
   showOwnerActions = false,
   onDelete,
+  isDetailPage = false,
 }: FeedCardProps) {
   const router = useRouter();
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(isDetailPage);
   const [showDirections, setShowDirections] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -318,8 +322,8 @@ export function FeedCard({
     <>
       <article
         className={`overflow-hidden rounded-3xl bg-white shadow-sm backdrop-blur-sm dark:bg-zinc-900 ${ratingBorderClass} ${isOwnLog ? "ring-1 ring-orange-200 dark:ring-orange-900/50" : "ring-1 ring-zinc-100 dark:ring-zinc-800"}`}
-        onClick={() => setExpanded((e) => !e)}
-        style={{ cursor: "pointer" }}
+        onClick={() => { if (!isDetailPage) setExpanded((e) => !e); }}
+        style={{ cursor: isDetailPage ? "default" : "pointer" }}
       >
         {/* ── COLLAPSED: always visible ── */}
         <div className="p-3">
@@ -670,6 +674,30 @@ export function FeedCard({
             {likeCount > 0 && <span>{likeCount}</span>}
           </button>
 
+          {/* Comments */}
+          <Link
+            href={isDetailPage ? "#comments" : `/log/${log.id}#comments`}
+            onClick={(e) => e.stopPropagation()}
+            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            style={{ color: "var(--color-text-secondary)" }}
+            aria-label="Comments"
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>
+            {(log.comment_count ?? 0) > 0 && <span>{log.comment_count}</span>}
+          </Link>
+
           {/* Spacer */}
           <div className="flex-1" />
 
@@ -701,22 +729,24 @@ export function FeedCard({
         </div>
 
         {/* ── Toggle label ── */}
-        <div
-          className="flex items-center justify-center gap-1 py-2 text-[10px] font-medium text-zinc-400 dark:text-zinc-500"
-          aria-hidden="true"
-        >
-          {expanded ? (
-            <>
-              <span>▲</span>
-              <span>less</span>
-            </>
-          ) : (
-            <>
-              <span>▼</span>
-              <span>more</span>
-            </>
-          )}
-        </div>
+        {!isDetailPage && (
+          <div
+            className="flex items-center justify-center gap-1 py-2 text-[10px] font-medium text-zinc-400 dark:text-zinc-500"
+            aria-hidden="true"
+          >
+            {expanded ? (
+              <>
+                <span>▲</span>
+                <span>less</span>
+              </>
+            ) : (
+              <>
+                <span>▼</span>
+                <span>more</span>
+              </>
+            )}
+          </div>
+        )}
       </article>
 
       {toast && (

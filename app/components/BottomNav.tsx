@@ -34,7 +34,7 @@ const navItems: NavItem[] = [
     href: "/log",
     label: "Log",
     icon: "GellogLog",
-    matchPrefixes: ["/log", "/icecream/logs/new"],
+    matchPrefixes: ["/icecream/logs"],
   },
   {
     href: "/profile",

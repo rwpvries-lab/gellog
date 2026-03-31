@@ -39,6 +39,7 @@ export default async function IceCreamFeedPage() {
       price_paid,
       weather_temp,
       weather_condition,
+      weather_uv_index,
       visibility,
       photo_visibility,
       price_hidden_from_others,
@@ -72,9 +73,10 @@ export default async function IceCreamFeedPage() {
   const logIds = rawLogs.map((l) => l.id);
   let likeCounts: Record<string, number> = {};
   let likedIds = new Set<string>();
+  let commentCounts: Record<string, number> = {};
 
   if (logIds.length > 0) {
-    const [{ data: likesData }, { data: userLikesData }] = await Promise.all([
+    const [{ data: likesData }, { data: userLikesData }, { data: commentsData }] = await Promise.all([
       supabase
         .from("log_likes")
         .select("log_id")
@@ -86,17 +88,25 @@ export default async function IceCreamFeedPage() {
             .in("log_id", logIds)
             .eq("user_id", user.id)
         : Promise.resolve({ data: null }),
+      supabase
+        .from("log_comments")
+        .select("log_id")
+        .in("log_id", logIds),
     ]);
     for (const row of likesData ?? []) {
       likeCounts[row.log_id] = (likeCounts[row.log_id] ?? 0) + 1;
     }
     likedIds = new Set((userLikesData ?? []).map((r) => r.log_id));
+    for (const row of commentsData ?? []) {
+      commentCounts[row.log_id] = (commentCounts[row.log_id] ?? 0) + 1;
+    }
   }
 
   const logs: IceCreamLog[] = rawLogs.map((l) => ({
     ...l,
     like_count: likeCounts[l.id] ?? 0,
     user_has_liked: likedIds.has(l.id),
+    comment_count: commentCounts[l.id] ?? 0,
   }));
 
   if (error) {
