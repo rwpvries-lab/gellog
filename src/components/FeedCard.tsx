@@ -1,6 +1,7 @@
 'use client';
 
 import { RatingStarsDisplay } from "@/app/components/RatingStars";
+import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
 import { createClient } from "@/src/lib/supabase/client";
 import { formatVisitDate } from "@/src/lib/utils";
 import Image from "next/image";
@@ -385,10 +386,17 @@ export function FeedCard({
               ) : (
                 log.salon_name
               )}
-              {log.vessel === "cone" ? (
-                <span className="ml-1.5 text-sm font-normal">🍦</span>
-              ) : log.vessel === "cup" ? (
-                <span className="ml-1.5 text-sm font-normal">🍧</span>
+              {log.vessel ? (
+                <span className="ml-1.5 inline-flex align-middle">
+                  <VesselIllustration
+                    vessel={log.vessel}
+                    flavours={log.log_flavours.slice(0, 3).map((f, i) => ({
+                      name: f.flavour_name,
+                      colorHex: getFlavourColor(f.flavour_name, i),
+                    }))}
+                    size="small"
+                  />
+                </span>
               ) : null}
             </h2>
             <div className="flex shrink-0 flex-col items-end gap-0.5">

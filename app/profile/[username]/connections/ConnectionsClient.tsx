@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/client";
+import { Icon } from "@/src/components/icons";
 
 export type PersonProfile = {
   id: string;
@@ -318,12 +319,11 @@ export function ConnectionsClient({
               background: "var(--color-surface)",
               border: "1px solid var(--color-border)",
               color: "var(--color-text-secondary)",
-              fontSize: 18,
               cursor: "pointer",
             }}
             aria-label="Back"
           >
-            ‹
+            <Icon name="GellogBack" size={18} strokeWidth={2} />
           </button>
           <h1
             style={{
@@ -374,15 +374,7 @@ export function ConnectionsClient({
 
         {/* Search bar */}
         <div style={{ position: "relative" }}>
-          <svg
-            width="15"
-            height="15"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <span
             style={{
               position: "absolute",
               left: 12,
@@ -390,12 +382,11 @@ export function ConnectionsClient({
               transform: "translateY(-50%)",
               color: "var(--color-text-tertiary)",
               pointerEvents: "none",
+              display: "flex",
             }}
-            aria-hidden="true"
           >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+            <Icon name="GellogSearch" size={15} strokeWidth={2} />
+          </span>
           <input
             type="search"
             placeholder="Search"

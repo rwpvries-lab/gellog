@@ -11,6 +11,7 @@ import {
   type PhotoVisibility,
 } from "@/src/components/PhotoVisibilityPicker";
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
+import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
 import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -1069,28 +1070,37 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
           <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
             Vessel
           </span>
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             {(
               [
-                { value: "cone", emoji: "🍦", label: "Hoorntje" },
-                { value: "cup", emoji: "🍧", label: "Bakje" },
+                { value: "cone", label: "Hoorntje" },
+                { value: "cup", label: "Bakje" },
               ] as const
-            ).map(({ value, emoji, label }) => {
-              const selected = vessel === value;
+            ).map(({ value, label }) => {
+              const isSelected = vessel === value;
+              const activeFlavours = flavours
+                .filter((f) => f.name.trim().length > 0)
+                .slice(0, 3)
+                .map((f, i) => ({ name: f.name, colorHex: getFlavourColor(f.name, i) }));
               return (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setVessel(selected ? null : value)}
-                  className={
-                    selected
-                      ? "flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-sm transition bg-[#D97706] text-white"
-                      : "flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  }
-                >
-                  <span>{emoji}</span>
-                  <span>{label}</span>
-                </button>
+                <div key={value} className="flex flex-1 flex-col items-center gap-2">
+                  <VesselIllustration
+                    vessel={value}
+                    flavours={activeFlavours}
+                    selected={isSelected}
+                    size="medium"
+                    onClick={() => setVessel(isSelected ? null : value)}
+                  />
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: isSelected ? 600 : 400,
+                      color: isSelected ? "var(--color-orange, #F97316)" : "var(--color-text-secondary)",
+                    }}
+                  >
+                    {label}
+                  </span>
+                </div>
               );
             })}
           </div>

@@ -8,6 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { Icon } from "@/src/components/icons";
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
 
@@ -298,10 +299,10 @@ export function SettingsClient({
             background: "var(--color-surface)",
             border: "1px solid var(--color-border)",
             color: "var(--color-text-secondary)",
-            fontSize: 18,
           }}
+          aria-label="Back"
         >
-          ‹
+          <Icon name="GellogBack" size={18} strokeWidth={2} />
         </Link>
         <h1
           style={{

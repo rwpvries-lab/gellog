@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FollowButton } from "./FollowButton";
+import { Icon } from "@/src/components/icons";
 
 type Profile = {
   id: string;
@@ -115,7 +116,7 @@ export default async function UserProfilePage({
             className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-500 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800"
             aria-label="Back"
           >
-            ←
+            <Icon name="GellogBack" size={18} strokeWidth={2} />
           </Link>
           <h1 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
             Profile

@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Icon, type IconName } from "@/src/components/icons";
 
 type NavItem = {
   href: string;
   label: string;
-  icon: string;
+  icon: IconName;
   matchPrefixes: string[];
 };
 
@@ -14,31 +15,31 @@ const navItems: NavItem[] = [
   {
     href: "/feed",
     label: "Feed",
-    icon: "🍦",
+    icon: "GellogFeed",
     matchPrefixes: ["/feed", "/icecream/feed"],
   },
   {
     href: "/search",
     label: "Search",
-    icon: "🔍",
+    icon: "GellogSearch",
     matchPrefixes: ["/search"],
   },
   {
     href: "/map",
     label: "Map",
-    icon: "🗺️",
+    icon: "GellogDirections",
     matchPrefixes: ["/map"],
   },
   {
     href: "/log",
     label: "Log",
-    icon: "＋",
+    icon: "GellogLog",
     matchPrefixes: ["/log", "/icecream/logs/new"],
   },
   {
     href: "/profile",
     label: "Profile",
-    icon: "👤",
+    icon: "GellogProfile",
     matchPrefixes: ["/profile", "/icecream/profile"],
   },
 ];
@@ -65,13 +66,13 @@ export function BottomNav() {
               }`}
             >
               <span
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-base shadow-sm ring-1 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-full shadow-sm ring-1 ${
                   isActive
                     ? "bg-gradient-to-br from-orange-500 to-teal-500 text-white ring-orange-200/80 dark:ring-teal-700/70"
                     : "bg-zinc-50 text-zinc-700 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-zinc-700"
                 }`}
               >
-                {item.icon}
+                <Icon name={item.icon} size={18} strokeWidth={1.75} />
               </span>
               <span>{item.label}</span>
             </Link>
