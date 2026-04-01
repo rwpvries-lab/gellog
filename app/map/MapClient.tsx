@@ -3,7 +3,8 @@
 import { shouldShowIceCreamMapMarker } from "@/src/lib/looksLikeIceCreamSalon";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import type { SalonPin } from "./page";
+import { GellogDirections, GellogClose } from "@/src/components/icons";
+import type { SalonPin, UserSubmittedPin } from "./page";
 
 declare global {
   interface Window {
@@ -28,28 +29,36 @@ type MapSelection =
 function makePinSvg(
   size: number,
   highlighted = false,
-  pinKind: "logged" | "unlogged" = "logged",
+  pinKind: "logged" | "unlogged" | "user_submitted" = "logged",
 ): string {
   let color: string;
   if (highlighted) color = "#f97316";
   else if (pinKind === "unlogged") color = "#9CA3AF";
   else color = "#0d9488";
   const h = Math.round(size * 1.22);
+  const pathAttrs =
+    pinKind === "user_submitted"
+      ? `fill="white" stroke="${color}" stroke-width="2"`
+      : `fill="${color}"`;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${h}" viewBox="0 0 36 44">
-    <path fill="${color}" d="M18 0C8.06 0 0 8.06 0 18c0 13.97 18 26 18 26S36 31.97 36 18 27.94 0 18 0z"/>
+    <path ${pathAttrs} d="M18 0C8.06 0 0 8.06 0 18c0 13.97 18 26 18 26S36 31.97 36 18 27.94 0 18 0z"/>
        <text x="18" y="25" text-anchor="middle" font-size="18" font-family="Arial,sans-serif">🍦</text>
   </svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-export function MapClient({ salons }: { salons: SalonPin[] }) {
+export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[]; userSubmittedSalons: UserSubmittedPin[] }) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const userOverlayRef = useRef<any>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
   const pinSizesRef = useRef<Map<string, number>>(new Map());
   const unloggedIdsRef = useRef<Set<string>>(new Set());
   const placedIdsRef = useRef<Set<string>>(new Set());
   const salonsRef = useRef(salons);
   salonsRef.current = salons;
+  const userSubmittedSalonsRef = useRef(userSubmittedSalons);
+  userSubmittedSalonsRef.current = userSubmittedSalons;
   const idleListenerRef = useRef<{ remove: () => void } | null>(null);
   const dragStartY = useRef<number | null>(null);
   const markerJustTapped = useRef(false);
@@ -59,6 +68,9 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
   const [showDirections, setShowDirections] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationDenied, setLocationDenied] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   // Lock body scroll
   useEffect(() => {
@@ -98,6 +110,75 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
     }
   }, [selected]);
 
+  // Place / update the blue user-dot overlay
+  useEffect(() => {
+    if (!mapReady || !userLocation || !window.google?.maps) return;
+
+    if (!document.getElementById("gellog-user-pulse-style")) {
+      const style = document.createElement("style");
+      style.id = "gellog-user-pulse-style";
+      style.textContent = `
+        @keyframes gellog-user-pulse {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+          50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.6; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Remove any previous overlay
+    if (userOverlayRef.current) {
+      userOverlayRef.current.setMap(null);
+      userOverlayRef.current = null;
+    }
+
+    const pos = userLocation;
+
+    class UserDot extends (window.google.maps.OverlayView as any) {
+      private _div: HTMLDivElement | null = null;
+
+      onAdd() {
+        this._div = document.createElement("div");
+        Object.assign(this._div.style, {
+          position: "absolute",
+          width: "16px",
+          height: "16px",
+          borderRadius: "50%",
+          background: "#3b82f6",
+          border: "2px solid white",
+          boxShadow: "0 0 0 3px rgba(59,130,246,0.25)",
+          animation: "gellog-user-pulse 1.5s ease-in-out infinite",
+          pointerEvents: "none",
+        });
+        this.getPanes()?.overlayMouseTarget.appendChild(this._div);
+      }
+
+      draw() {
+        if (!this._div) return;
+        const point = this.getProjection()?.fromLatLngToDivPixel(
+          new window.google.maps.LatLng(pos.lat, pos.lng),
+        );
+        if (!point) return;
+        this._div.style.left = `${point.x}px`;
+        this._div.style.top = `${point.y}px`;
+      }
+
+      onRemove() {
+        this._div?.parentNode?.removeChild(this._div);
+        this._div = null;
+      }
+    }
+
+    const overlay = new UserDot();
+    overlay.setMap(mapInstanceRef.current);
+    userOverlayRef.current = overlay;
+
+    return () => {
+      overlay.setMap(null);
+      userOverlayRef.current = null;
+    };
+  }, [mapReady, userLocation]);
+
   // Init map + Places (grey pins for salons not yet on Gellog)
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
@@ -132,6 +213,8 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
         zoomControl: true,
         gestureHandling: "greedy",
       });
+
+      mapInstanceRef.current = map;
 
       const service = new window.google.maps.places.PlacesService(map);
       const PlacesStatus = window.google.maps.places.PlacesServiceStatus;
@@ -230,6 +313,26 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
         });
       }
 
+      for (const salon of userSubmittedSalonsRef.current) {
+        if (placedIdsRef.current.has(salon.place_id)) continue;
+        placedIdsRef.current.add(salon.place_id);
+
+        const pinSize = 28;
+        const pinH = Math.round(pinSize * 1.22);
+        pinSizesRef.current.set(salon.place_id, pinSize);
+
+        new window.google.maps.Marker({
+          map,
+          position: { lat: salon.lat, lng: salon.lng },
+          icon: {
+            url: makePinSvg(pinSize, false, "user_submitted"),
+            scaledSize: new window.google.maps.Size(pinSize, pinH),
+            anchor: new window.google.maps.Point(pinSize / 2, pinH),
+          },
+          title: salon.name,
+        });
+      }
+
       map.addListener("click", () => {
         if (markerJustTapped.current) return;
         setSelected(null);
@@ -270,13 +373,20 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
 
     function getUserLocationAndInit() {
       if (!navigator.geolocation) {
+        setLocationDenied(true);
         initMap(AMSTERDAM);
         return;
       }
       navigator.geolocation.getCurrentPosition(
-        (pos) =>
-          initMap({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-        () => initMap(AMSTERDAM),
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(loc);
+          initMap(loc);
+        },
+        () => {
+          setLocationDenied(true);
+          initMap(AMSTERDAM);
+        },
       );
     }
 
@@ -309,7 +419,7 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
     return () => {
       cleanupIdle();
     };
-  }, [salons]);
+  }, [salons, userSubmittedSalons]);
 
   function handleTouchStart(e: React.TouchEvent) {
     dragStartY.current = e.touches[0].clientY;
@@ -328,6 +438,11 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
         setSelected(null);
       }
     }
+  }
+
+  function handleLocateMe() {
+    if (!userLocation || !mapInstanceRef.current) return;
+    mapInstanceRef.current.panTo(userLocation);
   }
 
   const googleUrl = selected
@@ -357,6 +472,39 @@ export function MapClient({ salons }: { salons: SalonPin[] }) {
           <div className="rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm">
             Use one finger to move the map
           </div>
+        </div>
+      )}
+
+      {/* Locate-me button */}
+      {userLocation && (
+        <button
+          type="button"
+          aria-label="Centre map on my location"
+          onClick={handleLocateMe}
+          className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md dark:bg-zinc-800"
+          style={{ zIndex: 30 }}
+        >
+          <GellogDirections size={20} className="text-blue-500" />
+        </button>
+      )}
+
+      {/* Location denied banner */}
+      {locationDenied && !bannerDismissed && (
+        <div
+          className="absolute inset-x-3 top-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-md dark:bg-zinc-800"
+          style={{ zIndex: 30 }}
+        >
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">
+            Enable location to see nearby salons
+          </p>
+          <button
+            type="button"
+            aria-label="Dismiss"
+            onClick={() => setBannerDismissed(true)}
+            className="ml-3 flex-shrink-0 text-zinc-400"
+          >
+            <GellogClose size={16} />
+          </button>
         </div>
       )}
 

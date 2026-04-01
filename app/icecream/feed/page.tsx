@@ -1,6 +1,7 @@
 import { createClient } from "@/src/lib/supabase/server";
 import Link from "next/link";
 import { IceCreamFeedClient } from "./IceCreamFeedClient";
+import { NotifPromptBanner } from "@/app/components/NotifPromptBanner";
 import type { IceCreamLog } from "@/src/components/FeedCard";
 
 export const revalidate = 30;
@@ -20,7 +21,15 @@ export default async function IceCreamFeedPage() {
           .eq("follower_id", user.id)
       : Promise.resolve({ data: null as { following_id: string }[] | null });
 
-  const [{ data, error }, { data: followingRows }] = await Promise.all([
+  const logCountQuery =
+    user != null
+      ? supabase
+          .from("ice_cream_logs")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+      : Promise.resolve({ count: 0 as number | null });
+
+  const [{ data, error }, { data: followingRows }, { count: logCount }] = await Promise.all([
     supabase
     .from("ice_cream_logs")
     .select(
@@ -64,6 +73,7 @@ export default async function IceCreamFeedPage() {
     .order("visited_at", { ascending: false })
     .limit(PAGE_SIZE),
     followingQuery,
+    logCountQuery,
   ]);
 
   const rawLogs = (data ?? []) as unknown as IceCreamLog[];
@@ -127,6 +137,8 @@ export default async function IceCreamFeedPage() {
             </p>
           </div>
         </header>
+
+        {(logCount ?? 0) >= 3 && <NotifPromptBanner />}
 
         <IceCreamFeedClient
           initialLogs={logs}

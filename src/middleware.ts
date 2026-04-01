@@ -33,7 +33,11 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
   //
   // IMPORTANT: If you remove getClaims() and you use server-side rendering
   // with the Supabase client, your users may be randomly logged out.
-  await supabase.auth.getClaims();
+  try {
+    await supabase.auth.getClaims();
+  } catch {
+    // Stale or invalid refresh token — session cookies are cleared automatically.
+  }
 
   return supabaseResponse;
 }

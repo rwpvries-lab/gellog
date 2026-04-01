@@ -1,5 +1,11 @@
 import { createClient } from "./supabase/client";
 
+export async function requestNotificationPermission(): Promise<NotificationPermission> {
+  if (!("Notification" in window)) return "denied";
+  if (Notification.permission !== "default") return Notification.permission;
+  return Notification.requestPermission();
+}
+
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration> {
   if (!("serviceWorker" in navigator)) {
     throw new Error("Service workers are not supported in this browser.");

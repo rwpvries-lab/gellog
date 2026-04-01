@@ -64,6 +64,16 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
   const containerRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addFormName, setAddFormName] = useState("");
+  const [addFormAddress, setAddFormAddress] = useState("");
+  const [addFormCity, setAddFormCity] = useState("");
+  const [addFormLat, setAddFormLat] = useState<number | null>(null);
+  const [addFormLng, setAddFormLng] = useState<number | null>(null);
+  const [addFormSubmitting, setAddFormSubmitting] = useState(false);
+  const [locatingMe, setLocatingMe] = useState(false);
+  const [addToast, setAddToast] = useState(false);
+
   useEffect(() => {
     if (typeof window !== "undefined" && "geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -225,7 +235,90 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
     }
   }
 
+  function handleOpenAddForm() {
+    setOpen(false);
+    setAddFormName(value);
+    setAddFormAddress("");
+    setAddFormCity("");
+    setAddFormLat(null);
+    setAddFormLng(null);
+    setShowAddForm(true);
+  }
+
+  async function handleLocateMe() {
+    if (!navigator.geolocation) return;
+    setLocatingMe(true);
+    try {
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 }),
+      );
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      setAddFormLat(lat);
+      setAddFormLng(lng);
+
+      const url = new URL("/api/places/reverse-geocode", window.location.origin);
+      url.searchParams.set("lat", String(lat));
+      url.searchParams.set("lng", String(lng));
+      const res = await fetch(url.toString());
+      if (res.ok) {
+        const data = await res.json();
+        const result = data.results?.[0];
+        if (result) {
+          setAddFormAddress(result.formatted_address ?? "");
+          const locality = result.address_components?.find((c: { types: string[] }) =>
+            c.types.includes("locality"),
+          );
+          if (locality) setAddFormCity(locality.long_name);
+        }
+      }
+    } catch {
+      // geolocation denied or timed out — lat/lng stay null
+    } finally {
+      setLocatingMe(false);
+    }
+  }
+
+  async function handleAddSalonSubmit() {
+    if (!addFormName.trim()) return;
+    setAddFormSubmitting(true);
+    try {
+      const supabase = createClient();
+      const syntheticPlaceId = `user_sub_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      await supabase.from("salon_profiles").insert({
+        place_id: syntheticPlaceId,
+        salon_name: addFormName.trim(),
+        salon_address: addFormAddress.trim() || null,
+        salon_city: addFormCity.trim() || null,
+        salon_lat: addFormLat,
+        salon_lng: addFormLng,
+        is_user_submitted: true,
+        submitted_by: userId,
+        is_claimed: false,
+      });
+      onPlaceSelect({
+        salon_name: addFormName.trim(),
+        salon_place_id: null,
+        salon_address: addFormAddress.trim() || null,
+        salon_lat: null,
+        salon_lng: null,
+        salon_city: addFormCity.trim() || null,
+      });
+      setShowAddForm(false);
+      setAddToast(true);
+      setTimeout(() => setAddToast(false), 3500);
+    } finally {
+      setAddFormSubmitting(false);
+    }
+  }
+
   const showRecentHeader = items.length > 0 && items[0].type === "recent";
+
+  const hasExactMatch = items.some((item) => {
+    const name = item.type === "place" ? predictionMainText(item.prediction) : item.name;
+    return name.toLowerCase() === value.toLowerCase();
+  });
+  const showAddRow = value.length >= 3 && !hasExactMatch;
 
   return (
     <div ref={containerRef} className="relative">
@@ -250,7 +343,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
           🗺
         </button>
       )}
-      {open && items.length > 0 && (
+      {open && (items.length > 0 || showAddRow) && (
         <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-black/5">
           {showRecentHeader && (
             <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-400">
@@ -295,6 +388,117 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
               </button>
             );
           })}
+          {showAddRow && (
+            <button
+              type="button"
+              onMouseDown={handleOpenAddForm}
+              className="flex w-full items-center gap-2 border-t border-zinc-100 px-3 py-2.5 text-left text-sm transition hover:bg-teal-50"
+            >
+              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-teal-100 text-xs font-bold text-teal-600">+</span>
+              <span className="text-zinc-600">
+                Add <span className="font-semibold text-zinc-900">"{value}"</span> as a new salon
+              </span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Add salon bottom sheet */}
+      {showAddForm && (
+        <div className="fixed inset-0 z-[60] flex flex-col justify-end">
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => setShowAddForm(false)}
+          />
+          <div className="relative flex max-h-[60vh] flex-col rounded-t-[20px] bg-white shadow-2xl dark:bg-zinc-900">
+            {/* Handle */}
+            <div className="flex flex-shrink-0 items-center justify-between px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setShowAddForm(false)}
+                className="text-sm text-zinc-500"
+              >
+                Cancel
+              </button>
+              <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Add a new salon</span>
+              <div className="w-14" />
+            </div>
+            <div className="overflow-y-auto px-5 pb-8">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    Salon name
+                  </label>
+                  <input
+                    type="text"
+                    value={addFormName}
+                    onChange={(e) => setAddFormName(e.target.value)}
+                    autoFocus
+                    className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                      Address <span className="font-normal text-zinc-400">(optional but encouraged)</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleLocateMe}
+                      disabled={locatingMe}
+                      className="flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 transition hover:bg-teal-100 disabled:opacity-60 dark:bg-teal-900/30 dark:text-teal-300"
+                    >
+                      {locatingMe ? (
+                        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-teal-400 border-t-transparent" />
+                      ) : (
+                        <span>📍</span>
+                      )}
+                      {locatingMe ? "Locating…" : addFormLat ? "Re-locate" : "Use my location"}
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={addFormAddress}
+                    onChange={(e) => setAddFormAddress(e.target.value)}
+                    placeholder="e.g. Via Roma 12"
+                    className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    value={addFormCity}
+                    onChange={(e) => setAddFormCity(e.target.value)}
+                    placeholder="e.g. Amsterdam"
+                    className="w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2.5 text-sm text-zinc-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+                  />
+                </div>
+                <p className="rounded-2xl bg-zinc-50 px-4 py-3 text-xs text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                  We'll review and verify this salon. It'll appear on the map after approval.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleAddSalonSubmit}
+                  disabled={!addFormName.trim() || addFormSubmitting}
+                  className="w-full rounded-2xl bg-teal-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-600 disabled:opacity-50"
+                >
+                  {addFormSubmitting ? "Adding…" : "Add this salon"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success toast */}
+      {addToast && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[70] flex justify-center">
+          <div className="rounded-full bg-teal-600 px-5 py-2.5 text-sm font-medium text-white shadow-lg">
+            Salon added! It will appear on the map after review.
+          </div>
         </div>
       )}
     </div>

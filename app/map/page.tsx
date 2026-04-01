@@ -11,6 +11,13 @@ export type SalonPin = {
   top_flavours: string[];
 };
 
+export type UserSubmittedPin = {
+  place_id: string;
+  name: string;
+  lat: number;
+  lng: number;
+};
+
 export const revalidate = 60;
 
 export default async function MapPage() {
@@ -79,6 +86,22 @@ export default async function MapPage() {
     }),
   );
 
+  const { data: userSubmittedData } = await supabase
+    .from("salon_profiles")
+    .select("place_id, salon_name, salon_lat, salon_lng")
+    .eq("is_user_submitted", true)
+    .not("salon_lat", "is", null)
+    .not("salon_lng", "is", null);
+
+  const userSubmittedSalons: UserSubmittedPin[] = (userSubmittedData ?? [])
+    .filter((r) => r.salon_lat != null && r.salon_lng != null)
+    .map((r) => ({
+      place_id: r.place_id,
+      name: r.salon_name ?? "Salon",
+      lat: r.salon_lat as number,
+      lng: r.salon_lng as number,
+    }));
+
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <header className="flex flex-none items-center border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
@@ -87,7 +110,7 @@ export default async function MapPage() {
         </h1>
       </header>
       <div className="relative flex-1">
-        <MapClient salons={salons} />
+        <MapClient salons={salons} userSubmittedSalons={userSubmittedSalons} />
       </div>
     </div>
   );
