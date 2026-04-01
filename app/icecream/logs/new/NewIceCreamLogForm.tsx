@@ -212,7 +212,7 @@ function ScrollDrum({
           left: 0,
           right: 0,
           height: DRUM_ITEM_H,
-          background: "#FEF3C7",
+          background: "var(--color-orange-bg)",
           pointerEvents: "none",
           zIndex: 0,
         }}
@@ -246,7 +246,7 @@ function ScrollDrum({
               justifyContent: "center",
               fontSize: centerIdx === i ? 22 : 20,
               fontWeight: centerIdx === i ? 500 : 400,
-              color: "#18181b",
+              color: "var(--color-text-primary)",
               userSelect: "none",
             }}
           >
@@ -263,7 +263,7 @@ function ScrollDrum({
           left: 0,
           right: 0,
           height: 1,
-          background: "#D97706",
+          background: "var(--color-orange)",
           pointerEvents: "none",
           zIndex: 2,
         }}
@@ -275,7 +275,7 @@ function ScrollDrum({
           left: 0,
           right: 0,
           height: 1,
-          background: "#D97706",
+          background: "var(--color-orange)",
           pointerEvents: "none",
           zIndex: 2,
         }}

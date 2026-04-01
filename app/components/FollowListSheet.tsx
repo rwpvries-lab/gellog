@@ -128,6 +128,7 @@ export function FollowListSheet({ userId, type, count, currentUserId }: FollowLi
                               alt={displayName}
                               fill
                               className="object-cover"
+                              unoptimized
                             />
                           ) : (
                             <span className="flex h-full w-full items-center justify-center text-sm font-semibold">

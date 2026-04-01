@@ -34,10 +34,10 @@ type FollowStatus = Record<string, boolean>;
 function SkeletonRow() {
   return (
     <div className="flex animate-pulse items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-200 dark:bg-zinc-700" />
+      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700" />
       <div className="flex flex-1 flex-col gap-2">
-        <div className="h-3 w-28 rounded bg-gray-200 dark:bg-zinc-700" />
-        <div className="h-3 w-16 rounded bg-gray-200 dark:bg-zinc-700" />
+        <div className="h-3 w-28 rounded bg-zinc-200 dark:bg-zinc-700" />
+        <div className="h-3 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
       </div>
     </div>
   );
@@ -296,6 +296,7 @@ export default function SearchPage() {
                           alt={displayName}
                           fill
                           className="object-cover"
+                          unoptimized
                         />
                       ) : (
                         <span className="flex h-full w-full items-center justify-center text-sm font-semibold">

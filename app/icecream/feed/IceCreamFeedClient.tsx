@@ -285,7 +285,7 @@ export function IceCreamFeedClient({
 
       {isEmpty && tab === "everyone" ? (
         <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-white px-8 py-12 text-center text-sm text-zinc-600 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800">
-          <span className="mb-4 text-5xl">😋</span>
+          <span className="mb-4 text-5xl">🍦</span>
           <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
             No ice cream logs
           </p>

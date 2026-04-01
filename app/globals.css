@@ -16,6 +16,9 @@
   --color-teal:           #3D948B;
   --color-orange-bg:      #FEF3E7;
   --color-teal-bg:        #EEF7F6;
+  --color-text-tertiary:  #9CA3AF;
+  --color-error:          #DC2626;
+  --color-location:       #3b82f6;
 }
 
 .dark {
@@ -31,6 +34,9 @@
   --color-teal:           #2A9D8F;
   --color-orange-bg:      #291A09;
   --color-teal-bg:        #042F2E;
+  --color-text-tertiary:  #6B7280;
+  --color-error:          #EF4444;
+  --color-location:       #60a5fa;
 }
 
 @theme inline {
@@ -49,7 +55,7 @@ body {
 /* Custom scrollbar — orange/teal theme */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #D97706 #99f6e4;
+  scrollbar-color: var(--color-orange) var(--color-teal-bg);
 }
 
 *::-webkit-scrollbar {
@@ -58,15 +64,15 @@ body {
 }
 
 *::-webkit-scrollbar-track {
-  background: #99f6e4;
+  background: var(--color-teal-bg);
   border-radius: 4px;
 }
 
 *::-webkit-scrollbar-thumb {
-  background: #D97706;
+  background: var(--color-orange);
   border-radius: 4px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: #b45309;
+  background: var(--color-teal);
 }

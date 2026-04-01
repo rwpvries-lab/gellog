@@ -49,6 +49,7 @@ export function Avatar({
       height={size}
       className="shrink-0 rounded-full object-cover"
       style={{ width: size, height: size }}
+      unoptimized
     />
   ) : (
     <div
@@ -107,7 +108,7 @@ function CommentItem({
               <button
                 type="button"
                 onClick={() => setShowMenu((s) => !s)}
-                className="flex h-5 w-5 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 aria-label="Comment options"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">

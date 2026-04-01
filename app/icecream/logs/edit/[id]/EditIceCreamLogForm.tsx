@@ -199,7 +199,7 @@ function ScrollDrum({
 
   return (
     <div style={{ position: "relative", height: containerH, flex: 1 }}>
-      <div style={{ position: "absolute", top: padH, left: 0, right: 0, height: DRUM_ITEM_H, background: "#FEF3C7", pointerEvents: "none", zIndex: 0 }} />
+      <div style={{ position: "absolute", top: padH, left: 0, right: 0, height: DRUM_ITEM_H, background: "var(--color-orange-bg)", pointerEvents: "none", zIndex: 0 }} />
       <div
         ref={ref}
         onScroll={handleScroll}
@@ -219,7 +219,7 @@ function ScrollDrum({
               height: DRUM_ITEM_H, scrollSnapAlign: "center", display: "flex",
               alignItems: "center", justifyContent: "center",
               fontSize: centerIdx === i ? 22 : 20, fontWeight: centerIdx === i ? 500 : 400,
-              color: "#18181b", userSelect: "none",
+              color: "var(--color-text-primary)", userSelect: "none",
             }}
           >
             {item.label}
@@ -227,8 +227,8 @@ function ScrollDrum({
         ))}
         <div style={{ height: padH, flexShrink: 0 }} />
       </div>
-      <div style={{ position: "absolute", top: padH, left: 0, right: 0, height: 1, background: "#D97706", pointerEvents: "none", zIndex: 2 }} />
-      <div style={{ position: "absolute", top: padH + DRUM_ITEM_H, left: 0, right: 0, height: 1, background: "#D97706", pointerEvents: "none", zIndex: 2 }} />
+      <div style={{ position: "absolute", top: padH, left: 0, right: 0, height: 1, background: "var(--color-orange)", pointerEvents: "none", zIndex: 2 }} />
+      <div style={{ position: "absolute", top: padH + DRUM_ITEM_H, left: 0, right: 0, height: 1, background: "var(--color-orange)", pointerEvents: "none", zIndex: 2 }} />
     </div>
   );
 }

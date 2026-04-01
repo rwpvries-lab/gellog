@@ -118,7 +118,7 @@ export function AnalyticsSection({
               <XAxis
                 dataKey="week"
                 tickFormatter={formatWeek}
-                tick={{ fontSize: 9, fill: "#a1a1aa" }}
+                tick={{ fontSize: 9, fill: "var(--color-text-tertiary)" }}
                 axisLine={false}
                 tickLine={false}
                 interval="preserveStartEnd"
@@ -131,11 +131,11 @@ export function AnalyticsSection({
                   fontSize: 11,
                   borderRadius: 10,
                   border: "none",
-                  background: "#18181b",
-                  color: "#fff",
+                  background: "var(--color-surface)",
+                  color: "var(--color-text-primary)",
                 }}
               />
-              <Bar dataKey="visits" fill="#14b8a6" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="visits" fill="var(--color-teal)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -207,7 +207,7 @@ export function AnalyticsSection({
                 <XAxis
                   dataKey="month"
                   tickFormatter={formatMonth}
-                  tick={{ fontSize: 9, fill: "#a1a1aa" }}
+                  tick={{ fontSize: 9, fill: "var(--color-text-tertiary)" }}
                   axisLine={false}
                   tickLine={false}
                   interval="preserveStartEnd"
@@ -227,9 +227,9 @@ export function AnalyticsSection({
                 <Line
                   type="monotone"
                   dataKey="avg_rating"
-                  stroke="#f97316"
+                  stroke="var(--color-orange)"
                   strokeWidth={2}
-                  dot={{ r: 3, fill: "#f97316" }}
+                  dot={{ r: 3, fill: "var(--color-orange)" }}
                 />
               </LineChart>
             </ResponsiveContainer>

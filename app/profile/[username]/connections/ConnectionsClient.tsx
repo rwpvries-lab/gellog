@@ -90,8 +90,8 @@ function FollowingRowAction({
           disabled={loading}
           style={{
             background: "none",
-            color: "#DC2626",
-            border: "1px solid #DC2626",
+            color: "var(--color-error)",
+            border: "1px solid var(--color-error)",
             borderRadius: 20,
             padding: "5px 12px",
             fontSize: 13,
@@ -191,8 +191,8 @@ function FollowerRowAction({
           disabled={loading}
           style={{
             background: "none",
-            color: "#DC2626",
-            border: "1px solid #DC2626",
+            color: "var(--color-error)",
+            border: "1px solid var(--color-error)",
             borderRadius: 20,
             padding: "5px 12px",
             fontSize: 13,

@@ -3,6 +3,7 @@
 import { RatingStarsDisplay } from "@/app/components/RatingStars";
 import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
 import { Toast, useToast, copyToClipboard } from "@/src/components/Toast";
+import { avatarColour } from "@/app/log/[id]/CommentsSection";
 import { createClient } from "@/src/lib/supabase/client";
 import { formatVisitDate } from "@/src/lib/utils";
 import Image from "next/image";
@@ -313,10 +314,7 @@ export function FeedCard({
   const highestFlavourRating =
     numericFlavourRatings.length > 0 ? Math.max(...numericFlavourRatings) : null;
 
-  // Avatar colours
-  const colours = ["#4D97D6", "#60B488", "#C13A2D", "#D02E2E", "#3531B7"];
-  const avatarColour =
-    colours[profile?.username ? profile.username.charCodeAt(0) % colours.length : 0];
+  const avatarColor = avatarColour(profile?.username);
 
   return (
     <>
@@ -342,11 +340,12 @@ export function FeedCard({
                     width={22}
                     height={22}
                     className="h-5.5 w-5.5 rounded-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div
                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
-                    style={{ backgroundColor: avatarColour }}
+                    style={{ backgroundColor: avatarColor }}
                   >
                     {displayName.charAt(0).toUpperCase()}
                   </div>
@@ -364,11 +363,12 @@ export function FeedCard({
                     width={22}
                     height={22}
                     className="h-5.5 w-5.5 rounded-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div
                     className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
-                    style={{ backgroundColor: avatarColour }}
+                    style={{ backgroundColor: avatarColor }}
                   >
                     {displayName.charAt(0).toUpperCase()}
                   </div>
@@ -397,7 +397,7 @@ export function FeedCard({
                     e.stopPropagation();
                     router.push(`/icecream/logs/edit/${log.id}`);
                   }}
-                  className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
                   aria-label="Edit log"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -411,7 +411,7 @@ export function FeedCard({
                     e.stopPropagation();
                     setShowDeleteConfirm(true);
                   }}
-                  className="flex h-6 w-6 items-center justify-center rounded-full text-zinc-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
                   aria-label="Delete log"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

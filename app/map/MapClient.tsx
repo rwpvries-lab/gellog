@@ -144,9 +144,9 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
           width: "16px",
           height: "16px",
           borderRadius: "50%",
-          background: "#3b82f6",
+          background: "var(--color-location)",
           border: "2px solid white",
-          boxShadow: "0 0 0 3px rgba(59,130,246,0.25)",
+          boxShadow: "0 0 0 3px color-mix(in srgb, var(--color-location) 25%, transparent)",
           animation: "gellog-user-pulse 1.5s ease-in-out infinite",
           pointerEvents: "none",
         });

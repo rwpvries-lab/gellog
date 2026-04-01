@@ -779,7 +779,7 @@ export function SettingsClient({
             {notifError && (
               <p
                 style={{
-                  color: "#DC2626",
+                  color: "var(--color-error)",
                   fontSize: 12,
                   paddingBottom: 10,
                 }}
@@ -909,7 +909,7 @@ export function SettingsClient({
               border: "none",
               background: "none",
               cursor: loggingOut ? "not-allowed" : "pointer",
-              color: "#DC2626",
+              color: "var(--color-error)",
               fontSize: 15,
               fontWeight: 500,
               justifyContent: "flex-start",
@@ -930,7 +930,7 @@ export function SettingsClient({
               border: "none",
               background: "none",
               cursor: "pointer",
-              color: "#DC2626",
+              color: "var(--color-error)",
               fontSize: 15,
               fontWeight: 500,
               justifyContent: "flex-start",
@@ -967,7 +967,7 @@ export function SettingsClient({
             </p>
 
             {deleteError && (
-              <p style={{ color: "#DC2626", fontSize: 13, marginBottom: 12 }}>
+              <p style={{ color: "var(--color-error)", fontSize: 13, marginBottom: 12 }}>
                 {deleteError}
               </p>
             )}
@@ -1099,7 +1099,7 @@ export function SettingsClient({
               </p>
 
               {editError && (
-                <p style={{ color: "#DC2626", fontSize: 13 }}>{editError}</p>
+                <p style={{ color: "var(--color-error)", fontSize: 13 }}>{editError}</p>
               )}
 
               <div className="flex flex-col gap-3 pt-2">
