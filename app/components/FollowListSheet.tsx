@@ -6,6 +6,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
+function AvatarFill({ avatarUrl, displayName, initial }: { avatarUrl: string | null; displayName: string; initial: string }) {
+  const [imgError, setImgError] = useState(false);
+  return avatarUrl && !imgError ? (
+    <Image src={avatarUrl} alt={displayName} fill className="object-cover" unoptimized onError={() => setImgError(true)} />
+  ) : (
+    <span className="flex h-full w-full items-center justify-center text-sm font-semibold">
+      {initial}
+    </span>
+  );
+}
+
 type FollowProfile = {
   id: string;
   username: string | null;
@@ -122,19 +133,7 @@ export function FollowListSheet({ userId, type, count, currentUserId }: FollowLi
                           onClick={() => setOpen(false)}
                           className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500 text-white shadow-sm"
                         >
-                          {profile.avatar_url ? (
-                            <Image
-                              src={profile.avatar_url}
-                              alt={displayName}
-                              fill
-                              className="object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            <span className="flex h-full w-full items-center justify-center text-sm font-semibold">
-                              {initial}
-                            </span>
-                          )}
+                          <AvatarFill avatarUrl={profile.avatar_url} displayName={displayName} initial={initial} />
                         </Link>
 
                         <Link

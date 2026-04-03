@@ -1,6 +1,21 @@
 import { createClient } from "@/src/lib/supabase/server";
 import { MapClient } from "./MapClient";
 
+/** Only allow in-app return paths (avoid open redirects). */
+function sanitizePickerReturnTo(raw: string | undefined): string | null {
+  if (!raw?.trim()) return null;
+  let path: string;
+  try {
+    path = decodeURIComponent(raw.trim());
+  } catch {
+    return null;
+  }
+  if (!path.startsWith("/")) return null;
+  if (path.includes("//")) return null;
+  const allowed = new Set(["/icecream/logs/new", "/log"]);
+  return allowed.has(path) ? path : null;
+}
+
 export type SalonPin = {
   place_id: string;
   name: string;
@@ -20,7 +35,14 @@ export type UserSubmittedPin = {
 
 export const revalidate = 60;
 
-export default async function MapPage() {
+export default async function MapPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string }>;
+}) {
+  const { returnTo } = await searchParams;
+  const pickerReturnTo = sanitizePickerReturnTo(returnTo);
+
   const supabase = await createClient();
 
   const { data: logsData } = await supabase
@@ -104,13 +126,19 @@ export default async function MapPage() {
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
-      <header className="flex flex-none items-center border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
-        <h1 className="text-base font-bold text-zinc-900 dark:text-zinc-50">
-          Discover
-        </h1>
-      </header>
+      {!pickerReturnTo ? (
+        <header className="flex flex-none items-center border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
+          <h1 className="text-base font-bold text-zinc-900 dark:text-zinc-50">
+            Discover
+          </h1>
+        </header>
+      ) : null}
       <div className="relative flex-1">
-        <MapClient salons={salons} userSubmittedSalons={userSubmittedSalons} />
+        <MapClient
+          salons={salons}
+          userSubmittedSalons={userSubmittedSalons}
+          pickerReturnTo={pickerReturnTo}
+        />
       </div>
     </div>
   );

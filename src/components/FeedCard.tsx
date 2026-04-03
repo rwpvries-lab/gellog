@@ -227,6 +227,7 @@ export function FeedCard({
   const [likeCount, setLikeCount] = useState(log.like_count ?? 0);
   const [liked, setLiked] = useState(log.user_has_liked ?? false);
   const [likeLoading, setLikeLoading] = useState(false);
+  const [avatarImgError, setAvatarImgError] = useState(false);
 
   const { toast, showToast, dismissToast } = useToast();
 
@@ -333,7 +334,7 @@ export function FeedCard({
                 onClick={(e) => e.stopPropagation()}
                 className="flex items-center gap-2"
               >
-                {profile.avatar_url ? (
+                {profile.avatar_url && !avatarImgError ? (
                   <Image
                     src={profile.avatar_url}
                     alt={displayName}
@@ -341,6 +342,7 @@ export function FeedCard({
                     height={22}
                     className="h-5.5 w-5.5 rounded-full object-cover"
                     unoptimized
+                    onError={() => setAvatarImgError(true)}
                   />
                 ) : (
                   <div
@@ -356,7 +358,7 @@ export function FeedCard({
               </Link>
             ) : (
               <>
-                {profile?.avatar_url ? (
+                {profile?.avatar_url && !avatarImgError ? (
                   <Image
                     src={profile.avatar_url}
                     alt={displayName}
@@ -364,6 +366,7 @@ export function FeedCard({
                     height={22}
                     className="h-5.5 w-5.5 rounded-full object-cover"
                     unoptimized
+                    onError={() => setAvatarImgError(true)}
                   />
                 ) : (
                   <div

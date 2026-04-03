@@ -1,8 +1,8 @@
 import { createClient } from "@/src/lib/supabase/server";
 import type { IceCreamLog as FeedIceCreamLog } from "@/src/components/FeedCard";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { IceCreamHeatmap, type HeatmapDayData } from "./IceCreamHeatmap";
+import type { HeatmapDayData } from "./IceCreamHeatmap";
+import { ProfileGellogClient } from "./ProfileGellogClient";
 import { ProfileFeedClient } from "./ProfileFeedClient";
 import { ProfileHeader } from "./ProfileHeader";
 import { ActivitySection, type WeekData } from "./ActivitySection";
@@ -63,11 +63,6 @@ type RankedFlavour = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatAverageRating(value: number | null): string {
-  if (value == null || !Number.isFinite(value)) return "—";
-  return `${value.toFixed(1)} ★`;
-}
 
 function deriveStats(logs: IceCreamLog[]) {
   const totalAllTime = logs.length;
@@ -268,75 +263,9 @@ function computeWeeklyData(logs: IceCreamLog[]): WeekData[] {
   return result;
 }
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-function IconTrendingUp() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-      <polyline points="16 7 22 7 22 13" />
-    </svg>
-  );
-}
-
-function IconTrophy() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-      <path d="M4 22h16" />
-      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-    </svg>
-  );
-}
-
-function IconGlobe() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-      <path d="M2 12h20" />
-    </svg>
-  );
-}
-
-function IconCalendar() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect width="18" height="18" x="3" y="4" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const FEED_PAGE_SIZE = 10;
-
-const GRID_CARDS = [
-  { label: "Stats", href: "#stats-section", icon: <IconTrendingUp /> },
-  { label: "Flavour ranking", href: "#ranking-section", icon: <IconTrophy /> },
-  { label: "Passport", href: "/map", icon: <IconGlobe /> },
-  { label: "Calendar", href: "#calendar-section", icon: <IconCalendar /> },
-] as const;
-
-const SECTION_LABEL_STYLE: React.CSSProperties = {
-  color: "var(--color-text-secondary)",
-  fontSize: 13,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  fontWeight: 600,
-};
-
-const CARD_STYLE: React.CSSProperties = {
-  background: "var(--color-surface)",
-  border: "1px solid var(--color-border)",
-  borderRadius: 20,
-};
 
 export default async function IceCreamProfilePage() {
   const supabase = await createClient();
@@ -454,42 +383,33 @@ export default async function IceCreamProfilePage() {
         {/* ── Section 2: Activity Chart ── */}
         <ActivitySection weeklyData={weeklyData} />
 
-        {/* ── Section 3: Quick Access Grid ── */}
-        <section>
-          <p style={SECTION_LABEL_STYLE} className="mb-3">
-            Your Gellog
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {GRID_CARDS.map(({ label, href, icon }) => (
-              <Link
-                key={label}
-                href={href}
-                style={{
-                  ...CARD_STYLE,
-                  padding: "20px 16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 10,
-                }}
-              >
-                <span style={{ color: "var(--color-orange)" }}>{icon}</span>
-                <span
-                  style={{
-                    color: "var(--color-text-primary)",
-                    fontSize: 14,
-                    fontWeight: 600,
-                  }}
-                >
-                  {label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
+        {/* ── Section 3: Quick Access Grid + sheets ── */}
+        <ProfileGellogClient
+          stats={{
+            totalAllTime,
+            totalThisYear,
+            averageOverallRating,
+            mostVisitedSalon,
+            bestWeather,
+            totalSpent,
+            averagePerVisit,
+          }}
+          rankedFlavours={rankedFlavours}
+          heatmapData={heatmapData}
+        />
 
         {/* ── Section 4: Recent Logs ── */}
         <section>
-          <p style={SECTION_LABEL_STYLE} className="mb-3">
+          <p
+            style={{
+              color: "var(--color-text-secondary)",
+              fontSize: 13,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              fontWeight: 600,
+            }}
+            className="mb-3"
+          >
             Recent Logs
           </p>
           <ProfileFeedClient
@@ -497,141 +417,6 @@ export default async function IceCreamProfilePage() {
             pageSize={FEED_PAGE_SIZE}
             currentUserId={user.id}
           />
-        </section>
-
-        {/* ── Stats details (linked from grid card) ── */}
-        <section id="stats-section" aria-labelledby="stats-heading">
-          <p id="stats-heading" style={SECTION_LABEL_STYLE} className="mb-3">
-            Stats
-          </p>
-          <div style={CARD_STYLE} className="p-4">
-            <div className="grid grid-cols-2 gap-4">
-              {[
-                { label: "Total scoops", value: String(totalAllTime) },
-                { label: "This year", value: String(totalThisYear) },
-                {
-                  label: "Average rating",
-                  value: formatAverageRating(averageOverallRating),
-                },
-                {
-                  label: "Most visited salon",
-                  value: mostVisitedSalon
-                    ? `${mostVisitedSalon.name} (${mostVisitedSalon.count}×)`
-                    : "—",
-                },
-                { label: "Best weather", value: bestWeather ?? "—" },
-                totalSpent != null
-                  ? {
-                      label: "Total spent",
-                      value: `€${totalSpent.toFixed(2)}`,
-                    }
-                  : null,
-                averagePerVisit != null
-                  ? {
-                      label: "Avg per visit",
-                      value: `€${averagePerVisit.toFixed(2)}`,
-                    }
-                  : null,
-              ]
-                .filter(Boolean)
-                .map((stat) => (
-                  <div key={stat!.label} className="flex flex-col gap-0.5">
-                    <p
-                      style={{
-                        color: "var(--color-text-secondary)",
-                        fontSize: 12,
-                      }}
-                    >
-                      {stat!.label}
-                    </p>
-                    <p
-                      style={{
-                        color: "var(--color-text-primary)",
-                        fontSize: 16,
-                        fontWeight: 600,
-                      }}
-                      className="truncate"
-                    >
-                      {stat!.value}
-                    </p>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Flavour ranking (linked from grid card) ── */}
-        <section id="ranking-section" aria-labelledby="ranking-heading">
-          <p id="ranking-heading" style={SECTION_LABEL_STYLE} className="mb-3">
-            Flavour Ranking
-          </p>
-          <div style={CARD_STYLE} className="p-4">
-            {rankedFlavours.length === 0 ? (
-              <p
-                style={{ color: "var(--color-text-secondary)", fontSize: 14 }}
-              >
-                Keep logging — flavours appear here once you've tried them at
-                least twice.
-              </p>
-            ) : (
-              <ul className="flex flex-col divide-y" style={{ borderColor: "var(--color-border)" }}>
-                {rankedFlavours.map((flavour) => (
-                  <li
-                    key={flavour.name}
-                    className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white"
-                        style={{ background: "var(--color-orange)" }}
-                      >
-                        #{flavour.rank}
-                      </div>
-                      <div className="flex flex-col">
-                        <span
-                          style={{
-                            color: "var(--color-text-primary)",
-                            fontSize: 14,
-                            fontWeight: 500,
-                          }}
-                        >
-                          {flavour.name}
-                        </span>
-                        <span
-                          style={{
-                            color: "var(--color-text-secondary)",
-                            fontSize: 12,
-                          }}
-                        >
-                          {flavour.timesTried} scoop
-                          {flavour.timesTried === 1 ? "" : "s"}
-                        </span>
-                      </div>
-                    </div>
-                    <span
-                      style={{
-                        color: "var(--color-orange)",
-                        fontSize: 14,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {flavour.averageRating.toFixed(1)} ★
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-
-        {/* ── Activity heatmap / Calendar (linked from grid card) ── */}
-        <section id="calendar-section" aria-labelledby="calendar-heading">
-          <p id="calendar-heading" style={SECTION_LABEL_STYLE} className="mb-3">
-            Calendar
-          </p>
-          <div style={CARD_STYLE} className="p-4">
-            <IceCreamHeatmap data={heatmapData} />
-          </div>
         </section>
 
       </div>

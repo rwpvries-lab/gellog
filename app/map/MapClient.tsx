@@ -3,6 +3,7 @@
 import { shouldShowIceCreamMapMarker } from "@/src/lib/looksLikeIceCreamSalon";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { GellogDirections, GellogClose } from "@/src/components/icons";
 import type { SalonPin, UserSubmittedPin } from "./page";
 
@@ -47,13 +48,25 @@ function makePinSvg(
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
-export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[]; userSubmittedSalons: UserSubmittedPin[] }) {
+export function MapClient({
+  salons,
+  userSubmittedSalons,
+  pickerReturnTo = null,
+}: {
+  salons: SalonPin[];
+  userSubmittedSalons: UserSubmittedPin[];
+  /** When set (from `?returnTo=`), map is used to pick a salon for the new-log flow. */
+  pickerReturnTo?: string | null;
+}) {
+  const router = useRouter();
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const userOverlayRef = useRef<any>(null);
   const markersRef = useRef<Map<string, any>>(new Map());
   const pinSizesRef = useRef<Map<string, number>>(new Map());
   const unloggedIdsRef = useRef<Set<string>>(new Set());
+  /** Picker mode: user-submitted pins are in `markersRef` and use the hollow pin style. */
+  const pickerUserSubmittedIdsRef = useRef<Set<string>>(new Set());
   const placedIdsRef = useRef<Set<string>>(new Set());
   const salonsRef = useRef(salons);
   salonsRef.current = salons;
@@ -98,9 +111,11 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
       const isSelected = selected?.place_id === place_id;
       const size = isSelected ? Math.round(base * 1.3) : base;
       const h = Math.round(size * 1.22);
-      const pinKind = unloggedIdsRef.current.has(place_id)
-        ? "unlogged"
-        : "logged";
+      const pinKind = pickerUserSubmittedIdsRef.current.has(place_id)
+        ? "user_submitted"
+        : unloggedIdsRef.current.has(place_id)
+          ? "unlogged"
+          : "logged";
       marker.setIcon({
         url: makePinSvg(size, isSelected, pinKind),
         scaledSize: new window.google.maps.Size(size, h),
@@ -197,6 +212,7 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
       markersRef.current.clear();
       pinSizesRef.current.clear();
       unloggedIdsRef.current.clear();
+      pickerUserSubmittedIdsRef.current.clear();
       placedIdsRef.current.clear();
     }
 
@@ -321,7 +337,7 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
         const pinH = Math.round(pinSize * 1.22);
         pinSizesRef.current.set(salon.place_id, pinSize);
 
-        new window.google.maps.Marker({
+        const marker = new window.google.maps.Marker({
           map,
           position: { lat: salon.lat, lng: salon.lng },
           icon: {
@@ -331,6 +347,27 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
           },
           title: salon.name,
         });
+
+        if (pickerReturnTo) {
+          markersRef.current.set(salon.place_id, marker);
+          pickerUserSubmittedIdsRef.current.add(salon.place_id);
+          marker.addListener("click", () => {
+            markerJustTapped.current = true;
+            setTimeout(() => {
+              markerJustTapped.current = false;
+            }, 300);
+            setShowDirections(false);
+            setExpanded(false);
+            setSelected({
+              kind: "unlogged",
+              place_id: salon.place_id,
+              name: salon.name,
+              lat: salon.lat,
+              lng: salon.lng,
+              address: "",
+            });
+          });
+        }
       }
 
       map.addListener("click", () => {
@@ -419,7 +456,7 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
     return () => {
       cleanupIdle();
     };
-  }, [salons, userSubmittedSalons]);
+  }, [salons, userSubmittedSalons, pickerReturnTo]);
 
   function handleTouchStart(e: React.TouchEvent) {
     dragStartY.current = e.touches[0].clientY;
@@ -445,6 +482,15 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
     mapInstanceRef.current.panTo(userLocation);
   }
 
+  function confirmPickerSelection() {
+    if (!selected || !pickerReturnTo) return;
+    const q = new URLSearchParams({
+      place_id: selected.place_id,
+      salon_name: selected.name,
+    });
+    router.push(`${pickerReturnTo}?${q.toString()}`);
+  }
+
   const googleUrl = selected
     ? `https://www.google.com/maps/dir/?api=1&destination=${selected.lat},${selected.lng}&destination_place_id=${selected.place_id}`
     : "";
@@ -453,10 +499,29 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
     : "";
 
   const NAV_HEIGHT = 80;
+  const floatingTop = pickerReturnTo ? "top-16" : "top-3";
+  const toastTop = pickerReturnTo ? "top-24" : "top-3";
 
   return (
     <div className="fixed inset-0" style={{ zIndex: 10 }}>
       <div ref={mapRef} className="absolute inset-0 bg-zinc-100 dark:bg-zinc-900" />
+
+      {pickerReturnTo ? (
+        <header
+          className="absolute inset-x-0 top-0 z-[45] flex items-center gap-2 border-b border-zinc-200/90 bg-white/95 px-3 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/95"
+        >
+          <button
+            type="button"
+            onClick={() => router.push(pickerReturnTo)}
+            className="rounded-xl px-2 py-1 text-sm font-medium text-teal-600 dark:text-teal-400"
+          >
+            ← Back
+          </button>
+          <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
+            Choose salon
+          </h2>
+        </header>
+      ) : null}
 
       {!mapReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-zinc-900/80">
@@ -466,7 +531,7 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
 
       {showToast && (
         <div
-          className="pointer-events-none absolute inset-x-0 top-3 flex justify-center"
+          className={`pointer-events-none absolute inset-x-0 flex justify-center ${toastTop}`}
           style={{ zIndex: 50 }}
         >
           <div className="rounded-full bg-black/60 px-4 py-2 text-xs font-medium text-white backdrop-blur-sm">
@@ -481,7 +546,7 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
           type="button"
           aria-label="Centre map on my location"
           onClick={handleLocateMe}
-          className="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md dark:bg-zinc-800"
+          className={`absolute right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md dark:bg-zinc-800 ${floatingTop}`}
           style={{ zIndex: 30 }}
         >
           <GellogDirections size={20} className="text-blue-500" />
@@ -491,7 +556,7 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
       {/* Location denied banner */}
       {locationDenied && !bannerDismissed && (
         <div
-          className="absolute inset-x-3 top-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-md dark:bg-zinc-800"
+          className={`absolute inset-x-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-md dark:bg-zinc-800 ${floatingTop}`}
           style={{ zIndex: 30 }}
         >
           <p className="text-sm text-zinc-600 dark:text-zinc-300">
@@ -546,6 +611,18 @@ export function MapClient({ salons, userSubmittedSalons }: { salons: SalonPin[];
               </span>
             </div>
           </button>
+
+          {pickerReturnTo ? (
+            <div className="px-5 pb-3">
+              <button
+                type="button"
+                onClick={confirmPickerSelection}
+                className="w-full rounded-2xl bg-teal-500 px-4 py-3 text-center text-sm font-semibold text-white"
+              >
+                Use this salon
+              </button>
+            </div>
+          ) : null}
 
           <div
             className={`overflow-hidden transition-all duration-300 ease-in-out ${

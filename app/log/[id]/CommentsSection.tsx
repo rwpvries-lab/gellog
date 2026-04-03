@@ -40,8 +40,9 @@ export function Avatar({
   avatarUrl?: string | null;
   size?: number;
 }) {
+  const [imgError, setImgError] = useState(false);
   const colour = avatarColour(username);
-  return avatarUrl ? (
+  return avatarUrl && !imgError ? (
     <Image
       src={avatarUrl}
       alt={username ?? ""}
@@ -50,6 +51,7 @@ export function Avatar({
       className="shrink-0 rounded-full object-cover"
       style={{ width: size, height: size }}
       unoptimized
+      onError={() => setImgError(true)}
     />
   ) : (
     <div

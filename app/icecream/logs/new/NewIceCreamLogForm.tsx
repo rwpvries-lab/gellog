@@ -3,10 +3,6 @@
 import { StarRating } from "@/app/components/RatingStars";
 import { SalonInput, type SalonData } from "@/src/components/SalonInput";
 import {
-  SalonMapPicker,
-  type MapLoggedSalon,
-} from "@/src/components/SalonMapPicker";
-import {
   PhotoVisibilityPicker,
   type PhotoVisibility,
 } from "@/src/components/PhotoVisibilityPicker";
@@ -14,7 +10,7 @@ import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPi
 import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
 import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 type NewIceCreamLogFormProps = {
   userId: string;
@@ -316,91 +312,15 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [showFlavourPrompt, setShowFlavourPrompt] = useState(false);
   const [priceWarning, setPriceWarning] = useState<number | null>(null);
-  const [mapOpen, setMapOpen] = useState(false);
-  const [mapLoggedSalons, setMapLoggedSalons] = useState<
-    MapLoggedSalon[] | undefined
-  >(undefined);
   const [visibility, setVisibility] = useState<Visibility>(defaultVisibility);
   const [photoVisibility, setPhotoVisibility] = useState<PhotoVisibility>("public");
   const [hidePriceFromOthers, setHidePriceFromOthers] = useState(false);
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
 
-  useEffect(() => {
-    if (!mapOpen) return;
-    let cancelled = false;
-    setMapLoggedSalons(undefined);
-
-    (async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("ice_cream_logs")
-        .select(
-          "salon_place_id, salon_name, salon_lat, salon_lng, salon_address, overall_rating",
-        )
-        .eq("visibility", "public")
-        .not("salon_place_id", "is", null);
-
-      if (cancelled) return;
-
-      if (error || !data) {
-        setMapLoggedSalons([]);
-        return;
-      }
-
-      const agg = new Map<
-        string,
-        {
-          name: string;
-          lat: number;
-          lng: number;
-          address: string | null;
-          sum: number;
-          count: number;
-        }
-      >();
-
-      for (const row of data) {
-        const pid = row.salon_place_id as string | null;
-        if (!pid) continue;
-        const lat = row.salon_lat as number | null;
-        const lng = row.salon_lng as number | null;
-        if (lat == null || lng == null) continue;
-
-        const rating = row.overall_rating as number;
-        const cur = agg.get(pid);
-        if (cur) {
-          cur.sum += rating;
-          cur.count += 1;
-        } else {
-          agg.set(pid, {
-            name: row.salon_name as string,
-            lat,
-            lng,
-            address: (row.salon_address as string | null) ?? null,
-            sum: rating,
-            count: 1,
-          });
-        }
-      }
-
-      const list: MapLoggedSalon[] = [...agg.entries()].map(([place_id, v]) => ({
-        place_id,
-        name: v.name,
-        address: v.address,
-        lat: v.lat,
-        lng: v.lng,
-        rating: v.sum / v.count,
-        visit_count: v.count,
-      }));
-
-      setMapLoggedSalons(list);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [mapOpen]);
+  function openSalonMapPicker() {
+    router.push(`/map?returnTo=${encodeURIComponent("/log")}`);
+  }
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -747,27 +667,17 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
             value={salonName}
             onPlaceSelect={handlePlaceSelect}
             userId={userId}
-            onOpenMap={() => setMapOpen(true)}
+            onOpenMap={openSalonMapPicker}
           />
-          {mapOpen &&
-            (mapLoggedSalons === undefined ? (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="flex flex-col items-center gap-3 rounded-3xl bg-white px-8 py-6 shadow-xl dark:bg-zinc-900">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-400 border-t-transparent" />
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                    Loading map…
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <SalonMapPicker
-                salons={mapLoggedSalons}
-                onSelect={handlePlaceSelect}
-                onClose={() => setMapOpen(false)}
-              />
-            ))}
           <p className="text-xs text-zinc-500 dark:text-zinc-500">
-            Start typing and we’ll remember your favourites later.
+            Start typing and we’ll remember your favourites later.{" "}
+            <button
+              type="button"
+              onClick={openSalonMapPicker}
+              className="font-medium text-teal-600 underline decoration-teal-600/40 underline-offset-2 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
+            >
+              Choose on map
+            </button>
           </p>
         </div>
 

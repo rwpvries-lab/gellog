@@ -32,6 +32,7 @@ export function ProfileHeader({
   const [showOverlay, setShowOverlay] = useState(false);
   const [currentAvatarUrl, setCurrentAvatarUrl] = useState(avatarUrl);
   const [uploading, setUploading] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -53,6 +54,7 @@ export function ProfileHeader({
         .update({ avatar_url: publicUrl })
         .eq("id", userId);
       setCurrentAvatarUrl(publicUrl);
+      setImgError(false);
       setShowOverlay(false);
     } catch {
       // silently fail — user can retry
@@ -118,13 +120,14 @@ export function ProfileHeader({
           }}
           aria-label="View or change profile photo"
         >
-          {currentAvatarUrl ? (
+          {currentAvatarUrl && !imgError ? (
             <Image
               src={currentAvatarUrl}
               alt={displayName}
               fill
               className="object-cover"
               unoptimized
+              onError={() => setImgError(true)}
             />
           ) : (
             <span

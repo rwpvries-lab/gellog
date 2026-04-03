@@ -7,7 +7,7 @@ import { type Visibility } from "@/src/components/VisibilityPicker";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/src/components/icons";
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
@@ -143,6 +143,8 @@ export function SettingsClient({
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [editDisplayName, setEditDisplayName] = useState(initialDisplayName ?? "");
   const [editAvatarUrl, setEditAvatarUrl] = useState(avatarUrl);
+  const [editAvatarImgError, setEditAvatarImgError] = useState(false);
+  const [accountAvatarImgError, setAccountAvatarImgError] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -150,6 +152,10 @@ export function SettingsClient({
 
   const displayName = username ?? email.split("@")[0] ?? "You";
   const initial = displayName.charAt(0).toUpperCase();
+
+  useEffect(() => {
+    setAccountAvatarImgError(false);
+  }, [avatarUrl]);
 
   async function handleVisibilityChange(v: Visibility) {
     setDefaultVisibility(v);
@@ -251,6 +257,7 @@ export function SettingsClient({
       await supabase.storage.from("log-photos").upload(path, file, { upsert: true });
       const { data: { publicUrl } } = supabase.storage.from("log-photos").getPublicUrl(path);
       setEditAvatarUrl(publicUrl);
+      setEditAvatarImgError(false);
     } catch {
       // silently fail — user can retry
     } finally {
@@ -347,13 +354,14 @@ export function SettingsClient({
                 className="relative flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500"
                 style={{ width: 32, height: 32 }}
               >
-                {avatarUrl ? (
+                {avatarUrl && !accountAvatarImgError ? (
                   <Image
                     src={avatarUrl}
                     alt={displayName}
                     fill
                     className="object-cover"
                     unoptimized
+                    onError={() => setAccountAvatarImgError(true)}
                   />
                 ) : (
                   <span
@@ -1056,8 +1064,8 @@ export function SettingsClient({
                     className="relative overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500"
                     style={{ width: 72, height: 72, opacity: avatarUploading ? 0.6 : 1 }}
                   >
-                    {editAvatarUrl ? (
-                      <Image src={editAvatarUrl} alt={displayName} fill className="object-cover" unoptimized />
+                    {editAvatarUrl && !editAvatarImgError ? (
+                      <Image src={editAvatarUrl} alt={displayName} fill className="object-cover" unoptimized onError={() => setEditAvatarImgError(true)} />
                     ) : (
                       <span className="flex h-full w-full items-center justify-center text-2xl font-semibold text-white">
                         {initial}

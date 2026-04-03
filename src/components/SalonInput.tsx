@@ -337,7 +337,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
         <button
           type="button"
           onClick={onOpenMap}
-          title="Find nearby salons on map"
+          title="Choose on map"
           className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-xl text-base transition hover:bg-zinc-100 dark:hover:bg-zinc-800"
         >
           🗺

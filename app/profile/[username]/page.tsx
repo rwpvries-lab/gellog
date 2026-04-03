@@ -1,10 +1,10 @@
 import { createClient } from "@/src/lib/supabase/server";
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FollowButton } from "./FollowButton";
 import { Icon } from "@/src/components/icons";
+import { ProfileAvatar } from "./ProfileAvatar";
 
 type Profile = {
   id: string;
@@ -127,19 +127,7 @@ export default async function UserProfilePage({
         <div className="flex items-center justify-between gap-4 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
           <div className="flex items-center gap-4">
             <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500 text-white shadow-md ring-2 ring-white/80 dark:ring-zinc-900">
-              {profile.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={displayName}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                />
-              ) : (
-                <span className="flex h-full w-full items-center justify-center text-xl font-semibold">
-                  {initial}
-                </span>
-              )}
+              <ProfileAvatar avatarUrl={profile.avatar_url} displayName={displayName} initial={initial} />
             </div>
 
             <div className="flex flex-col gap-0.5">
