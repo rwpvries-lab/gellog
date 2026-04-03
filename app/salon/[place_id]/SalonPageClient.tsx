@@ -22,6 +22,35 @@ type SalonProfile = {
   website: string | null;
 };
 
+type VitrinePublicRow = { id: string; name: string; colour: string | null };
+
+function VitrineDisplaySection({ rows }: { rows: VitrinePublicRow[] }) {
+  return (
+    <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+        On display today
+      </h2>
+      {rows.length === 0 ? (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          No flavours on display today
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {rows.map((r) => (
+            <span
+              key={r.id}
+              className="rounded-full px-3 py-1.5 text-xs font-semibold text-white shadow-sm ring-1 ring-black/10 dark:ring-white/10"
+              style={{ backgroundColor: r.colour ?? "#F9A8D4" }}
+            >
+              {r.name}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const FEED_FIELDS = `
   id,
   user_id,
@@ -122,6 +151,7 @@ export function SalonPageClient({ placeId }: Props) {
   const [followingAuthorIds, setFollowingAuthorIds] = useState<Set<string>>(
     new Set(),
   );
+  const [vitrineOnDisplay, setVitrineOnDisplay] = useState<VitrinePublicRow[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -136,15 +166,28 @@ export function SalonPageClient({ placeId }: Props) {
       if (cancelled) return;
       setUserId(user?.id ?? null);
 
-      const [{ data: logsData }, { data: profileRow }] = await Promise.all([
-        supabase
-          .from("ice_cream_logs")
-          .select(FEED_FIELDS)
-          .eq("salon_place_id", placeId)
-          .eq("visibility", "public")
-          .order("visited_at", { ascending: false }),
-        supabase.from("salon_profiles").select("*").eq("place_id", placeId).maybeSingle<SalonProfile>(),
-      ]);
+      const vitrineSelect = supabase
+        .from("vitrine_flavours")
+        .select("id,name,colour")
+        .eq("salon_place_id", placeId)
+        .eq("is_visible", true)
+        .order("created_at", { ascending: true });
+
+      const [{ data: logsData }, { data: profileRow }, { data: vitrineData }] =
+        await Promise.all([
+          supabase
+            .from("ice_cream_logs")
+            .select(FEED_FIELDS)
+            .eq("salon_place_id", placeId)
+            .eq("visibility", "public")
+            .order("visited_at", { ascending: false }),
+          supabase
+            .from("salon_profiles")
+            .select("*")
+            .eq("place_id", placeId)
+            .maybeSingle<SalonProfile>(),
+          vitrineSelect,
+        ]);
 
       if (cancelled) return;
 
@@ -165,6 +208,7 @@ export function SalonPageClient({ placeId }: Props) {
         setAllLogs([]);
         setSalonProfile(profile);
         setFollowingAuthorIds(new Set());
+        setVitrineOnDisplay((vitrineData ?? []) as VitrinePublicRow[]);
         setLoading(false);
         return;
       }
@@ -207,6 +251,7 @@ export function SalonPageClient({ placeId }: Props) {
       setSalonProfile(profile);
       setFollowingAuthorIds(following);
       setEmptyPlaceName(null);
+      setVitrineOnDisplay((vitrineData ?? []) as VitrinePublicRow[]);
       setLoading(false);
     }
 
@@ -265,6 +310,8 @@ export function SalonPageClient({ placeId }: Props) {
             {placeName}
           </h1>
         </div>
+
+        <VitrineDisplaySection rows={vitrineOnDisplay} />
 
         <div className="rounded-3xl bg-white px-6 py-8 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
           <p className="mb-1 text-3xl">🍦</p>
@@ -385,6 +432,8 @@ export function SalonPageClient({ placeId }: Props) {
           </div>
         )}
       </div>
+
+      <VitrineDisplaySection rows={vitrineOnDisplay} />
 
       <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">

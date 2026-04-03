@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { MySalonBottomNavItem } from "@/app/components/MySalonOwnerAccess";
 import { Icon, type IconName } from "@/src/components/icons";
 
 type NavItem = {
@@ -49,7 +50,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-zinc-200 bg-white/95 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90">
-      <div className="mx-auto flex max-w-xl items-center justify-around px-4 py-2.5">
+      <div className="mx-auto flex max-w-2xl items-center justify-around gap-1 px-2 py-2.5 sm:px-4">
         {navItems.map((item) => {
           const isActive = item.matchPrefixes.some((prefix) =>
             pathname.startsWith(prefix),
@@ -78,6 +79,7 @@ export function BottomNav() {
             </Link>
           );
         })}
+        <MySalonBottomNavItem />
       </div>
     </nav>
   );

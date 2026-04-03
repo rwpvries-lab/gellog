@@ -6,7 +6,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FlavourBoard, type Flavour, type Suggestion } from "./FlavourBoard";
-import { AnalyticsSection, type MonthlyRating, type TopFlavour, type WeatherStat, type WeeklyVisit } from "./AnalyticsSection";
+import { VitrineBoard, type VitrineFlavour, type VitrineVisibilityLogRow } from "./VitrineBoard";
+import {
+  AnalyticsSection,
+  type FlavourInsightRow,
+  type MonthlyRating,
+  type TopFlavour,
+  type WeatherStat,
+  type WeeklyVisit,
+} from "./AnalyticsSection";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -52,6 +60,9 @@ type Props = {
   topFlavours: TopFlavour[];
   weatherStats: WeatherStat[];
   monthlyRatings: MonthlyRating[];
+  initialVitrineFlavours: VitrineFlavour[];
+  initialVitrineLog: VitrineVisibilityLogRow[];
+  flavourInsights: FlavourInsightRow[];
 };
 
 function SalonUpgradeButton({
@@ -100,7 +111,21 @@ function SalonUpgradeButton({
   );
 }
 
-export function DashboardClient({ salonProfile, stats, justClaimed, justUpgraded, initialFlavours, initialSuggestions, weeklyVisits, topFlavours, weatherStats, monthlyRatings }: Props) {
+export function DashboardClient({
+  salonProfile,
+  stats,
+  justClaimed,
+  justUpgraded,
+  initialFlavours,
+  initialSuggestions,
+  weeklyVisits,
+  topFlavours,
+  weatherStats,
+  monthlyRatings,
+  initialVitrineFlavours,
+  initialVitrineLog,
+  flavourInsights,
+}: Props) {
   const router = useRouter();
   const tier = salonProfile.salon_subscription_tier ?? "free";
   const [salonName, setSalonName] = useState(salonProfile.salon_name);
@@ -384,6 +409,7 @@ export function DashboardClient({ salonProfile, stats, justClaimed, justUpgraded
         topFlavours={topFlavours}
         weatherStats={weatherStats}
         monthlyRatings={monthlyRatings}
+        flavourInsights={flavourInsights}
       />
 
       {/* Flavour Board */}
@@ -398,19 +424,26 @@ export function DashboardClient({ salonProfile, stats, justClaimed, justUpgraded
         />
       </div>
 
-      {/* Vitrine Display — Coming Soon */}
-      <div className="mb-5 rounded-3xl border border-zinc-200 bg-zinc-50 px-6 py-5 dark:border-zinc-700 dark:bg-zinc-900/50">
-        <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
-          🪟 Vitrine Display — Coming Soon
+      {/* Vitrine — public flavour display */}
+      <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+        <h2 className="mb-1 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+          Vitrine
+        </h2>
+        <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
+          Flavours you mark visible appear on your public salon page. Hiding a flavour does not delete it.
         </p>
-        <p className="mt-2 text-sm text-zinc-400 dark:text-zinc-500">
-          Let customers see your flavour cabinet inside the app. Your flavours
-          above will appear as coloured tubs in a row. Launching Week 6.
-        </p>
+        <VitrineBoard
+          placeId={salonProfile.place_id}
+          initialFlavours={initialVitrineFlavours}
+          initialLog={initialVitrineLog}
+        />
       </div>
 
       {/* Billing */}
-      <div className="mb-5 rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+      <div
+        id="billing"
+        className="mb-5 scroll-mt-4 rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+      >
         <h2 className="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
           Billing
         </h2>

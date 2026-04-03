@@ -16,6 +16,14 @@ export type TopFlavour = { flavour_name: string; count: number; avg_rating: numb
 export type WeatherStat = { weather_condition: string; visits: number };
 export type MonthlyRating = { month: string; avg_rating: number };
 
+export type FlavourInsightRow = {
+  id: string;
+  name: string;
+  colour: string;
+  displayPct: number;
+  logSharePct: number;
+};
+
 type Props = {
   tier: "free" | "basic" | "pro";
   placeId: string;
@@ -23,6 +31,7 @@ type Props = {
   topFlavours: TopFlavour[];
   weatherStats: WeatherStat[];
   monthlyRatings: MonthlyRating[];
+  flavourInsights: FlavourInsightRow[];
 };
 
 const WEATHER_EMOJI: Record<string, string> = {
@@ -52,6 +61,24 @@ function formatWeek(week: string) {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
+function ProLockIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        fill="currentColor"
+        d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5zm-3 8V7a3 3 0 1 1 6 0v3H9z"
+      />
+    </svg>
+  );
+}
+
 export function AnalyticsSection({
   tier,
   placeId,
@@ -59,6 +86,7 @@ export function AnalyticsSection({
   topFlavours,
   weatherStats,
   monthlyRatings,
+  flavourInsights,
 }: Props) {
   const isBasicOrPro = tier === "basic" || tier === "pro";
   const isPro = tier === "pro";
@@ -244,6 +272,91 @@ export function AnalyticsSection({
           <SalonUpgradeButtonInline place_id={placeId} tier="pro" label="Upgrade to Pro" className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500" />
         </div>
       )}
+
+      {/* 5. Flavour Insights — Pro only */}
+      <div className="mt-6 border-t border-zinc-100 pt-6 dark:border-zinc-800">
+        {isPro ? (
+          <>
+            <p className="mb-3 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              Flavour Insights
+            </p>
+            <p className="mb-3 text-[11px] leading-snug text-zinc-400 dark:text-zinc-500">
+              Vitrine display time vs. your salon profile age, plus how often each name appears in
+              visit logs (matched by flavour name).
+            </p>
+            {flavourInsights.length === 0 ? (
+              <p className="text-xs text-zinc-400 dark:text-zinc-500">
+                Add vitrine flavours to see display share and log share stats.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-4">
+                {flavourInsights.map((row) => {
+                  const d = Math.round(row.displayPct);
+                  const l = Math.round(row.logSharePct);
+                  return (
+                    <div
+                      key={row.id}
+                      className="flex flex-col gap-2 border-b border-zinc-50 pb-4 last:border-b-0 last:pb-0 dark:border-zinc-800/80 sm:flex-row sm:items-center sm:gap-3"
+                    >
+                      <div className="flex min-w-0 items-center gap-2 sm:w-[8.5rem] sm:shrink-0">
+                        <span
+                          className="h-3 w-3 shrink-0 rounded-full ring-1 ring-black/10 dark:ring-white/15"
+                          style={{ backgroundColor: row.colour }}
+                        />
+                        <span className="truncate text-xs font-medium text-zinc-800 dark:text-zinc-200">
+                          {row.name}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1 sm:min-w-[6rem]">
+                        <div className="mb-1 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                          <div
+                            className="h-full rounded-full bg-orange-400 transition-[width] dark:bg-orange-500"
+                            style={{ width: `${Math.min(100, d)}%` }}
+                          />
+                        </div>
+                        <p className="text-[10px] leading-tight text-zinc-500 dark:text-zinc-400">
+                          On display {d}% of the time
+                        </p>
+                      </div>
+                      <p className="shrink-0 text-[10px] leading-tight text-zinc-600 tabular-nums dark:text-zinc-300 sm:w-[7rem] sm:text-right">
+                        Chosen in {l}% of logs
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex flex-col gap-3 rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-800/60 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-2">
+              <ProLockIcon className="shrink-0 text-orange-500 dark:text-orange-400" />
+              <div>
+                <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                  Flavour Insights
+                </p>
+                <p className="mt-0.5 text-xs text-zinc-400 dark:text-zinc-500">
+                  Unlock display time and log share per vitrine flavour on Pro.
+                </p>
+              </div>
+            </div>
+            <div className="flex shrink-0 flex-col gap-2 sm:items-end">
+              <SalonUpgradeButtonInline
+                place_id={placeId}
+                tier="pro"
+                label="Upgrade to Pro"
+                className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500"
+              />
+              <a
+                href="#billing"
+                className="text-center text-[11px] font-medium text-orange-600 hover:underline dark:text-orange-400 sm:text-right"
+              >
+                View billing & plans
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import type { HeatmapDayData } from "./IceCreamHeatmap";
 import { ProfileGellogClient } from "./ProfileGellogClient";
 import { ProfileFeedClient } from "./ProfileFeedClient";
+import { MySalonProfileShortcut } from "@/app/components/MySalonOwnerAccess";
 import { ProfileHeader } from "./ProfileHeader";
 import { ActivitySection, type WeekData } from "./ActivitySection";
 
@@ -367,6 +368,7 @@ export default async function IceCreamProfilePage() {
       className="px-4 pb-24 pt-6"
     >
       <div className="mx-auto flex w-full max-w-xl flex-col gap-5 pb-4">
+        <MySalonProfileShortcut />
 
         {/* ── Section 1: Profile Header ── */}
         <ProfileHeader

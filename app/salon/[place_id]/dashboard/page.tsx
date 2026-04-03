@@ -2,7 +2,14 @@ import { createClient } from "@/src/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardClient } from "./DashboardClient";
 import type { Flavour, Suggestion } from "./FlavourBoard";
-import type { MonthlyRating, TopFlavour, WeatherStat, WeeklyVisit } from "./AnalyticsSection";
+import type { VitrineFlavour, VitrineVisibilityLogRow } from "./VitrineBoard";
+import type {
+  FlavourInsightRow,
+  MonthlyRating,
+  TopFlavour,
+  WeatherStat,
+  WeeklyVisit,
+} from "./AnalyticsSection";
 
 type SalonProfile = {
   id: string;
@@ -19,6 +26,7 @@ type SalonProfile = {
   website: string | null;
   salon_subscription_tier: "free" | "basic" | "pro" | null;
   salon_subscription_expires_at: string | null;
+  created_at?: string | null;
 };
 
 type Stats = {
@@ -79,6 +87,8 @@ export default async function SalonDashboardPage({
     { data: topFlavoursRaw },
     { data: weatherRaw },
     { data: monthlyRatingsRaw },
+    { data: vitrineFlavoursRaw },
+    { data: vitrineLogRaw },
   ] = await Promise.all([
     supabase
       .from("ice_cream_logs")
@@ -86,7 +96,7 @@ export default async function SalonDashboardPage({
       .eq("salon_place_id", place_id),
     supabase
       .from("log_flavours")
-      .select("flavour_name, ice_cream_logs!inner(salon_place_id)")
+      .select("flavour_name, log_id, ice_cream_logs!inner(salon_place_id)")
       .eq("ice_cream_logs.salon_place_id", place_id),
     supabase
       .from("ice_cream_logs")
@@ -120,6 +130,17 @@ export default async function SalonDashboardPage({
     isPro
       ? supabase.rpc("salon_monthly_ratings", { p_place_id: place_id })
       : Promise.resolve({ data: [] }),
+    supabase
+      .from("vitrine_flavours")
+      .select("*")
+      .eq("salon_place_id", place_id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("vitrine_visibility_log")
+      .select("*")
+      .eq("salon_place_id", place_id)
+      .order("changed_at", { ascending: false })
+      .limit(50),
   ]);
 
   const logs = logsData ?? [];
@@ -145,6 +166,51 @@ export default async function SalonDashboardPage({
     visitsThisMonth: monthCount ?? 0,
   };
 
+  let flavourInsightsRows: FlavourInsightRow[] = [];
+  if (isPro && salonProfile.created_at) {
+    const vitrineList = (vitrineFlavoursRaw ?? []) as VitrineFlavour[];
+    const activeSeconds = Math.max(
+      1,
+      Math.floor(
+        (Date.now() - new Date(salonProfile.created_at as string).getTime()) /
+          1000,
+      ),
+    );
+    const totalLogCount = logs.length;
+
+    const logIdsByFlavourName = new Map<string, Set<string>>();
+    for (const row of flavourData ?? []) {
+      const r = row as { flavour_name: string; log_id: string };
+      const key = r.flavour_name.trim().toLowerCase();
+      if (!logIdsByFlavourName.has(key)) logIdsByFlavourName.set(key, new Set());
+      logIdsByFlavourName.get(key)!.add(r.log_id);
+    }
+
+    const rows: FlavourInsightRow[] = vitrineList.map((v) => {
+      const stored = Number(v.total_display_seconds ?? 0);
+      let displaySecs = stored;
+      if (v.is_visible && v.display_started_at) {
+        displaySecs += Math.floor(
+          (Date.now() - new Date(v.display_started_at).getTime()) / 1000,
+        );
+      }
+      const displayPct = Math.min(100, (displaySecs / activeSeconds) * 100);
+      const nameKey = v.name.trim().toLowerCase();
+      const logsWithFlavour = logIdsByFlavourName.get(nameKey)?.size ?? 0;
+      const logSharePct =
+        totalLogCount > 0 ? (logsWithFlavour / totalLogCount) * 100 : 0;
+      return {
+        id: v.id,
+        name: v.name,
+        colour: v.colour ?? "#F9A8D4",
+        displayPct,
+        logSharePct,
+      };
+    });
+    rows.sort((a, b) => b.logSharePct - a.logSharePct);
+    flavourInsightsRows = rows;
+  }
+
   return (
     <DashboardClient
       salonProfile={salonProfile}
@@ -157,6 +223,9 @@ export default async function SalonDashboardPage({
       topFlavours={(topFlavoursRaw ?? []) as TopFlavour[]}
       weatherStats={(weatherRaw ?? []) as WeatherStat[]}
       monthlyRatings={(monthlyRatingsRaw ?? []) as MonthlyRating[]}
+      initialVitrineFlavours={(vitrineFlavoursRaw ?? []) as VitrineFlavour[]}
+      initialVitrineLog={(vitrineLogRaw ?? []) as VitrineVisibilityLogRow[]}
+      flavourInsights={flavourInsightsRows}
     />
   );
 }
