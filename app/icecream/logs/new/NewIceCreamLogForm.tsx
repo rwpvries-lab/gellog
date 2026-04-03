@@ -280,6 +280,49 @@ function ScrollDrum({
   );
 }
 
+function LogCard({
+  children,
+  prominent = false,
+  className = "",
+}: {
+  children: React.ReactNode;
+  prominent?: boolean;
+  className?: string;
+}) {
+  return (
+    <section
+      className={`rounded-2xl bg-[color:var(--color-surface)] ${
+        prominent
+          ? "border-2 border-[color:var(--color-orange)] p-6 shadow-[0_10px_40px_color-mix(in_srgb,var(--color-orange)_12%,transparent)]"
+          : "border border-[color:var(--color-border)] p-5"
+      } ${className}`}
+    >
+      {children}
+    </section>
+  );
+}
+
+function LogSectionHeading({
+  children,
+  hint,
+}: {
+  children: React.ReactNode;
+  hint?: string;
+}) {
+  return (
+    <div className="mb-4">
+      <h2 className="text-base font-semibold tracking-tight text-[color:var(--color-text-primary)]">
+        {children}
+      </h2>
+      {hint ? (
+        <p className="mt-1 text-xs leading-relaxed text-[color:var(--color-text-secondary)]">
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
 export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initialSalonData }: NewIceCreamLogFormProps) {
   const router = useRouter();
   const [salonName, setSalonName] = useState(initialSalonData?.salon_name ?? "");
@@ -635,356 +678,300 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
     setSheetOpen(false);
   }
 
+  const inputFocusClass =
+    "focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)] focus:border-[color:var(--color-teal)]";
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-6 rounded-3xl border border-orange-100 bg-gradient-to-b from-orange-50 via-white to-teal-50 p-6 shadow-xl shadow-orange-100/60 dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-950 dark:to-teal-950/30"
-    >
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <header className="flex flex-col gap-1">
+        <h1 className="text-xl font-semibold tracking-tight text-[color:var(--color-text-primary)]">
           Log a scoop
         </h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+        <p className="text-sm text-[color:var(--color-text-secondary)]">
           Capture your latest ice cream adventure.
         </p>
-      </div>
+      </header>
 
       {error ? (
-        <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100 dark:bg-red-950/60 dark:text-red-200 dark:ring-red-900/60">
+        <p
+          role="alert"
+          className="rounded-2xl px-4 py-3 text-sm text-[color:var(--color-error)] ring-1 ring-[color:var(--color-error-border)] bg-[color:var(--color-error-surface)]"
+        >
           {error}
         </p>
       ) : null}
 
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="salon-name"
-            className="text-sm font-medium text-zinc-800 dark:text-zinc-100"
+      <LogCard prominent>
+        <LogSectionHeading hint="Search or pick on the map — this is the heart of your log.">
+          Salon
+        </LogSectionHeading>
+        <SalonInput
+          value={salonName}
+          onPlaceSelect={handlePlaceSelect}
+          userId={userId}
+          onOpenMap={openSalonMapPicker}
+        />
+        <p className="mt-3 text-xs leading-relaxed text-[color:var(--color-text-secondary)]">
+          Start typing and we’ll remember your favourites later.{" "}
+          <button
+            type="button"
+            onClick={openSalonMapPicker}
+            className="font-medium text-[color:var(--color-teal)] underline decoration-[color:color-mix(in_srgb,var(--color-teal)_45%,transparent)] underline-offset-2"
           >
-            Salon name
-          </label>
-          <SalonInput
-            value={salonName}
-            onPlaceSelect={handlePlaceSelect}
-            userId={userId}
-            onOpenMap={openSalonMapPicker}
+            Choose on map
+          </button>
+        </p>
+      </LogCard>
+
+      {sheetOpen ? (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end">
+          <div
+            className="absolute inset-0 bg-[color:var(--color-backdrop)]"
+            onClick={cancelSheet}
+            aria-hidden
           />
-          <p className="text-xs text-zinc-500 dark:text-zinc-500">
-            Start typing and we’ll remember your favourites later.{" "}
-            <button
-              type="button"
-              onClick={openSalonMapPicker}
-              className="font-medium text-teal-600 underline decoration-teal-600/40 underline-offset-2 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300"
-            >
-              Choose on map
-            </button>
-          </p>
-        </div>
-
-        {/* Date/time trigger pill */}
-        <button
-          type="button"
-          onClick={openSheet}
-          className="flex w-full items-center gap-3 rounded-2xl bg-zinc-100 px-4 py-3 text-left text-sm text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
-        >
-          <span className="text-base leading-none">🕐</span>
-          <span className="flex-1">{formatTriggerLabel(visitedAt)}</span>
-          <span className="text-zinc-400">›</span>
-        </button>
-
-        {/* iOS-style bottom sheet */}
-        {sheetOpen && (
-          <div className="fixed inset-0 z-50 flex flex-col justify-end">
-            <div
-              className="absolute inset-0 bg-black/40"
-              onClick={cancelSheet}
-            />
-            <div className="relative rounded-t-[20px] bg-white shadow-2xl">
-              <div className="flex items-center justify-between px-5 py-4">
-                <button
-                  type="button"
-                  onClick={cancelSheet}
-                  className="text-sm text-zinc-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmSheet}
-                  className="text-sm font-semibold text-amber-600"
-                >
-                  Bevestigen
-                </button>
-              </div>
-              <div className="flex pb-8">
-                <ScrollDrum
-                  items={getLast30Days()}
-                  selectedValue={draftDay}
-                  onChange={setDraftDay}
-                />
-                <ScrollDrum
-                  items={Array.from({ length: 24 }, (_, i) => ({
-                    value: String(i),
-                    label: pad(i),
-                  }))}
-                  selectedValue={String(draftHour)}
-                  onChange={(v) => setDraftHour(Number(v))}
-                />
-                <ScrollDrum
-                  items={MINUTE_STEPS.map((m) => ({
-                    value: String(m),
-                    label: pad(m),
-                  }))}
-                  selectedValue={String(draftMinute)}
-                  onChange={(v) => setDraftMinute(Number(v))}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-col gap-2">
-          {!isToday(visitedAt) ? (
-            <p className="text-xs text-zinc-500 dark:text-zinc-500">
-              No weather data available for past visits
-            </p>
-          ) : weather ? (
-            <div className="inline-flex items-center gap-2 self-start rounded-full bg-teal-100/90 px-3 py-1 text-xs font-medium text-teal-800 ring-1 ring-teal-200 dark:bg-teal-900/40 dark:text-teal-100 dark:ring-teal-800">
-              <span className="text-sm leading-none">✓</span>
-              <span>{weather.emoji}</span>
-              <span>
-                {Math.round(weather.temperature)}°C · Feels like{" "}
-                {Math.round(weather.apparentTemperature)}°C · {weather.label}
-                {weather.uvIndex != null && weather.uvIndex >= 3
-                  ? ` · UV ${Math.round(weather.uvIndex)}`
-                  : ""}
-              </span>
-            </div>
-          ) : weatherLoading ? (
-            <div className="inline-flex items-center gap-2 self-start rounded-full bg-sky-50 px-3 py-1.5 text-xs font-medium text-sky-800 ring-1 ring-sky-200 dark:bg-sky-950/40 dark:text-sky-100 dark:ring-sky-900">
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-sky-300 border-t-sky-600 dark:border-sky-800 dark:border-t-sky-200" />
-              <span>Fetching weather...</span>
-            </div>
-          ) : weatherUnsupported ? (
-            <p className="text-xs text-zinc-500 dark:text-zinc-500">
-              Location not supported on this browser
-            </p>
-          ) : weatherUnavailable ? (
-            <div className="flex items-center gap-2">
-              <p className="text-xs text-zinc-500 dark:text-zinc-500">
-                ⚠️ Weather unavailable
-              </p>
+          <div className="relative rounded-t-[20px] bg-[color:var(--color-surface)] shadow-2xl ring-1 ring-[color:var(--color-border)]">
+            <div className="flex items-center justify-between px-5 py-4">
               <button
                 type="button"
-                onClick={handleCaptureWeather}
-                className="text-xs font-medium text-teal-700 underline underline-offset-2 dark:text-teal-400"
+                onClick={cancelSheet}
+                className="text-sm text-[color:var(--color-text-secondary)]"
               >
-                Retry
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={confirmSheet}
+                className="text-sm font-semibold text-[color:var(--color-orange)]"
+              >
+                Done
               </button>
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleCaptureWeather}
-              className="inline-flex items-center justify-center self-start rounded-full bg-teal-100 px-4 py-2 text-sm font-medium text-teal-800 ring-1 ring-teal-200 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:bg-teal-950/50 dark:text-teal-100 dark:ring-teal-800 dark:hover:bg-teal-900/60"
-            >
-              Tap to capture weather 🌤️
-            </button>
-          )}
+            <div className="flex pb-8">
+              <ScrollDrum
+                items={getLast30Days()}
+                selectedValue={draftDay}
+                onChange={setDraftDay}
+              />
+              <ScrollDrum
+                items={Array.from({ length: 24 }, (_, i) => ({
+                  value: String(i),
+                  label: pad(i),
+                }))}
+                selectedValue={String(draftHour)}
+                onChange={(v) => setDraftHour(Number(v))}
+              />
+              <ScrollDrum
+                items={MINUTE_STEPS.map((m) => ({
+                  value: String(m),
+                  label: pad(m),
+                }))}
+                selectedValue={String(draftMinute)}
+                onChange={(v) => setDraftMinute(Number(v))}
+              />
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <LogCard>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold tracking-tight text-[color:var(--color-text-primary)]">
+              Flavours
+            </h2>
+            <p className="mt-1 text-xs leading-relaxed text-[color:var(--color-text-secondary)]">
+              Add each scoop and rate it.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddFlavour}
+            className="inline-flex shrink-0 items-center justify-center rounded-full bg-[color:var(--color-orange)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-on-brand)] shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)] focus:ring-offset-2 focus:ring-offset-[color:var(--color-surface)]"
+          >
+            + Add flavour
+          </button>
         </div>
 
-        <div className="flex flex-col gap-3 rounded-2xl bg-white/70 p-3 ring-1 ring-orange-100 backdrop-blur dark:bg-zinc-900/70 dark:ring-zinc-800">
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-                Flavours
-              </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-500">
-                Add each scoop and rate it.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleAddFlavour}
-              className="inline-flex items-center justify-center rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-teal-300"
-            >
-              + Add flavour
-            </button>
-          </div>
-
-          {showFlavourPrompt ? (
-            <div className="rounded-2xl bg-zinc-50 px-3 py-2.5 ring-1 ring-zinc-200 dark:bg-zinc-800/60 dark:ring-zinc-700">
-              <p className="text-sm italic text-zinc-500 dark:text-zinc-400">
-                That&apos;s already quite a lot of gelato 🍦 — are you sure you want to add another flavour?
-              </p>
-              <div className="mt-2 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => { addFlavour(); setShowFlavourPrompt(false); }}
-                  className="rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-orange-700"
-                >
-                  Yes, add it
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowFlavourPrompt(false)}
-                  className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : null}
-
-          <div className="flex flex-col gap-3">
-            {flavours.map((flavour, index) => (
-              <div
-                key={flavour.id}
-                className="flex flex-col gap-2 rounded-2xl bg-orange-50/60 p-3 ring-1 ring-orange-100 dark:bg-zinc-900/80 dark:ring-zinc-700"
+        {showFlavourPrompt ? (
+          <div className="mb-4 rounded-xl bg-[color:var(--color-surface-alt)] px-3 py-3 ring-1 ring-[color:var(--color-border)]">
+            <p className="text-sm italic text-[color:var(--color-text-secondary)]">
+              That&apos;s already quite a lot of gelato 🍦 — are you sure you want to add another flavour?
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  addFlavour();
+                  setShowFlavourPrompt(false);
+                }}
+                className="rounded-full bg-[color:var(--color-orange)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-on-brand)] transition hover:brightness-110"
               >
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={flavour.name}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setFlavours((prev) =>
-                        prev.map((item) =>
-                          item.id === flavour.id ? { ...item, name: value } : item
-                        )
-                      );
-                    }}
-                    placeholder={`Flavour ${index + 1} (e.g. Stracciatella)`}
-                    className="flex-1 rounded-xl border border-orange-100 bg-white/80 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-100"
-                  />
-                  {flavours.length > 1 ? (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFlavour(flavour.id)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white text-xs font-semibold text-red-500 ring-1 ring-red-200 transition hover:bg-red-50 dark:bg-zinc-900 dark:ring-zinc-700 dark:text-red-400"
-                      aria-label="Remove flavour"
-                    >
-                      ×
-                    </button>
-                  ) : null}
-                </div>
+                Yes, add it
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowFlavourPrompt(false)}
+                className="rounded-full bg-[color:var(--color-surface-alt)] px-3 py-1.5 text-xs font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : null}
 
-                <StarRating
-                  id={`flavour-${flavour.id}-rating`}
-                  label="Flavour rating"
-                  value={flavour.rating}
-                  onChange={(value) =>
+        <div className="flex flex-col gap-3">
+          {flavours.map((flavour, index) => (
+            <div
+              key={flavour.id}
+              className="flex flex-col gap-3 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] p-4"
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={flavour.name}
+                  onChange={(e) => {
+                    const value = e.target.value;
                     setFlavours((prev) =>
                       prev.map((item) =>
-                        item.id === flavour.id ? { ...item, rating: value } : item
-                      )
-                    )
-                  }
+                        item.id === flavour.id ? { ...item, name: value } : item,
+                      ),
+                    );
+                  }}
+                  placeholder={`Flavour ${index + 1} (e.g. Stracciatella)`}
+                  className={`flex-1 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-3 py-2 text-sm text-[color:var(--color-text-primary)] placeholder-[color:var(--color-text-tertiary)] ${inputFocusClass}`}
                 />
+                {flavours.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFlavour(flavour.id)}
+                    className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-[color:var(--color-surface)] text-sm font-semibold text-[color:var(--color-error)] ring-1 ring-[color:var(--color-error-border)] transition hover:bg-[color:var(--color-error-surface)]"
+                    aria-label="Remove flavour"
+                  >
+                    ×
+                  </button>
+                ) : null}
+              </div>
 
-                <button
-                  type="button"
-                  onClick={() => toggleAdvanced(flavour.id)}
-                  className="self-start text-xs font-medium text-teal-700 dark:text-teal-400"
-                >
-                  {expandedAdvanced.has(flavour.id) ? "− Rate in more detail" : "+ Rate in more detail"}
-                </button>
+              <StarRating
+                id={`flavour-${flavour.id}-rating`}
+                label="Flavour rating"
+                value={flavour.rating}
+                onChange={(value) =>
+                  setFlavours((prev) =>
+                    prev.map((item) =>
+                      item.id === flavour.id ? { ...item, rating: value } : item,
+                    ),
+                  )
+                }
+              />
 
-                <div
-                  className="grid transition-all duration-300"
-                  style={{ gridTemplateRows: expandedAdvanced.has(flavour.id) ? "1fr" : "0fr" }}
-                >
-                  <div className="overflow-hidden">
-                    <div className="flex flex-col gap-2 pt-1">
-                      {(
-                        [
-                          { key: "ratingTexture", label: "Textuur (Texture)" },
-                          { key: "ratingOriginality", label: "Originaliteit (Originality)" },
-                          { key: "ratingIntensity", label: "Intensiteit (Intensity)" },
-                          { key: "ratingPresentation", label: "Presentatie (Presentation)" },
-                        ] as const
-                      ).map(({ key, label }) => (
-                        <StarRating
-                          key={key}
-                          id={`flavour-${flavour.id}-${key}`}
-                          label={label}
-                          value={flavour[key]}
-                          onChange={(value) =>
-                            setFlavours((prev) =>
-                              prev.map((item) =>
-                                item.id === flavour.id ? { ...item, [key]: value } : item
-                              )
-                            )
-                          }
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              <button
+                type="button"
+                onClick={() => toggleAdvanced(flavour.id)}
+                className="self-start text-xs font-medium text-[color:var(--color-teal)]"
+              >
+                {expandedAdvanced.has(flavour.id)
+                  ? "− Rate in more detail"
+                  : "+ Rate in more detail"}
+              </button>
 
-                <div className="flex flex-wrap gap-1.5">
-                  {DIETARY_TAGS.map((tag) => {
-                    const selected = flavour.tags.includes(tag);
-                    return (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() =>
+              <div
+                className="grid transition-all duration-300"
+                style={{ gridTemplateRows: expandedAdvanced.has(flavour.id) ? "1fr" : "0fr" }}
+              >
+                <div className="overflow-hidden">
+                  <div className="flex flex-col gap-2 pt-1">
+                    {(
+                      [
+                        { key: "ratingTexture" as const, label: "Textuur (Texture)" },
+                        { key: "ratingOriginality" as const, label: "Originaliteit (Originality)" },
+                        { key: "ratingIntensity" as const, label: "Intensiteit (Intensity)" },
+                        { key: "ratingPresentation" as const, label: "Presentatie (Presentation)" },
+                      ] as const
+                    ).map(({ key, label }) => (
+                      <StarRating
+                        key={key}
+                        id={`flavour-${flavour.id}-${key}`}
+                        label={label}
+                        value={flavour[key]}
+                        onChange={(value) =>
                           setFlavours((prev) =>
                             prev.map((item) =>
-                              item.id === flavour.id
-                                ? {
-                                    ...item,
-                                    tags: selected
-                                      ? item.tags.filter((t) => t !== tag)
-                                      : [...item.tags, tag],
-                                  }
-                                : item
-                            )
+                              item.id === flavour.id ? { ...item, [key]: value } : item,
+                            ),
                           )
                         }
-                        className={
-                          selected
-                            ? "rounded-full px-2.5 py-0.5 text-xs font-medium bg-teal-600 text-white"
-                            : "rounded-full px-2.5 py-0.5 text-xs font-medium bg-white text-zinc-500 ring-1 ring-zinc-300 dark:bg-zinc-900 dark:text-zinc-400 dark:ring-zinc-600"
-                        }
-                      >
-                        {tag}
-                      </button>
-                    );
-                  })}
-                  {STATUS_TAGS.map((tag) => (
-                    <span
-                      key={tag.label}
-                      className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium bg-orange-100 text-orange-700 ring-1 ring-orange-200 dark:bg-orange-900/30 dark:text-orange-200 dark:ring-orange-800/50 opacity-40 cursor-default select-none"
-                      title="Set by salon operators"
-                    >
-                      <span>{tag.icon}</span>
-                      {tag.label}
-                    </span>
-                  ))}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
 
+              <div className="flex flex-wrap gap-1.5">
+                {DIETARY_TAGS.map((tag) => {
+                  const selected = flavour.tags.includes(tag);
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() =>
+                        setFlavours((prev) =>
+                          prev.map((item) =>
+                            item.id === flavour.id
+                              ? {
+                                  ...item,
+                                  tags: selected
+                                    ? item.tags.filter((t) => t !== tag)
+                                    : [...item.tags, tag],
+                                }
+                              : item,
+                          ),
+                        )
+                      }
+                      className={
+                        selected
+                          ? "rounded-full bg-[color:var(--color-teal)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--color-on-brand)]"
+                          : `rounded-full bg-[color:var(--color-surface)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]`
+                      }
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+                {STATUS_TAGS.map((tag) => (
+                  <span
+                    key={tag.label}
+                    className="inline-flex cursor-default select-none items-center gap-1 rounded-full bg-[color:var(--color-orange-bg)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--color-orange)] opacity-45 ring-1 ring-[color:color-mix(in_srgb,var(--color-orange)_35%,var(--color-border))]"
+                    title="Set by salon operators"
+                  >
+                    <span>{tag.icon}</span>
+                    {tag.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </LogCard>
+
+      <LogCard>
+        <LogSectionHeading hint="How was the visit overall?">Rating</LogSectionHeading>
         <StarRating
           id="log-overall-visit-rating"
           label="Overall visit rating"
           value={overallRating}
           onChange={(value) => setOverallRating(value)}
         />
-
-        <div className="flex flex-col gap-2">
-          <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
-            Vessel
-          </span>
-          <div className="flex gap-4">
+        <div className="mt-5 rounded-xl border-2 border-[color:var(--color-teal)] bg-[color:var(--color-teal-bg)] p-5 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-teal)_18%,transparent)]">
+          <p className="mb-4 text-center text-sm font-semibold text-[color:var(--color-text-primary)]">
+            Cup or cone?
+          </p>
+          <div className="flex gap-6">
             {(
               [
-                { value: "cone", label: "Hoorntje" },
-                { value: "cup", label: "Bakje" },
+                { value: "cone" as const, label: "Hoorntje" },
+                { value: "cup" as const, label: "Bakje" },
               ] as const
             ).map(({ value, label }) => {
               const isSelected = vessel === value;
@@ -993,7 +980,7 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
                 .slice(0, 3)
                 .map((f, i) => ({ name: f.name, colorHex: getFlavourColor(f.name, i) }));
               return (
-                <div key={value} className="flex flex-1 flex-col items-center gap-2">
+                <div key={value} className="flex flex-1 flex-col items-center gap-3">
                   <VesselIllustration
                     vessel={value}
                     flavours={activeFlavours}
@@ -1004,8 +991,10 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
                   <span
                     style={{
                       fontSize: 13,
-                      fontWeight: isSelected ? 600 : 400,
-                      color: isSelected ? "var(--color-orange, #F97316)" : "var(--color-text-secondary)",
+                      fontWeight: isSelected ? 600 : 500,
+                      color: isSelected
+                        ? "var(--color-orange)"
+                        : "var(--color-text-secondary)",
                     }}
                   >
                     {label}
@@ -1015,22 +1004,102 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
             })}
           </div>
         </div>
+      </LogCard>
 
-        <div className="flex flex-col gap-1">
+      <LogCard>
+        <LogSectionHeading hint="Anything memorable about this visit?">Notes</LogSectionHeading>
+        <textarea
+          id="notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={4}
+          placeholder="Sunny terrace, friendly staff, maybe a waffle on the side…"
+          className={`w-full rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] px-3 py-3 text-sm text-[color:var(--color-text-primary)] placeholder-[color:var(--color-text-tertiary)] ${inputFocusClass}`}
+        />
+      </LogCard>
+
+      <LogCard>
+        <LogSectionHeading hint="When were you there?">Visit date &amp; time</LogSectionHeading>
+        <button
+          type="button"
+          onClick={openSheet}
+          className="flex w-full items-center gap-3 rounded-xl bg-[color:var(--color-surface-alt)] px-4 py-3.5 text-left text-sm text-[color:var(--color-text-primary)] transition hover:brightness-[0.97] dark:hover:brightness-110"
+        >
+          <span className="text-base leading-none" aria-hidden>
+            🕐
+          </span>
+          <span className="flex-1 font-medium">{formatTriggerLabel(visitedAt)}</span>
+          <span className="text-[color:var(--color-text-tertiary)]" aria-hidden>
+            ›
+          </span>
+        </button>
+        <div className="mt-4 flex flex-col gap-2 border-t border-[color:var(--color-border)] pt-4">
+          {!isToday(visitedAt) ? (
+            <p className="text-xs text-[color:var(--color-text-secondary)]">
+              No weather data available for past visits
+            </p>
+          ) : weather ? (
+            <div className="inline-flex max-w-full flex-wrap items-center gap-2 self-start rounded-xl bg-[color:var(--color-teal-bg)] px-3 py-2 text-xs font-medium text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_35%,var(--color-border))]">
+              <span className="text-sm leading-none" aria-hidden>
+                ✓
+              </span>
+              <span>{weather.emoji}</span>
+              <span className="text-[color:var(--color-text-primary)]">
+                {Math.round(weather.temperature)}°C · Feels like{" "}
+                {Math.round(weather.apparentTemperature)}°C · {weather.label}
+                {weather.uvIndex != null && weather.uvIndex >= 3
+                  ? ` · UV ${Math.round(weather.uvIndex)}`
+                  : ""}
+              </span>
+            </div>
+          ) : weatherLoading ? (
+            <div className="inline-flex items-center gap-2 self-start rounded-xl bg-[color:var(--color-surface-alt)] px-3 py-2 text-xs font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-[color:var(--color-border)] border-t-[color:var(--color-teal)]" />
+              <span>Fetching weather…</span>
+            </div>
+          ) : weatherUnsupported ? (
+            <p className="text-xs text-[color:var(--color-text-secondary)]">
+              Location not supported on this browser
+            </p>
+          ) : weatherUnavailable ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-xs text-[color:var(--color-text-secondary)]">Weather unavailable</p>
+              <button
+                type="button"
+                onClick={handleCaptureWeather}
+                className="text-xs font-medium text-[color:var(--color-teal)] underline underline-offset-2"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={handleCaptureWeather}
+              className="inline-flex items-center justify-center self-start rounded-full bg-[color:var(--color-teal-bg)] px-4 py-2 text-sm font-medium text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_35%,var(--color-border))] transition hover:brightness-95 dark:hover:brightness-110"
+            >
+              Tap to capture weather <span aria-hidden>{"\u00a0"}🌤️</span>
+            </button>
+          )}
+        </div>
+      </LogCard>
+
+      <LogCard>
+        <div className="mb-5 flex flex-col gap-3 border-b border-[color:var(--color-border)] pb-5">
           <label
             htmlFor="photo"
-            className="text-sm font-medium text-zinc-800 dark:text-zinc-100"
+            className="text-sm font-semibold text-[color:var(--color-text-primary)]"
           >
             Photo
           </label>
           <label
             htmlFor="photo"
-            className="flex cursor-pointer items-center justify-between gap-2 rounded-2xl bg-white/80 px-3 py-2.5 text-sm text-zinc-700 shadow-sm ring-1 ring-orange-100 transition hover:bg-orange-50 dark:bg-zinc-900/70 dark:text-zinc-100 dark:ring-zinc-700"
+            className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] px-3 py-2.5 text-sm text-[color:var(--color-text-primary)] transition hover:brightness-[0.98] dark:hover:brightness-110"
           >
-            <span>
+            <span className="min-w-0 truncate">
               {photoFile ? photoFile.name : "Add a sunny scoop photo"}
             </span>
-            <span className="rounded-full bg-[#00D4A6] px-3 py-1 text-xs font-semibold text-white">
+            <span className="shrink-0 rounded-full bg-[color:var(--color-teal)] px-3 py-1 text-xs font-semibold text-[color:var(--color-on-brand)]">
               Choose file
             </span>
             <input
@@ -1045,74 +1114,79 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
               }}
             />
           </label>
-          <p className="text-xs text-zinc-500 dark:text-zinc-500">
-            Stored in the <code>log-photos</code> bucket.
+          <p className="text-xs text-[color:var(--color-text-secondary)]">
+            Stored in the <code className="text-[color:var(--color-text-primary)]">log-photos</code> bucket.
           </p>
           {photoFile ? (
-            <div className="mt-2 flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-medium text-[color:var(--color-text-secondary)]">
                 Who can see this photo?
               </span>
-              <PhotoVisibilityPicker
-                value={photoVisibility}
-                onChange={setPhotoVisibility}
-              />
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              <PhotoVisibilityPicker value={photoVisibility} onChange={setPhotoVisibility} />
+              <p className="text-xs text-[color:var(--color-text-tertiary)]">
                 Followers are people who follow you on Gellog.
               </p>
             </div>
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <label
             htmlFor="price-paid"
-            className="text-sm font-medium text-zinc-800 dark:text-zinc-100"
+            className="text-sm font-semibold text-[color:var(--color-text-primary)]"
           >
             Price paid (optional)
           </label>
-          <div className="flex items-center rounded-2xl border border-orange-100 bg-white/80 shadow-sm focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70">
-            <span className="pl-3 text-sm text-zinc-400">€</span>
+          <div
+            className={`flex items-center rounded-xl border border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] focus-within:border-[color:var(--color-teal)] focus-within:ring-2 focus-within:ring-[color:var(--color-teal)]`}
+          >
+            <span className="pl-3 text-sm text-[color:var(--color-text-tertiary)]">€</span>
             <input
               id="price-paid"
               type="text"
               inputMode="decimal"
               value={pricePaid}
-              onChange={(e) => { setPricePaid(e.target.value); setPriceWarning(null); }}
+              onChange={(e) => {
+                setPricePaid(e.target.value);
+                setPriceWarning(null);
+              }}
               onBlur={() => {
                 const val = parseFloat(pricePaid.replace(",", "."));
                 if (!isNaN(val) && val >= 20) setPriceWarning(val >= 100 ? val / 100 : val / 10);
               }}
               placeholder="0.00"
-              className="w-full rounded-2xl bg-transparent px-2 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none dark:text-zinc-100"
+              className="w-full rounded-xl bg-transparent px-2 py-2.5 text-sm text-[color:var(--color-text-primary)] placeholder-[color:var(--color-text-tertiary)] focus:outline-none"
             />
           </div>
-          <label className="mt-2 flex cursor-pointer items-start gap-2 text-xs text-zinc-600 dark:text-zinc-300">
+          <label className="mt-1 flex cursor-pointer items-start gap-2 text-xs text-[color:var(--color-text-secondary)]">
             <input
               type="checkbox"
               checked={hidePriceFromOthers}
               onChange={(e) => setHidePriceFromOthers(e.target.checked)}
-              className="mt-0.5 rounded border-zinc-300 text-teal-600 focus:ring-teal-500 dark:border-zinc-600"
+              className="mt-0.5 rounded border-[color:var(--color-border)] text-[color:var(--color-teal)] focus:ring-[color:var(--color-teal)]"
             />
             <span>Hide this price from other people (only you will see it)</span>
           </label>
           {priceWarning != null ? (
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <p className="text-sm italic text-zinc-500 dark:text-zinc-400">
+              <p className="text-sm italic text-[color:var(--color-text-secondary)]">
                 That seems high — did you mean €{priceWarning.toFixed(2)}? Gelato usually costs a few euros.
               </p>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5">
                 <button
                   type="button"
-                  onClick={() => { setPricePaid(priceWarning.toFixed(2)); setPriceWarning(null); }}
-                  className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                  onClick={() => {
+                    setPricePaid(priceWarning.toFixed(2));
+                    setPriceWarning(null);
+                  }}
+                  className="rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-xs font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
                 >
                   Yes, use €{priceWarning.toFixed(2)}
                 </button>
                 <button
                   type="button"
                   onClick={() => setPriceWarning(null)}
-                  className="rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                  className="rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-xs font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
                 >
                   No, keep €{pricePaid}
                 </button>
@@ -1120,36 +1194,19 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
             </div>
           ) : null}
         </div>
+      </LogCard>
 
-        <div className="flex flex-col gap-1">
-          <label
-            htmlFor="notes"
-            className="text-sm font-medium text-zinc-800 dark:text-zinc-100"
-          >
-            Notes (optional)
-          </label>
-          <textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={4}
-            placeholder="Sunny terrace, friendly staff, maybe a waffle on the side…"
-            className="w-full rounded-2xl border border-orange-100 bg-white/80 px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+      <LogCard className="p-4">
+        <label className="mb-3 block text-sm font-semibold text-[color:var(--color-text-primary)]">
           Visibility
         </label>
         <VisibilityPicker value={visibility} onChange={setVisibility} />
-      </div>
+      </LogCard>
 
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex h-11 w-full items-center justify-center rounded-full bg-orange-600 px-6 text-sm font-semibold text-white transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 disabled:opacity-60"
+        className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[color:var(--color-orange)] px-6 text-sm font-semibold text-[color:var(--color-on-brand)] transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)] focus:ring-offset-2 focus:ring-offset-[color:var(--color-surface-alt)] disabled:opacity-60"
       >
         {submitting ? "Scooping…" : "Opslaan"}
       </button>

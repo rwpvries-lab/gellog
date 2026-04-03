@@ -15,11 +15,9 @@ export type LogComment = {
   profiles: { username: string | null; avatar_url: string | null } | null;
 };
 
-const AVATAR_COLOURS = ["#4D97D6", "#60B488", "#C13A2D", "#D02E2E", "#3531B7"];
-
 export function avatarColour(username: string | null | undefined): string {
-  if (!username) return AVATAR_COLOURS[0];
-  return AVATAR_COLOURS[username.charCodeAt(0) % AVATAR_COLOURS.length];
+  const i = !username ? 0 : username.charCodeAt(0) % 5;
+  return `var(--color-avatar-${i})`;
 }
 
 export function timeAgo(dateStr: string): string {

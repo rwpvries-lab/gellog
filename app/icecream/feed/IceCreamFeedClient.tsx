@@ -255,21 +255,26 @@ export function IceCreamFeedClient({
   const isEmpty = !loading && logs.length === 0;
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Tab toggle */}
-      <div className="flex rounded-2xl bg-zinc-100 p-0.5 dark:bg-zinc-800">
+    <div className="flex flex-col gap-6">
+      <div
+        className="flex rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-1 shadow-sm"
+        role="tablist"
+        aria-label="Feed scope"
+      >
         {(["everyone", "friends"] as const).map((t) => (
           <button
             key={t}
             type="button"
+            role="tab"
+            aria-selected={tab === t}
             onClick={() => void switchTab(t)}
-            className={`flex flex-1 items-center justify-center rounded-xl px-4 py-2 text-sm font-medium transition ${
+            className={`flex flex-1 items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
               tab === t
-                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-50"
-                : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                ? "bg-[color:var(--color-orange)] text-[color:var(--color-on-brand)] shadow-[0_1px_3px_color-mix(in_srgb,var(--color-text-primary)_12%,transparent)]"
+                : "text-[color:var(--color-text-secondary)] hover:text-[color:var(--color-text-primary)]"
             }`}
           >
-            {t === "everyone" ? "Everyone" : "Friends"}
+            {t === "everyone" ? "Discover" : "Friends"}
           </button>
         ))}
       </div>
@@ -284,49 +289,73 @@ export function IceCreamFeedClient({
       ))}
 
       {isEmpty && tab === "everyone" ? (
-        <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-white px-8 py-12 text-center text-sm text-zinc-600 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800">
-          <span className="mb-4 text-5xl">🍦</span>
-          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            No ice cream logs
-          </p>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            Start your first sweet adventure and track your scoops.
-          </p>
-          <Link
-            href="/log"
-            className="mt-5 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-teal-500 px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-300/50 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-white dark:shadow-none dark:focus:ring-offset-zinc-950"
-          >
-            Log a sweet trip
-          </Link>
+        <div className="relative mt-6 overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-8 py-12 text-center shadow-sm">
+          <div
+            className="pointer-events-none absolute -right-10 -top-12 h-40 w-40 rounded-full bg-[color:var(--color-orange-bg)] opacity-80 blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -bottom-14 -left-8 h-36 w-36 rounded-full bg-[color:var(--color-teal-bg)] opacity-90 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative flex flex-col items-center">
+            <div className="mb-6 flex items-end justify-center gap-0.5" aria-hidden>
+              <span className="translate-y-1 text-4xl">🍨</span>
+              <span className="text-6xl leading-none">🍦</span>
+              <span className="translate-y-2 text-3xl">🧁</span>
+            </div>
+            <p className="text-base font-semibold text-[color:var(--color-text-primary)]">
+              No scoops yet
+            </p>
+            <p className="mt-2 max-w-[260px] text-sm leading-relaxed text-[color:var(--color-text-secondary)]">
+              Be the first to log a visit — your feed will fill up with flavour here.
+            </p>
+            <Link
+              href="/log"
+              className="mt-8 inline-flex items-center justify-center rounded-full bg-[color:var(--color-orange)] px-6 py-3 text-sm font-semibold text-[color:var(--color-on-brand)] shadow-[0_6px_20px_color-mix(in_srgb,var(--color-orange)_25%,transparent)] transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)] focus:ring-offset-2 focus:ring-offset-[color:var(--color-surface)]"
+            >
+              Log your first scoop
+            </Link>
+          </div>
         </div>
       ) : isEmpty && tab === "friends" ? (
-        <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-white px-8 py-12 text-center text-sm text-zinc-600 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:text-zinc-300 dark:ring-zinc-800">
-          <span className="mb-4 text-5xl">👥</span>
-          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-            No logs from friends yet
-          </p>
-          <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-            Follow people to see their scoops here.
-          </p>
-          <Link
-            href="/search"
-            className="mt-5 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-teal-500 px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-300/50 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-white dark:shadow-none dark:focus:ring-offset-zinc-950"
-          >
-            Find people to follow
-          </Link>
+        <div className="relative mt-6 overflow-hidden rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] px-8 py-12 text-center shadow-sm">
+          <div
+            className="pointer-events-none absolute -right-8 top-6 h-32 w-32 rounded-full bg-[color:var(--color-teal-bg)] opacity-75 blur-3xl"
+            aria-hidden
+          />
+          <div className="relative flex flex-col items-center">
+            <div className="mb-6 flex items-center justify-center gap-2 text-5xl" aria-hidden>
+              <span>👋</span>
+              <span className="text-6xl leading-none">👥</span>
+              <span className="text-4xl">🍦</span>
+            </div>
+            <p className="text-base font-semibold text-[color:var(--color-text-primary)]">
+              No friend activity yet
+            </p>
+            <p className="mt-2 max-w-[260px] text-sm leading-relaxed text-[color:var(--color-text-secondary)]">
+              Follow people you know to see their gelato logs in this tab.
+            </p>
+            <Link
+              href="/search"
+              className="mt-8 inline-flex items-center justify-center rounded-full bg-[color:var(--color-teal)] px-6 py-3 text-sm font-semibold text-[color:var(--color-on-brand)] shadow-[0_6px_20px_color-mix(in_srgb,var(--color-teal)_28%,transparent)] transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-orange)] focus:ring-offset-2 focus:ring-offset-[color:var(--color-surface)]"
+            >
+              Find people
+            </Link>
+          </div>
         </div>
       ) : null}
 
-      <div ref={sentinelRef} className="h-8 w-full" />
+      <div ref={sentinelRef} className="h-6 w-full" />
 
-      <div className="flex items-center justify-center py-4 text-xs text-zinc-500 dark:text-zinc-400">
+      <div className="flex items-center justify-center py-2 text-xs text-[color:var(--color-text-secondary)]">
         {loading ? (
           <span>Loading more scoops…</span>
         ) : hasMore ? (
           <button
             type="button"
             onClick={() => void fetchMore()}
-            className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-teal-700 shadow-sm ring-1 ring-teal-100 transition hover:bg-teal-50 dark:bg-zinc-900 dark:text-teal-300 dark:ring-teal-900"
+            className="rounded-full bg-[color:var(--color-surface)] px-5 py-2 text-xs font-semibold text-[color:var(--color-teal)] shadow-sm ring-1 ring-[color:var(--color-border)] transition hover:bg-[color:var(--color-surface-alt)]"
           >
             Load more
           </button>
@@ -336,7 +365,10 @@ export function IceCreamFeedClient({
       </div>
 
       {error ? (
-        <p className="pb-4 text-center text-xs text-red-600 dark:text-red-300">
+        <p
+          role="alert"
+          className="pb-4 text-center text-xs font-medium text-[color:var(--color-error)]"
+        >
           {error}
         </p>
       ) : null}

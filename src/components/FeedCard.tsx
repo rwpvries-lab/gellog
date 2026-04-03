@@ -151,17 +151,17 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
       onClick={onClose}
     >
       <div
-        className="w-full rounded-t-3xl bg-white p-6 shadow-2xl ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+        className="w-full rounded-t-3xl bg-[color:var(--color-surface)] p-6 shadow-2xl ring-1 ring-[color:var(--color-border)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+          <p className="text-sm font-semibold text-[color:var(--color-text-primary)]">
             Get directions to {log.salon_name}
           </p>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-xs text-zinc-500 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--color-surface-alt)] text-xs text-[color:var(--color-text-secondary)] transition hover:brightness-95 dark:hover:brightness-110"
             aria-label="Close"
           >
             ✕
@@ -170,7 +170,7 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
         <div className="flex flex-col gap-2">
           <a
             href={appleUrl}
-            className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
+            className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface-alt)] px-4 py-3 text-sm font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
           >
             <span className="text-lg">🗺️</span>
             Open in Apple Maps
@@ -179,7 +179,7 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
             href={googleUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
+            className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface-alt)] px-4 py-3 text-sm font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
           >
             <span className="text-lg">🌐</span>
             Open in Google Maps
@@ -187,7 +187,7 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
           <button
             type="button"
             onClick={() => void handleCopyLocation()}
-            className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-4 py-3 text-sm font-medium text-zinc-800 ring-1 ring-zinc-100 transition hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-100 dark:ring-zinc-700 dark:hover:bg-zinc-700"
+            className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface-alt)] px-4 py-3 text-sm font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
           >
             <span className="text-lg">{copied ? "✅" : "📋"}</span>
             {copied ? "Copied!" : "Copy location"}
@@ -219,7 +219,8 @@ export function FeedCard({
   isDetailPage = false,
 }: FeedCardProps) {
   const router = useRouter();
-  const [expanded, setExpanded] = useState(isDetailPage);
+  const [feedExpanded, setFeedExpanded] = useState(false);
+  const expanded = isDetailPage || feedExpanded;
   const [showDirections, setShowDirections] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -303,10 +304,10 @@ export function FeedCard({
 
   const ratingBorderClass =
     log.overall_rating >= 4
-      ? "border-l-4 border-l-orange-400 dark:border-l-orange-500"
+      ? "border-l-4 border-l-[color:var(--color-orange)]"
       : log.overall_rating >= 3
-        ? "border-l-4 border-l-teal-500 dark:border-l-teal-400"
-        : "border-l-4 border-l-zinc-200 dark:border-l-zinc-700";
+        ? "border-l-4 border-l-[color:var(--color-teal)]"
+        : "border-l-4 border-l-[color:var(--color-border)]";
 
   const numericFlavourRatings = log.log_flavours
     .map((f) => (typeof f.rating === "number" ? f.rating : null))
@@ -320,14 +321,20 @@ export function FeedCard({
   return (
     <>
       <article
-        className={`overflow-hidden rounded-3xl bg-white shadow-sm backdrop-blur-sm dark:bg-zinc-900 ${ratingBorderClass} ${isOwnLog ? "ring-1 ring-orange-200 dark:ring-orange-900/50" : "ring-1 ring-zinc-100 dark:ring-zinc-800"}`}
-        onClick={() => { if (!isDetailPage) setExpanded((e) => !e); }}
+        className={`overflow-hidden rounded-3xl bg-[color:var(--color-surface)] shadow-sm ring-1 backdrop-blur-sm ${ratingBorderClass} ${
+          isOwnLog
+            ? "ring-[color:color-mix(in_srgb,var(--color-orange)_45%,var(--color-border))]"
+            : "ring-[color:var(--color-border)]"
+        }`}
+        onClick={() => {
+          if (!isDetailPage) setFeedExpanded((v) => !v);
+        }}
         style={{ cursor: isDetailPage ? "default" : "pointer" }}
       >
         {/* ── COLLAPSED: always visible ── */}
-        <div className="p-3">
+        <div className="p-4 pb-3">
           {/* Header: avatar · username · time ago [· edit/delete] */}
-          <div className="mb-2.5 flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400">
+          <div className="mb-3 flex items-center gap-2 text-xs text-[color:var(--color-text-secondary)]">
             {profile?.username ? (
               <Link
                 href={isOwnLog ? "/icecream/profile" : `/profile/${profile.username}`}
@@ -346,13 +353,13 @@ export function FeedCard({
                   />
                 ) : (
                   <div
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-[color:var(--color-on-brand)]"
                     style={{ backgroundColor: avatarColor }}
                   >
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                <span className="font-medium text-[color:var(--color-text-primary)]">
                   {displayName}
                 </span>
               </Link>
@@ -370,13 +377,13 @@ export function FeedCard({
                   />
                 ) : (
                   <div
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-white"
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-[color:var(--color-on-brand)]"
                     style={{ backgroundColor: avatarColor }}
                   >
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="font-medium text-zinc-700 dark:text-zinc-300">
+                <span className="font-medium text-[color:var(--color-text-primary)]">
                   {displayName}
                 </span>
               </>
@@ -384,11 +391,11 @@ export function FeedCard({
             <span>·</span>
             <span>{timeAgo}</span>
             {log.visibility === "friends" ? (
-              <span className="rounded-full bg-teal-50 px-1.5 py-0.5 text-[10px] font-medium text-teal-600 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-400 dark:ring-teal-800/50">
+              <span className="rounded-full bg-[color:var(--color-teal-bg)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_35%,var(--color-border))]">
                 Friends
               </span>
             ) : log.visibility === "private" ? (
-              <span className="rounded-full bg-zinc-100 px-1.5 py-0.5 text-[10px] font-medium text-zinc-500 ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:ring-zinc-700">
+              <span className="rounded-full bg-[color:var(--color-surface-alt)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
                 Private
               </span>
             ) : null}
@@ -400,7 +407,7 @@ export function FeedCard({
                     e.stopPropagation();
                     router.push(`/icecream/logs/edit/${log.id}`);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[color:var(--color-text-tertiary)] transition hover:bg-[color:var(--color-surface-alt)] hover:text-[color:var(--color-text-primary)]"
                   aria-label="Edit log"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -414,7 +421,7 @@ export function FeedCard({
                     e.stopPropagation();
                     setShowDeleteConfirm(true);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 transition hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[color:var(--color-text-tertiary)] transition hover:bg-[color:var(--color-error-surface)] hover:text-[color:var(--color-error)]"
                   aria-label="Delete log"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -429,13 +436,13 @@ export function FeedCard({
           </div>
 
           {/* Salon name + vessel + overall rating */}
-          <div className="flex items-start justify-between gap-3">
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
+          <div className="flex items-start justify-between gap-4">
+            <h2 className="text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--color-text-primary)]">
               {log.salon_place_id ? (
                 <Link
                   href={`/salon/${log.salon_place_id}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 text-teal-800 ring-1 ring-teal-100 transition hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60 dark:hover:bg-teal-900/50"
+                  className="inline-flex max-w-full items-center gap-1 rounded-full bg-[color:var(--color-teal-bg)] px-3 py-1 text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_40%,var(--color-border))] transition hover:brightness-95 dark:hover:brightness-110"
                 >
                   {log.salon_name}
                 </Link>
@@ -457,7 +464,7 @@ export function FeedCard({
             </h2>
             <div className="flex shrink-0 flex-col items-end gap-0.5">
               <RatingStarsDisplay value={log.overall_rating} size="lg" />
-              <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <span className="text-xs font-medium text-[color:var(--color-text-secondary)]">
                 {log.overall_rating.toFixed(1)}/5
               </span>
             </div>
@@ -465,7 +472,7 @@ export function FeedCard({
 
           {/* Photo */}
           {canSeePhoto && photoUrl ? (
-            <div className="relative mt-2.5 aspect-[8/5] w-full overflow-hidden rounded-2xl">
+            <div className="relative mt-3 aspect-[8/5] w-full overflow-hidden rounded-2xl">
               <Image
                 src={photoUrl}
                 alt={`Photo from ${log.salon_name}`}
@@ -475,11 +482,11 @@ export function FeedCard({
               />
             </div>
           ) : showPhotoPlaceholder ? (
-            <div className="mt-2.5 flex aspect-[8/5] w-full flex-col items-center justify-center gap-1 rounded-2xl bg-zinc-100 ring-1 ring-zinc-200 dark:bg-zinc-800/80 dark:ring-zinc-700">
+            <div className="mt-3 flex aspect-[8/5] w-full flex-col items-center justify-center gap-1 rounded-2xl bg-[color:var(--color-surface-alt)] ring-1 ring-[color:var(--color-border)]">
               <span className="text-2xl" aria-hidden>
                 👥
               </span>
-              <p className="px-4 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <p className="px-4 text-center text-xs font-medium text-[color:var(--color-text-secondary)]">
                 Photo visible to followers only
               </p>
             </div>
@@ -490,16 +497,16 @@ export function FeedCard({
             <div
               style={{
                 display: "grid",
-                gridTemplateRows: expanded ? "0fr" : "1fr",
+                gridTemplateRows: expanded ? "0fr" : "minmax(0, 1fr)",
                 transition: "grid-template-rows 280ms ease",
               }}
             >
-              <div style={{ overflow: "hidden" }}>
-                <div className="mt-2.5 flex flex-wrap gap-1.5">
+              <div className="min-h-0 overflow-hidden">
+                <div className="mt-3 flex flex-wrap gap-2 pt-0.5">
                   {log.log_flavours.map((flavour) => (
                     <span
                       key={flavour.id}
-                      className="inline-flex items-center rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                      className="inline-flex items-center rounded-full bg-[color:var(--color-surface-alt)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)]"
                     >
                       {flavour.flavour_name}
                     </span>
@@ -514,12 +521,12 @@ export function FeedCard({
         <div
           style={{
             display: "grid",
-            gridTemplateRows: expanded ? "1fr" : "0fr",
+            gridTemplateRows: expanded ? "minmax(0, 1fr)" : "0fr",
             transition: "grid-template-rows 280ms ease",
           }}
         >
-          <div style={{ overflow: "hidden" }}>
-            <div className="flex flex-col gap-3 px-3 pb-1">
+          <div className="min-h-0 overflow-hidden">
+            <div className="flex flex-col gap-3 px-4 pb-2 pt-1">
               {/* Flavour pills with ratings + tags */}
               {log.log_flavours.length > 0 ? (
                 <div className="flex flex-col gap-2">
@@ -530,8 +537,8 @@ export function FeedCard({
                       flavour.rating === highestFlavourRating;
 
                     const flavourClass = isTop
-                      ? "bg-orange-50 text-orange-700 ring-orange-100 dark:bg-orange-500/10 dark:text-orange-200 dark:ring-orange-800/60"
-                      : "bg-zinc-50 text-zinc-700 ring-zinc-100 dark:bg-zinc-900/70 dark:text-zinc-100 dark:ring-zinc-700";
+                      ? "bg-[color:var(--color-orange-bg)] text-[color:var(--color-orange)] ring-[color:color-mix(in_srgb,var(--color-orange)_35%,var(--color-border))]"
+                      : "bg-[color:var(--color-surface-alt)] text-[color:var(--color-text-primary)] ring-[color:var(--color-border)]";
 
                     const advancedRatings = getAdvancedRatings(flavour);
 
@@ -552,14 +559,14 @@ export function FeedCard({
                                 DIETARY_TAG_SET.has(tag) ? (
                                   <span
                                     key={tag}
-                                    className="rounded-full bg-teal-100 px-1.5 py-0 text-[10px] font-medium text-teal-700 dark:bg-teal-900/50 dark:text-teal-200"
+                                    className="rounded-full bg-[color:var(--color-teal-bg)] px-1.5 py-0 text-[10px] font-medium text-[color:var(--color-teal)]"
                                   >
                                     {tag}
                                   </span>
                                 ) : (
                                   <span
                                     key={tag}
-                                    className="rounded-full bg-orange-100 px-1.5 py-0 text-[10px] font-medium text-orange-700 dark:bg-orange-900/40 dark:text-orange-200"
+                                    className="rounded-full bg-[color:var(--color-orange-bg)] px-1.5 py-0 text-[10px] font-medium text-[color:var(--color-orange)]"
                                   >
                                     {tag}
                                   </span>
@@ -572,7 +579,7 @@ export function FeedCard({
                             {advancedRatings.map(({ label, value }) => (
                               <span
                                 key={label}
-                                className="flex items-center gap-1 text-[10px] text-zinc-500 dark:text-zinc-400"
+                                className="flex items-center gap-1 text-[10px] text-[color:var(--color-text-secondary)]"
                               >
                                 <span className="font-medium">{label}</span>
                                 <RatingStarsDisplay value={value} size="sm" />
@@ -588,7 +595,7 @@ export function FeedCard({
 
               {/* Weather */}
               {weather ? (
-                <p className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="flex items-center gap-1 text-xs text-[color:var(--color-text-secondary)]">
                   <span>☀️</span>
                   {weather}
                 </p>
@@ -596,8 +603,8 @@ export function FeedCard({
 
               {/* Price */}
               {canSeePrice && pricePaid != null ? (
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                  <span className="font-medium text-orange-600 dark:text-orange-300">
+                <p className="text-xs text-[color:var(--color-text-secondary)]">
+                  <span className="font-medium text-[color:var(--color-orange)]">
                     €{pricePaid.toFixed(2)}
                   </span>{" "}
                   paid
@@ -606,13 +613,13 @@ export function FeedCard({
 
               {/* Notes */}
               {log.notes ? (
-                <p className="rounded-2xl bg-zinc-50 px-3 py-2 text-sm text-zinc-700 ring-1 ring-zinc-100 dark:bg-zinc-900/80 dark:text-zinc-200 dark:ring-zinc-800">
+                <p className="rounded-2xl bg-[color:var(--color-surface-alt)] px-3 py-2 text-sm text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)]">
                   {log.notes}
                 </p>
               ) : null}
 
               {/* Full date/time */}
-              <p className="text-xs text-zinc-400 dark:text-zinc-500">{fullDate}</p>
+              <p className="text-xs text-[color:var(--color-text-tertiary)]">{fullDate}</p>
 
               {/* Directions button */}
               {log.salon_lat != null && log.salon_lng != null ? (
@@ -623,7 +630,7 @@ export function FeedCard({
                       e.stopPropagation();
                       setShowDirections(true);
                     }}
-                    className="flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1.5 text-xs font-medium text-teal-700 ring-1 ring-teal-100 transition hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60 dark:hover:bg-teal-900/50"
+                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--color-teal-bg)] px-3 py-1.5 text-xs font-medium text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_35%,var(--color-border))] transition hover:brightness-95 dark:hover:brightness-110"
                   >
                     <svg
                       width="11"
@@ -647,9 +654,9 @@ export function FeedCard({
           </div>
         </div>
 
-        {/* ── Action row: like · comment count · [spacer] · share ── */}
+        {/* ── Action row: balanced like · comment · share ── */}
         <div
-          className="flex items-center gap-3 border-t border-zinc-100 px-3 py-2 dark:border-zinc-800"
+          className="grid grid-cols-3 items-center border-t border-[color:var(--color-border)] px-2 py-2.5"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Like */}
@@ -657,8 +664,8 @@ export function FeedCard({
             type="button"
             onClick={(e) => void handleLike(e)}
             disabled={!currentUserId || likeLoading}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition hover:bg-zinc-50 disabled:cursor-default dark:hover:bg-zinc-800"
-            style={{ color: liked ? "var(--color-orange, #F97316)" : "var(--color-text-secondary)" }}
+            className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)] disabled:cursor-default"
+            style={{ color: liked ? "var(--color-orange)" : "var(--color-text-secondary)" }}
             aria-label={liked ? "Unlike" : "Like"}
           >
             <svg
@@ -681,7 +688,7 @@ export function FeedCard({
           <Link
             href={isDetailPage ? "#comments" : `/log/${log.id}#comments`}
             onClick={(e) => e.stopPropagation()}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)]"
             style={{ color: "var(--color-text-secondary)" }}
             aria-label="Comments"
           >
@@ -701,14 +708,11 @@ export function FeedCard({
             {(log.comment_count ?? 0) > 0 && <span>{log.comment_count}</span>}
           </Link>
 
-          {/* Spacer */}
-          <div className="flex-1" />
-
           {/* Share */}
           <button
             type="button"
             onClick={(e) => void handleShare(e)}
-            className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium transition hover:bg-zinc-50 dark:hover:bg-zinc-800"
+            className="mx-auto flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)]"
             style={{ color: "var(--color-text-secondary)" }}
             aria-label="Share"
           >
@@ -731,11 +735,10 @@ export function FeedCard({
           </button>
         </div>
 
-        {/* ── Toggle label ── */}
-        {!isDetailPage && (
+        {!isDetailPage ? (
           <div
-            className="flex items-center justify-center gap-1 py-2 text-[10px] font-medium text-zinc-400 dark:text-zinc-500"
-            aria-hidden="true"
+            className="flex items-center justify-center gap-1 py-2 text-[10px] font-medium text-[color:var(--color-text-tertiary)]"
+            aria-hidden
           >
             {expanded ? (
               <>
@@ -749,7 +752,7 @@ export function FeedCard({
               </>
             )}
           </div>
-        )}
+        ) : null}
       </article>
 
       {toast && (
@@ -765,22 +768,22 @@ export function FeedCard({
           className="fixed inset-0 z-50 flex items-center justify-center p-6"
           onClick={() => setShowDeleteConfirm(false)}
         >
-          <div className="absolute inset-0 bg-black/40" />
+          <div className="absolute inset-0 bg-[color:var(--color-backdrop)]" />
           <div
-            className="relative w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+            className="relative w-full max-w-sm rounded-3xl bg-[color:var(--color-surface)] p-6 shadow-2xl ring-1 ring-[color:var(--color-border)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+            <p className="text-sm font-semibold text-[color:var(--color-text-primary)]">
               Delete this log?
             </p>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="mt-1 text-xs text-[color:var(--color-text-secondary)]">
               Are you sure you want to delete this log? This cannot be undone.
             </p>
             <div className="mt-5 flex gap-3">
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 rounded-full bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                className="flex-1 rounded-full bg-[color:var(--color-surface-alt)] px-4 py-2 text-sm font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
               >
                 Cancel
               </button>
@@ -788,7 +791,7 @@ export function FeedCard({
                 type="button"
                 onClick={() => void handleDelete()}
                 disabled={deleting}
-                className="flex-1 rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
+                className="flex-1 rounded-full bg-[color:var(--color-error)] px-4 py-2 text-sm font-semibold text-[color:var(--color-on-brand)] transition hover:brightness-110 disabled:opacity-60"
               >
                 {deleting ? "Deleting…" : "Delete"}
               </button>

@@ -40,7 +40,11 @@ function getStarSizeClass(size: StarSize): string {
 }
 
 function StarIcon({ active, preview = false, size }: StarIconProps) {
-  const fillColor = active ? "#F59E0B" : preview ? "#FDBA74" : "transparent";
+  const fillColor = active
+    ? "var(--color-orange)"
+    : preview
+      ? "color-mix(in srgb, var(--color-orange) 45%, transparent)"
+      : "transparent";
 
   return (
     <svg
@@ -51,7 +55,7 @@ function StarIcon({ active, preview = false, size }: StarIconProps) {
       <path
         d={STAR_PATH}
         fill={fillColor}
-        stroke="#3F3F46"
+        stroke="var(--color-border)"
         strokeWidth="1.25"
         strokeLinejoin="round"
       />
@@ -59,7 +63,7 @@ function StarIcon({ active, preview = false, size }: StarIconProps) {
         <path
           d={STAR_PATH}
           fill="none"
-          stroke="#D97706"
+          stroke="var(--color-orange)"
           strokeWidth="1"
           strokeLinejoin="round"
         />
@@ -77,7 +81,7 @@ export function StarRating({ label, value, onChange, id }: StarRatingProps) {
       {label ? (
         <span
           id={labelId}
-          className="text-sm font-medium text-zinc-800 dark:text-zinc-100"
+          className="text-sm font-medium text-[color:var(--color-text-primary)]"
         >
           {label}
         </span>
@@ -87,7 +91,7 @@ export function StarRating({ label, value, onChange, id }: StarRatingProps) {
         role="radiogroup"
         aria-labelledby={labelId}
         aria-label={label && !labelId ? label : undefined}
-        className="inline-flex items-center gap-1 rounded-full bg-white/70 px-3 py-1 shadow-sm ring-1 ring-orange-100 backdrop-blur dark:bg-zinc-900/70 dark:ring-zinc-700"
+        className="inline-flex items-center gap-1 rounded-full bg-[color:var(--color-surface-alt)] px-3 py-1 shadow-sm ring-1 ring-[color:var(--color-border)]"
       >
         {STAR_VALUES.map((star) => {
           const active = value != null && star <= value;
@@ -108,7 +112,7 @@ export function StarRating({ label, value, onChange, id }: StarRatingProps) {
               onMouseLeave={() => setHoveredValue(null)}
               onFocus={() => setHoveredValue(star)}
               onBlur={() => setHoveredValue(null)}
-              className="flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-300"
+              className="flex h-7 w-7 items-center justify-center rounded-full transition-transform hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--color-orange)]"
             >
               <StarIcon active={active} preview={preview} size="input" />
             </button>
@@ -129,7 +133,7 @@ export function RatingStarsDisplay({
   return (
     <div
       aria-label={`${safeValue} out of 5 stars`}
-      className="inline-flex items-center gap-0.5 rounded-full bg-white/80 px-2 py-1 ring-1 ring-orange-100 dark:bg-zinc-900/70 dark:ring-zinc-700"
+      className="inline-flex items-center gap-0.5 rounded-full bg-[color:var(--color-surface-alt)] px-2 py-1 ring-1 ring-[color:var(--color-border)]"
     >
       {STAR_VALUES.map((star) => (
         <StarIcon

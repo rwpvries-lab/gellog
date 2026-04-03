@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/client";
 import { Icon } from "@/src/components/icons";
@@ -267,30 +267,140 @@ function FollowsYouBadge() {
   );
 }
 
+type FollowerRow = {
+  profiles: PersonProfile | PersonProfile[] | null;
+};
+
+function extractProfile(row: FollowerRow): PersonProfile | null {
+  const p = row.profiles;
+  if (!p) return null;
+  if (Array.isArray(p)) return p[0] ?? null;
+  return p;
+}
+
+function ConnectionsListSkeleton() {
+  return (
+    <>
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+        <div key={i}>
+          {i > 0 && (
+            <div
+              style={{
+                height: "0.5px",
+                background: "var(--color-border)",
+                marginLeft: 68,
+              }}
+            />
+          )}
+          <div
+            className="flex animate-pulse items-center gap-3 px-4 py-3"
+            style={{ minHeight: 64 }}
+          >
+            <div
+              className="flex-shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700"
+              style={{ width: 44, height: 44 }}
+            />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <div className="h-3.5 w-32 rounded bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-3 w-20 rounded bg-zinc-200 dark:bg-zinc-700" />
+            </div>
+            <div className="h-8 w-20 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 type Props = {
+  viewedUserId: string;
   viewedUsername: string;
-  followers: PersonProfile[];
-  following: PersonProfile[];
   currentUserId: string | null;
-  myFollowingIds: string[];
-  myFollowerIds: string[];
   initialTab: "followers" | "following";
 };
 
 export function ConnectionsClient({
+  viewedUserId,
   viewedUsername,
-  followers,
-  following,
   currentUserId,
-  myFollowingIds,
-  myFollowerIds,
   initialTab,
 }: Props) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"followers" | "following">(initialTab);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [followers, setFollowers] = useState<PersonProfile[]>([]);
+  const [following, setFollowing] = useState<PersonProfile[]>([]);
+  const [myFollowingIds, setMyFollowingIds] = useState<string[]>([]);
+  const [myFollowerIds, setMyFollowerIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      const supabase = createClient();
+
+      const [followersRes, followingRes, myFollowingRes, myFollowersRes] =
+        await Promise.all([
+          supabase
+            .from("friendships")
+            .select(
+              "profiles!follower_id(id, username, display_name, avatar_url)",
+            )
+            .eq("following_id", viewedUserId),
+          supabase
+            .from("friendships")
+            .select(
+              "profiles!following_id(id, username, display_name, avatar_url)",
+            )
+            .eq("follower_id", viewedUserId),
+          currentUserId
+            ? supabase
+                .from("friendships")
+                .select("following_id")
+                .eq("follower_id", currentUserId)
+            : Promise.resolve({
+                data: [] as { following_id: string }[],
+                error: null,
+              }),
+          currentUserId
+            ? supabase
+                .from("friendships")
+                .select("follower_id")
+                .eq("following_id", currentUserId)
+            : Promise.resolve({
+                data: [] as { follower_id: string }[],
+                error: null,
+              }),
+        ]);
+
+      if (cancelled) return;
+
+      const nextFollowers: PersonProfile[] = (followersRes.data ?? [])
+        .map((r) => extractProfile(r as FollowerRow))
+        .filter((p): p is PersonProfile => p !== null);
+
+      const nextFollowing: PersonProfile[] = (followingRes.data ?? [])
+        .map((r) => extractProfile(r as FollowerRow))
+        .filter((p): p is PersonProfile => p !== null);
+
+      setFollowers(nextFollowers);
+      setFollowing(nextFollowing);
+      setMyFollowingIds(
+        (myFollowingRes.data ?? []).map((r) => r.following_id),
+      );
+      setMyFollowerIds((myFollowersRes.data ?? []).map((r) => r.follower_id));
+      setLoading(false);
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [viewedUserId, currentUserId]);
 
   const list = activeTab === "followers" ? followers : following;
   const query = search.trim().toLowerCase();
@@ -366,8 +476,12 @@ export function ConnectionsClient({
               }}
             >
               {tab === "followers"
-                ? `Followers · ${followers.length}`
-                : `Following · ${following.length}`}
+                ? loading
+                  ? "Followers"
+                  : `Followers · ${followers.length}`
+                : loading
+                  ? "Following"
+                  : `Following · ${following.length}`}
             </button>
           ))}
         </div>
@@ -414,7 +528,9 @@ export function ConnectionsClient({
             overflow: "hidden",
           }}
         >
-          {filtered.length === 0 ? (
+          {loading ? (
+            <ConnectionsListSkeleton />
+          ) : filtered.length === 0 ? (
             <p
               className="py-10 text-center"
               style={{ color: "var(--color-text-secondary)", fontSize: 14 }}

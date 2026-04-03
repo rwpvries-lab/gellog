@@ -19,6 +19,18 @@
   --color-text-tertiary:  #9CA3AF;
   --color-error:          #DC2626;
   --color-location:       #3b82f6;
+
+  /* Log form & overlays (reference palette only via variables) */
+  --color-backdrop:       color-mix(in srgb, var(--color-text-primary) 42%, transparent);
+  --color-error-surface:  color-mix(in srgb, var(--color-error) 8%, var(--color-surface));
+  --color-error-border:   color-mix(in srgb, var(--color-error) 28%, var(--color-border));
+  --color-on-brand:       #ffffff;
+
+  --color-avatar-0: #4d97d6;
+  --color-avatar-1: #60b488;
+  --color-avatar-2: #c13a2d;
+  --color-avatar-3: #d02e2e;
+  --color-avatar-4: #3531b7;
 }
 
 .dark {
@@ -37,6 +49,17 @@
   --color-text-tertiary:  #6B7280;
   --color-error:          #EF4444;
   --color-location:       #60a5fa;
+
+  --color-backdrop:       color-mix(in srgb, #000000 55%, transparent);
+  --color-error-surface:  color-mix(in srgb, var(--color-error) 14%, var(--color-surface));
+  --color-error-border:   color-mix(in srgb, var(--color-error) 35%, var(--color-border));
+  --color-on-brand:       #ffffff;
+
+  --color-avatar-0: #5ba3e8;
+  --color-avatar-1: #6bc49a;
+  --color-avatar-2: #e34d3d;
+  --color-avatar-3: #ef5350;
+  --color-avatar-4: #5c58d6;
 }
 
 @theme inline {

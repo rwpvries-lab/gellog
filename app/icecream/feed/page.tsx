@@ -125,15 +125,15 @@ export default async function IceCreamFeedPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-teal-50 px-4 pb-24 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40">
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
+    <main className="min-h-screen bg-[color:var(--color-surface-alt)] px-4 pb-24 pt-6">
+      <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
         <header className="flex items-center justify-between gap-3">
-          <div className="flex flex-col">
-            <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-bold tracking-tight text-[color:var(--color-text-primary)]">
               Ice cream feed
             </h1>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              See the latest scoops from everyone logging their adventures.
+            <p className="text-sm leading-relaxed text-[color:var(--color-text-secondary)]">
+              Latest scoops from the community.
             </p>
           </div>
         </header>
@@ -150,7 +150,7 @@ export default async function IceCreamFeedPage() {
 
       <Link
         href="/icecream/logs/new"
-        className="fixed bottom-6 right-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-teal-500 text-3xl font-semibold text-white shadow-xl shadow-orange-400/40 ring-2 ring-white/60 transition hover:brightness-110 focus:outline-none focus:ring-4 focus:ring-teal-300/70 dark:shadow-none dark:ring-zinc-900"
+        className="fixed bottom-6 right-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-orange),var(--color-teal))] text-3xl font-semibold text-[color:var(--color-on-brand)] shadow-[0_10px_28px_color-mix(in_srgb,var(--color-orange)_28%,transparent)] ring-2 ring-[color:var(--color-surface)] transition hover:brightness-110 focus:outline-none focus:ring-4 focus:ring-[color:color-mix(in_srgb,var(--color-teal)_45%,transparent)]"
         aria-label="Log a new ice cream"
       >
         +

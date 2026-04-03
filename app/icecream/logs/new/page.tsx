@@ -90,14 +90,14 @@ export default async function NewIceCreamLogPage({
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-orange-100 via-orange-50 to-teal-100 px-4 py-8 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40">
+    <div className="flex min-h-screen flex-col items-center bg-[color:var(--color-surface-alt)] px-4 py-8">
       <main className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 drop-shadow-sm dark:text-zinc-50">
-            <span className="text-orange-500">Gel</span>
-            <span className="text-teal-600 dark:text-teal-400">log</span>
+          <h1 className="text-3xl font-bold tracking-tight text-[color:var(--color-text-primary)]">
+            <span className="text-[color:var(--color-orange)]">Gel</span>
+            <span className="text-[color:var(--color-teal)]">log</span>
           </h1>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mt-2 text-sm text-[color:var(--color-text-secondary)]">
             New scoop, who this?
           </p>
         </div>
