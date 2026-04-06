@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { GellogLogo } from "./GellogLogo";
 import { SplashScreen } from "./SplashScreen";
 
 export function HomeLanding() {
@@ -15,10 +16,7 @@ export function HomeLanding() {
 
       <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 py-12 dark:bg-zinc-950">
         <main className="flex w-full max-w-md flex-col items-center">
-          <h1 className="text-4xl font-bold tracking-tight">
-            <span className="text-orange-500">Gel</span>
-            <span className="text-teal-600 dark:text-teal-400">log</span>
-          </h1>
+          <GellogLogo size={96} priority />
           <p className="mt-4 text-center text-zinc-600 dark:text-zinc-400">
             Log every ice cream. Track your flavours. Find the best spots.
           </p>

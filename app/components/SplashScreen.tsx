@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { GellogLogo } from "./GellogLogo"
 
 export interface SplashScreenProps {
   onComplete: () => void
@@ -60,24 +61,11 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
     >
       {/* Main Logo */}
       <div
-        className={`text-5xl font-bold tracking-tight transition-opacity duration-300 ${
+        className={`flex justify-center transition-opacity duration-300 ${
           stage >= 1 ? "opacity-100" : "opacity-0"
         }`}
       >
-        <span
-          className={`transition-colors duration-300 ${
-            stage >= 2 ? "text-[#D97706]" : "text-gray-900"
-          }`}
-        >
-          Gel
-        </span>
-        <span
-          className={`transition-colors duration-300 ${
-            stage >= 2 ? "text-[#0D9488]" : "text-gray-900"
-          }`}
-        >
-          log
-        </span>
+        <GellogLogo size={120} priority />
       </div>
 
       {/* Tagline */}

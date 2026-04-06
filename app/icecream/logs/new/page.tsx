@@ -1,3 +1,4 @@
+import { GellogLogo } from "@/app/components/GellogLogo";
 import { createClient } from "@/src/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { NewIceCreamLogForm } from "./NewIceCreamLogForm";
@@ -92,11 +93,8 @@ export default async function NewIceCreamLogPage({
   return (
     <div className="flex min-h-screen flex-col items-center bg-[color:var(--color-surface-alt)] px-4 py-8">
       <main className="w-full max-w-md">
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-[color:var(--color-text-primary)]">
-            <span className="text-[color:var(--color-orange)]">Gel</span>
-            <span className="text-[color:var(--color-teal)]">log</span>
-          </h1>
+        <div className="mb-6 flex justify-center">
+          <GellogLogo size={88} />
           <p className="mt-2 text-sm text-[color:var(--color-text-secondary)]">
             New scoop, who this?
           </p>

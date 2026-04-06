@@ -15,6 +15,10 @@ export const metadata: Metadata = {
   title: "Gellog",
   description:
     "Log every ice cream. Track your flavours. Find the best spots.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon-1024.png",
+  },
 };
 
 export const viewport: Viewport = {
