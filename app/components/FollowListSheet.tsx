@@ -9,9 +9,17 @@ import { useState } from "react";
 function AvatarFill({ avatarUrl, displayName, initial }: { avatarUrl: string | null; displayName: string; initial: string }) {
   const [imgError, setImgError] = useState(false);
   return avatarUrl && !imgError ? (
-    <Image src={avatarUrl} alt={displayName} fill className="object-cover" unoptimized onError={() => setImgError(true)} />
+    <Image
+      src={avatarUrl}
+      alt={displayName}
+      fill
+      className="object-cover"
+      sizes="40px"
+      loading="lazy"
+      onError={() => setImgError(true)}
+    />
   ) : (
-    <span className="flex h-full w-full items-center justify-center text-sm font-semibold">
+    <span className="flex h-full w-full items-center justify-center bg-[color:var(--color-teal)] text-sm font-semibold text-[color:var(--color-on-brand)]">
       {initial}
     </span>
   );
@@ -131,7 +139,7 @@ export function FollowListSheet({ userId, type, count, currentUserId }: FollowLi
                         <Link
                           href={`/profile/${profile.username}`}
                           onClick={() => setOpen(false)}
-                          className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500 text-white shadow-sm"
+                          className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-700"
                         >
                           <AvatarFill avatarUrl={profile.avatar_url} displayName={displayName} initial={initial} />
                         </Link>

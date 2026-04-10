@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { GellogClose } from "@/src/components/icons";
 import {
   useCallback,
@@ -9,42 +11,31 @@ import {
   useSyncExternalStore,
 } from "react";
 import { createPortal } from "react-dom";
-import { IceCreamHeatmap, type HeatmapDayData } from "./IceCreamHeatmap";
+import type { CSSProperties } from "react";
 
-export type ProfileSheetView = "stats" | "flavours" | "calendar";
+export type ProfileRollupView = "flavours" | "salons" | null;
 
-export type ProfileSheetStats = {
-  totalAllTime: number;
-  totalThisYear: number;
-  averageOverallRating: number | null;
-  mostVisitedSalon: { name: string; count: number } | null;
-  bestWeather: string | null;
-  totalSpent: number | null;
-  averagePerVisit: number | null;
-};
-
-export type ProfileSheetRankedFlavour = {
-  rank: number;
+export type ProfileRollupFlavourRow = {
   name: string;
   timesTried: number;
-  averageRating: number;
+};
+
+export type ProfileRollupSalonRow = {
+  name: string;
+  visitCount: number;
+  lastVisitedIso: string;
+  /** Google Places id when the user picked a real venue while logging — links to `/salon/[place_id]`. */
+  placeId: string | null;
 };
 
 const SHEET_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 const SHEET_MS = 420;
 
-function formatAverageRating(value: number | null): string {
-  if (value == null || !Number.isFinite(value)) return "—";
-  return `${value.toFixed(1)} ★`;
-}
-
-const VIEW_TITLES: Record<ProfileSheetView, string> = {
-  stats: "Stats",
-  flavours: "Flavour ranking",
-  calendar: "Activity",
+const TITLES: Record<Exclude<ProfileRollupView, null>, string> = {
+  flavours: "All flavours",
+  salons: "All salons",
 };
 
-/** iOS Safari: read theme from <html> class; portaled nodes + transforms often ignore Tailwind/CSS file fills. */
 function subscribeHtmlClass(onChange: () => void): () => void {
   const el = document.documentElement;
   const obs = new MutationObserver(onChange);
@@ -56,10 +47,9 @@ function getHtmlIsDark(): boolean {
   return document.documentElement.classList.contains("dark");
 }
 
-function opaqueLayerStyle(hex: string): React.CSSProperties {
+function opaqueLayerStyle(hex: string): CSSProperties {
   return {
     backgroundColor: hex,
-    /* WebKit sometimes drops plain background-color on promoted layers; gradient forces a fill. */
     backgroundImage: `linear-gradient(${hex}, ${hex})`,
     WebkitBackfaceVisibility: "hidden",
     backfaceVisibility: "hidden",
@@ -68,21 +58,19 @@ function opaqueLayerStyle(hex: string): React.CSSProperties {
   };
 }
 
-type ProfileSheetProps = {
-  view: ProfileSheetView | null;
+type ProfileRollupSheetProps = {
+  view: ProfileRollupView;
   onClose: () => void;
-  stats: ProfileSheetStats;
-  rankedFlavours: ProfileSheetRankedFlavour[];
-  heatmapData: Record<string, HeatmapDayData>;
+  flavours: ProfileRollupFlavourRow[];
+  salons: ProfileRollupSalonRow[];
 };
 
-export function ProfileSheet({
+export function ProfileRollupSheet({
   view,
   onClose,
-  stats,
-  rankedFlavours,
-  heatmapData,
-}: ProfileSheetProps) {
+  flavours,
+  salons,
+}: ProfileRollupSheetProps) {
   const [entered, setEntered] = useState(false);
   const [dragY, setDragY] = useState(0);
   const dragStartY = useRef(0);
@@ -184,17 +172,17 @@ export function ProfileSheet({
 
   if (view === null) return null;
 
-  /* translate3d keeps iOS GPU layers consistent with opaque fills */
   const sheetTransform = entered
     ? `translate3d(0, ${dragY}px, 0)`
     : `translate3d(0, calc(100% + ${dragY}px), 0)`;
 
-  /* Portal to body: avoids iOS/WebKit stacking bugs where fixed UI inside the page
-   * tree paints under later siblings (e.g. the feed) and odd backdrop rendering. */
+  const metaColor = isDark ? "#aeaeb2" : "#6b7280";
+  const titleColor = isDark ? "#f9f9f9" : "#111827";
+
   const overlay = (
     <div
       className="fixed inset-0 flex flex-col justify-end"
-      style={{ zIndex: 9999 }}
+      style={{ zIndex: 10000 }}
       role="presentation"
     >
       <button
@@ -203,7 +191,6 @@ export function ProfileSheet({
         className="absolute inset-0 transition-opacity"
         style={{
           zIndex: 0,
-          /* Explicit rgba: Tailwind bg-black/45 can look invisible on some mobile WebKit builds. */
           backgroundColor: "rgba(0, 0, 0, 0.52)",
           opacity: entered ? 1 : 0,
           transitionDuration: `${SHEET_MS}ms`,
@@ -243,11 +230,8 @@ export function ProfileSheet({
             />
           </div>
           <div className="flex w-full items-center justify-between gap-3">
-            <p
-              className="text-[17px] font-bold"
-              style={{ color: isDark ? "#f9f9f9" : "#111827" }}
-            >
-              {VIEW_TITLES[view]}
+            <p className="text-[17px] font-bold" style={{ color: titleColor }}>
+              {TITLES[view]}
             </p>
             <button
               type="button"
@@ -267,18 +251,7 @@ export function ProfileSheet({
             paddingBottom: "max(2rem, env(safe-area-inset-bottom, 0px))",
           }}
         >
-          {view === "stats" ? (
-            <StatsBody stats={stats} cardBg={cardBg} hairline={hairline} isDark={isDark} />
-          ) : null}
           {view === "flavours" ? (
-            <FlavoursBody
-              rankedFlavours={rankedFlavours}
-              cardBg={cardBg}
-              hairline={hairline}
-              isDark={isDark}
-            />
-          ) : null}
-          {view === "calendar" ? (
             <div
               className="p-4"
               style={{
@@ -287,9 +260,111 @@ export function ProfileSheet({
                 borderRadius: 20,
               }}
             >
-              <IceCreamHeatmap data={heatmapData} />
+              {flavours.length === 0 ? (
+                <p className="text-sm" style={{ color: metaColor }}>
+                  No flavours yet — add flavours when you log a visit.
+                </p>
+              ) : (
+                <ul className="flex flex-col">
+                  {flavours.map((row) => (
+                    <li
+                      key={row.name}
+                      className="flex items-center justify-between gap-3 border-t py-2.5 first:border-t-0 first:pt-0 last:pb-0"
+                      style={{ borderColor: hairline }}
+                    >
+                      <span
+                        className="text-sm font-medium"
+                        style={{ color: titleColor }}
+                      >
+                        {row.name}
+                      </span>
+                      <span className="text-sm tabular-nums" style={{ color: metaColor }}>
+                        {row.timesTried}×
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-          ) : null}
+          ) : (
+            <div
+              className="p-4"
+              style={{
+                ...opaqueLayerStyle(cardBg),
+                border: `1px solid ${hairline}`,
+                borderRadius: 20,
+              }}
+            >
+              {salons.length === 0 ? (
+                <p className="text-sm" style={{ color: metaColor }}>
+                  No salons yet.
+                </p>
+              ) : (
+                <ul className="flex flex-col">
+                  {salons.map((row) => {
+                    const rowInner = (
+                      <div className="flex items-start gap-2">
+                        <div className="min-w-0 flex-1">
+                          <span
+                            className="block text-sm font-medium leading-snug"
+                            style={{ color: titleColor }}
+                          >
+                            {row.name}
+                          </span>
+                          <span
+                            className="mt-0.5 block text-xs leading-relaxed"
+                            style={{ color: metaColor }}
+                          >
+                            {row.visitCount} visit{row.visitCount === 1 ? "" : "s"}
+                            {" · "}
+                            Last visit{" "}
+                            {new Date(row.lastVisitedIso).toLocaleDateString(undefined, {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </span>
+                        </div>
+                        {/* Fixed slot so text lines up whether the row links to a salon or not */}
+                        <div
+                          className="flex h-5 w-5 shrink-0 items-center justify-center self-start pt-0.5"
+                          aria-hidden
+                        >
+                          {row.placeId ? (
+                            <ChevronRight
+                              className="h-5 w-5"
+                              style={{ color: "var(--color-text-tertiary)" }}
+                              strokeWidth={2}
+                            />
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+
+                    return (
+                      <li
+                        key={row.name}
+                        className="border-t first:border-t-0 first:pt-0 last:pb-0"
+                        style={{ borderColor: hairline }}
+                      >
+                        {row.placeId ? (
+                          <Link
+                            href={`/salon/${encodeURIComponent(row.placeId)}`}
+                            className="-mx-1 flex flex-col gap-0.5 rounded-xl px-1 py-3 transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.06]"
+                            style={{ textDecoration: "none", color: "inherit" }}
+                          >
+                            {rowInner}
+                          </Link>
+                        ) : (
+                          <div className="flex flex-col gap-0.5 py-3">{rowInner}</div>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -298,143 +373,3 @@ export function ProfileSheet({
   if (typeof document === "undefined") return null;
   return createPortal(overlay, document.body);
 }
-
-function StatsBody({
-  stats,
-  cardBg,
-  hairline,
-  isDark,
-}: {
-  stats: ProfileSheetStats;
-  cardBg: string;
-  hairline: string;
-  isDark: boolean;
-}) {
-  const {
-    totalAllTime,
-    totalThisYear,
-    averageOverallRating,
-    mostVisitedSalon,
-    bestWeather,
-    totalSpent,
-    averagePerVisit,
-  } = stats;
-
-  const rows: { label: string; value: string }[] = [
-    { label: "Total scoops", value: String(totalAllTime) },
-    { label: "This year", value: String(totalThisYear) },
-    {
-      label: "Average rating",
-      value: formatAverageRating(averageOverallRating),
-    },
-    {
-      label: "Most visited salon",
-      value: mostVisitedSalon
-        ? `${mostVisitedSalon.name} (${mostVisitedSalon.count}×)`
-        : "—",
-    },
-    { label: "Best weather", value: bestWeather ?? "—" },
-  ];
-
-  if (totalSpent != null) {
-    rows.push({ label: "Total spent", value: `€${totalSpent.toFixed(2)}` });
-  }
-  if (averagePerVisit != null) {
-    rows.push({
-      label: "Avg per visit",
-      value: `€${averagePerVisit.toFixed(2)}`,
-    });
-  }
-
-  return (
-    <div
-      className="p-4"
-      style={{
-        ...opaqueLayerStyle(cardBg),
-        border: `1px solid ${hairline}`,
-        borderRadius: 20,
-      }}
-    >
-      <div className="grid grid-cols-2 gap-4">
-        {rows.map((stat) => (
-          <div key={stat.label} className="flex flex-col gap-0.5">
-            <p className="text-xs" style={{ color: isDark ? "#aeaeb2" : "#6b7280" }}>
-              {stat.label}
-            </p>
-            <p
-              className="truncate text-base font-semibold"
-              style={{ color: isDark ? "#f9f9f9" : "#111827" }}
-            >
-              {stat.value}
-            </p>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function FlavoursBody({
-  rankedFlavours,
-  cardBg,
-  hairline,
-  isDark,
-}: {
-  rankedFlavours: ProfileSheetRankedFlavour[];
-  cardBg: string;
-  hairline: string;
-  isDark: boolean;
-}) {
-  return (
-    <div
-      className="p-4"
-      style={{
-        ...opaqueLayerStyle(cardBg),
-        border: `1px solid ${hairline}`,
-        borderRadius: 20,
-      }}
-    >
-      {rankedFlavours.length === 0 ? (
-        <p className="text-sm" style={{ color: isDark ? "#aeaeb2" : "#6b7280" }}>
-          Keep logging — flavours appear here once you&apos;ve tried them at
-          least twice.
-        </p>
-      ) : (
-        <ul className="flex flex-col">
-          {rankedFlavours.map((flavour) => (
-            <li
-              key={flavour.name}
-              className="flex items-center justify-between gap-3 border-t py-2.5 first:border-t-0 first:pt-0 last:pb-0"
-              style={{ borderColor: hairline }}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-xs font-semibold text-white">
-                  #{flavour.rank}
-                </div>
-                <div className="flex flex-col">
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: isDark ? "#f9f9f9" : "#111827" }}
-                  >
-                    {flavour.name}
-                  </span>
-                  <span className="text-xs" style={{ color: isDark ? "#aeaeb2" : "#6b7280" }}>
-                    {flavour.timesTried} scoop
-                    {flavour.timesTried === 1 ? "" : "s"}
-                  </span>
-                </div>
-              </div>
-              <span
-                className="text-sm font-semibold"
-                style={{ color: isDark ? "#fb923c" : "#ea580c" }}
-              >
-                {flavour.averageRating.toFixed(1)} ★
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-

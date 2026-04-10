@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/src/lib/supabase/client";
+import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import { deletePushSubscription, subscribeToPush } from "@/src/lib/push";
 import { useThemeToggle } from "@/src/app/ThemeProvider";
 import { type Visibility } from "@/src/components/VisibilityPicker";
@@ -252,9 +253,13 @@ export function SettingsClient({
     setAvatarUploading(true);
     try {
       const supabase = createClient();
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `avatars/${userId}.${ext}`;
-      await supabase.storage.from("log-photos").upload(path, file, { upsert: true });
+      const blob = await resizeImageBeforeUpload(file, 400, 0.85);
+      const path = `avatars/${userId}.webp`;
+      await supabase.storage.from("log-photos").upload(path, blob, {
+        upsert: true,
+        cacheControl: "3600",
+        contentType: "image/webp",
+      });
       const { data: { publicUrl } } = supabase.storage.from("log-photos").getPublicUrl(path);
       setEditAvatarUrl(publicUrl);
       setEditAvatarImgError(false);
@@ -351,22 +356,21 @@ export function SettingsClient({
           >
             <div className="flex items-center gap-3">
               <div
-                className="relative flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500"
-                style={{ width: 32, height: 32 }}
+                className="relative flex-shrink-0 overflow-hidden rounded-full bg-[color:var(--color-teal)]"
+                style={{ width: 40, height: 40 }}
               >
                 {avatarUrl && !accountAvatarImgError ? (
                   <Image
                     src={avatarUrl}
                     alt={displayName}
-                    fill
-                    className="object-cover"
-                    unoptimized
+                    width={40}
+                    height={40}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
                     onError={() => setAccountAvatarImgError(true)}
                   />
                 ) : (
-                  <span
-                    className="flex h-full w-full items-center justify-center text-xs font-semibold text-white"
-                  >
+                  <span className="flex h-full w-full items-center justify-center text-xs font-semibold text-[color:var(--color-on-brand)]">
                     {initial}
                   </span>
                 )}
@@ -827,12 +831,7 @@ export function SettingsClient({
       <div>
         <p style={SECTION_LABEL}>Support</p>
         <div style={CARD}>
-          <a
-            href="https://gellog.app/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ ...ROW, textDecoration: "none" }}
-          >
+          <Link href="/privacy" style={{ ...ROW, textDecoration: "none" }}>
             <span
               style={{
                 color: "var(--color-text-primary)",
@@ -841,17 +840,12 @@ export function SettingsClient({
             >
               Privacy policy
             </span>
-            <ExternalIcon />
-          </a>
+            <Chevron />
+          </Link>
 
           <Sep />
 
-          <a
-            href="https://gellog.app/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ ...ROW, textDecoration: "none" }}
-          >
+          <Link href="/terms" style={{ ...ROW, textDecoration: "none" }}>
             <span
               style={{
                 color: "var(--color-text-primary)",
@@ -860,8 +854,8 @@ export function SettingsClient({
             >
               Terms of service
             </span>
-            <ExternalIcon />
-          </a>
+            <Chevron />
+          </Link>
 
           <Sep />
 
@@ -1065,9 +1059,17 @@ export function SettingsClient({
                     style={{ width: 72, height: 72, opacity: avatarUploading ? 0.6 : 1 }}
                   >
                     {editAvatarUrl && !editAvatarImgError ? (
-                      <Image src={editAvatarUrl} alt={displayName} fill className="object-cover" unoptimized onError={() => setEditAvatarImgError(true)} />
+                      <Image
+                        src={editAvatarUrl}
+                        alt={displayName}
+                        width={72}
+                        height={72}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                        onError={() => setEditAvatarImgError(true)}
+                      />
                     ) : (
-                      <span className="flex h-full w-full items-center justify-center text-2xl font-semibold text-white">
+                      <span className="flex h-full w-full items-center justify-center bg-[color:var(--color-teal)] text-2xl font-semibold text-[color:var(--color-on-brand)]">
                         {initial}
                       </span>
                     )}

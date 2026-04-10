@@ -1,7 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
+import Link from "next/link";
+import { Activity } from "lucide-react";
 import {
   ProfileSheet,
   type ProfileSheetRankedFlavour,
@@ -72,59 +74,52 @@ function IconGlobe() {
   );
 }
 
-function IconCalendar() {
+function IconActivity() {
   return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+    <Activity
+      width={20}
+      height={20}
+      strokeWidth={2}
       aria-hidden="true"
-    >
-      <rect width="18" height="18" x="3" y="4" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
+    />
   );
 }
 
-const GRID_CARDS: {
+const SHEET_CARDS: {
   label: string;
   view: ProfileSheetView;
   icon: ReactNode;
+  accent: "teal" | "orange";
 }[] = [
-  { label: "Stats", view: "stats", icon: <IconTrendingUp /> },
-  { label: "Flavour ranking", view: "flavours", icon: <IconTrophy /> },
-  { label: "Passport", view: "passport", icon: <IconGlobe /> },
-  { label: "Calendar", view: "calendar", icon: <IconCalendar /> },
+  { label: "Stats", view: "stats", icon: <IconTrendingUp />, accent: "teal" },
+  {
+    label: "Flavour ranking",
+    view: "flavours",
+    icon: <IconTrophy />,
+    accent: "orange",
+  },
+  { label: "Activity", view: "calendar", icon: <IconActivity />, accent: "teal" },
 ];
 
-const SECTION_LABEL_STYLE: React.CSSProperties = {
-  color: "var(--color-text-secondary)",
-  fontSize: 13,
-  letterSpacing: "0.08em",
-  textTransform: "uppercase",
-  fontWeight: 600,
-};
-
-const CARD_STYLE: React.CSSProperties = {
+const CARD_STYLE: CSSProperties = {
   background: "var(--color-surface)",
   border: "1px solid var(--color-border)",
-  borderRadius: 20,
+  borderRadius: 14,
+  boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
 };
 
 type ProfileGellogClientProps = {
+  hasIceCreamPlus: boolean;
   stats: ProfileSheetStats;
   rankedFlavours: ProfileSheetRankedFlavour[];
   heatmapData: Record<string, HeatmapDayData>;
 };
 
+const cellClass =
+  "flex min-h-[88px] flex-col items-center justify-center gap-2 px-1 py-3 text-center";
+
 export function ProfileGellogClient({
+  hasIceCreamPlus,
   stats,
   rankedFlavours,
   heatmapData,
@@ -133,40 +128,66 @@ export function ProfileGellogClient({
 
   return (
     <>
-      <section>
-        <p style={SECTION_LABEL_STYLE} className="mb-3">
-          Your Gellog
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          {GRID_CARDS.map(({ label, view, icon }) => (
-            <button
-              key={label}
-              type="button"
-              onClick={() => setSheetView(view)}
+      <div
+        className={`grid gap-2 ${hasIceCreamPlus ? "grid-cols-4" : "grid-cols-3"}`}
+      >
+        {SHEET_CARDS.map(({ label, view, icon, accent }) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => setSheetView(view)}
+            className={cellClass}
+            style={{
+              ...CARD_STYLE,
+              cursor: "pointer",
+            }}
+          >
+            <span
               style={{
-                ...CARD_STYLE,
-                padding: "20px 16px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-                textAlign: "left",
-                cursor: "pointer",
+                color:
+                  accent === "teal" ? "var(--color-teal)" : "var(--color-orange)",
               }}
             >
-              <span style={{ color: "var(--color-orange)" }}>{icon}</span>
-              <span
-                style={{
-                  color: "var(--color-text-primary)",
-                  fontSize: 14,
-                  fontWeight: 600,
-                }}
-              >
-                {label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </section>
+              {icon}
+            </span>
+            <span
+              style={{
+                color: "var(--color-text-primary)",
+                fontSize: 11,
+                fontWeight: 600,
+                lineHeight: 1.2,
+              }}
+            >
+              {label}
+            </span>
+          </button>
+        ))}
+        {hasIceCreamPlus ? (
+          <Link
+            href="/icecream/passport"
+            className={cellClass}
+            style={{
+              ...CARD_STYLE,
+              textDecoration: "none",
+              color: "inherit",
+            }}
+          >
+            <span style={{ color: "var(--color-orange)" }}>
+              <IconGlobe />
+            </span>
+            <span
+              style={{
+                color: "var(--color-text-primary)",
+                fontSize: 11,
+                fontWeight: 600,
+                lineHeight: 1.2,
+              }}
+            >
+              Passport
+            </span>
+          </Link>
+        ) : null}
+      </div>
 
       <ProfileSheet
         view={sheetView}

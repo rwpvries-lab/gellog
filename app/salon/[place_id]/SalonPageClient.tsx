@@ -24,6 +24,15 @@ type SalonProfile = {
 
 type VitrinePublicRow = { id: string; name: string; colour: string | null };
 
+const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+function publicSalonLogoUrl(path: string | null): string | null {
+  if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (!supabaseBase) return path;
+  return `${supabaseBase}/storage/v1/object/public/salon-logos/${path}`;
+}
+
 function VitrineDisplaySection({ rows }: { rows: VitrinePublicRow[] }) {
   return (
     <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
@@ -130,7 +139,7 @@ function SalonPageSkeleton() {
                 <div className="h-3 w-24 rounded bg-zinc-200 dark:bg-zinc-700" />
               </div>
               <div className="mb-2 h-4 w-3/4 rounded bg-zinc-200 dark:bg-zinc-700" />
-              <div className="aspect-[8/5] w-full rounded-2xl bg-zinc-200 dark:bg-zinc-700" />
+              <div className="aspect-[4/3] w-full rounded-2xl bg-gray-200 dark:bg-zinc-700" />
             </div>
           </div>
         ))}
@@ -152,6 +161,11 @@ export function SalonPageClient({ placeId }: Props) {
     new Set(),
   );
   const [vitrineOnDisplay, setVitrineOnDisplay] = useState<VitrinePublicRow[]>([]);
+  const [salonLogoImgError, setSalonLogoImgError] = useState(false);
+
+  useEffect(() => {
+    setSalonLogoImgError(false);
+  }, [salonProfile?.logo_url]);
 
   useEffect(() => {
     let cancelled = false;
@@ -380,17 +394,28 @@ export function SalonPageClient({ placeId }: Props) {
       )}
 
       <div className="mb-5 rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-        {isClaimed && salonProfile?.logo_url && (
+        {isClaimed && salonProfile?.logo_url ? (
           <div className="mb-4 flex justify-center">
-            <Image
-              src={salonProfile.logo_url}
-              alt={displayName}
-              width={80}
-              height={80}
-              className="rounded-2xl object-cover ring-1 ring-zinc-100 dark:ring-zinc-800"
-            />
+            {(() => {
+              const logoSrc = publicSalonLogoUrl(salonProfile.logo_url);
+              return logoSrc && !salonLogoImgError ? (
+                <Image
+                  src={logoSrc}
+                  alt={displayName}
+                  width={60}
+                  height={60}
+                  className="rounded-2xl object-cover ring-1 ring-zinc-100 dark:ring-zinc-800"
+                  loading="lazy"
+                  onError={() => setSalonLogoImgError(true)}
+                />
+              ) : (
+                <div className="flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-[color:var(--color-teal)] text-lg font-semibold text-[color:var(--color-on-brand)] ring-1 ring-zinc-100 dark:ring-zinc-800">
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+              );
+            })()}
           </div>
-        )}
+        ) : null}
 
         <div className="flex items-center justify-between gap-3">
           <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">

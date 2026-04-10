@@ -1,10 +1,10 @@
 "use client";
 
 import { useClaimedSalons } from "@/src/hooks/useClaimedSalons";
-import { Store } from "lucide-react";
+import { ChevronRight, Store } from "lucide-react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useState, type CSSProperties } from "react";
 import { SalonPickerSheet } from "./SalonPickerSheet";
 
 function useSalonDashboardNavigation() {
@@ -66,48 +66,68 @@ export function MySalonProfileShortcut() {
   );
 }
 
-function navItemClass(active: boolean) {
-  return `group inline-flex flex-col items-center gap-0.5 rounded-full px-2 py-1.5 text-xs font-medium transition-colors ${
-    active
-      ? "text-teal-700 dark:text-teal-300"
-      : "text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100"
-  }`;
-}
-
-function navIconWrap(active: boolean) {
-  return `flex h-8 w-8 items-center justify-center rounded-full shadow-sm ring-1 ${
-    active
-      ? "bg-gradient-to-br from-orange-500 to-teal-500 text-white ring-orange-200/80 dark:ring-teal-700/70"
-      : "bg-zinc-50 text-zinc-700 ring-zinc-200 dark:bg-zinc-900 dark:text-zinc-100 dark:ring-zinc-700"
-  }`;
-}
-
-/**
- * Extra bottom-nav slot for claimed salon owners only.
- * Single salon: link. Multiple: opens picker sheet.
- */
-export function MySalonBottomNavItem() {
+/** Full-width card on ice cream profile (below quick actions), Figma-style row. */
+export function MySalonProfileCard() {
   const { salons, ready } = useClaimedSalons();
-  const pathname = usePathname();
   const { pickerOpen, setPickerOpen, go } = useSalonDashboardNavigation();
 
   if (!ready || salons.length === 0) return null;
 
-  const isActive = salons.some((s) => pathname.startsWith(`/salon/${s.place_id}/dashboard`));
+  const subtitle =
+    salons.length === 1 ? salons[0]!.salon_name : `${salons.length} locations`;
+
+  const cardClass =
+    "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:opacity-95";
+  const cardStyle: CSSProperties = {
+    background: "var(--color-surface)",
+    border: "1px solid var(--color-border)",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+  };
 
   const inner = (
     <>
-      <span className={navIconWrap(isActive)}>
-        <Store className="h-[18px] w-[18px]" strokeWidth={1.75} aria-hidden />
-      </span>
-      <span className="max-w-[4.5rem] truncate">My Salon</span>
+      <div
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+        style={{ background: "var(--color-teal-bg)" }}
+      >
+        <Store
+          className="h-5 w-5"
+          strokeWidth={2}
+          style={{ color: "var(--color-teal)" }}
+          aria-hidden
+        />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p
+          className="font-semibold leading-tight"
+          style={{ color: "var(--color-text-primary)" }}
+        >
+          My Salon
+        </p>
+        <p
+          className="truncate text-sm leading-snug"
+          style={{ color: "var(--color-text-secondary)" }}
+        >
+          {subtitle}
+        </p>
+      </div>
+      <ChevronRight
+        className="h-5 w-5 shrink-0"
+        style={{ color: "var(--color-text-tertiary)" }}
+        strokeWidth={2}
+        aria-hidden
+      />
     </>
   );
 
   if (salons.length === 1) {
     const s = salons[0]!;
     return (
-      <Link href={`/salon/${s.place_id}/dashboard`} className={navItemClass(isActive)}>
+      <Link
+        href={`/salon/${s.place_id}/dashboard`}
+        className={cardClass}
+        style={{ ...cardStyle, textDecoration: "none", color: "inherit" }}
+      >
         {inner}
       </Link>
     );
@@ -118,7 +138,8 @@ export function MySalonBottomNavItem() {
       <button
         type="button"
         onClick={() => setPickerOpen(true)}
-        className={`${navItemClass(isActive)} border-0 bg-transparent p-0`}
+        className={cardClass}
+        style={{ ...cardStyle, cursor: "pointer" }}
       >
         {inner}
       </button>
@@ -131,3 +152,4 @@ export function MySalonBottomNavItem() {
     </>
   );
 }
+

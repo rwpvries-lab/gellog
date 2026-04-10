@@ -9,13 +9,14 @@ export function ProfileAvatar({ avatarUrl, displayName, initial }: { avatarUrl: 
     <Image
       src={avatarUrl}
       alt={displayName}
-      fill
-      className="object-cover"
-      unoptimized
+      width={40}
+      height={40}
+      className="h-full w-full object-cover"
+      loading="lazy"
       onError={() => setImgError(true)}
     />
   ) : (
-    <span className="flex h-full w-full items-center justify-center text-xl font-semibold">
+    <span className="flex h-full w-full items-center justify-center bg-[color:var(--color-teal)] text-xl font-semibold text-[color:var(--color-on-brand)]">
       {initial}
     </span>
   );

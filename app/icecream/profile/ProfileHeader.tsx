@@ -3,10 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { createClient } from "@/src/lib/supabase/client";
+import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import { Icon } from "@/src/components/icons";
-
-// ─── ProfileHeader ────────────────────────────────────────────────────────────
 
 type ProfileHeaderProps = {
   displayName: string;
@@ -14,9 +14,22 @@ type ProfileHeaderProps = {
   avatarUrl: string | null;
   userId: string;
   username: string;
-  logCount: number;
   followerCount: number;
   followingCount: number;
+};
+
+const ROUND_BTN: CSSProperties = {
+  width: 40,
+  height: 40,
+  borderRadius: 999,
+  background: "var(--color-surface)",
+  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+  border: "1px solid var(--color-border)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  color: "var(--color-text-secondary)",
+  cursor: "pointer",
 };
 
 export function ProfileHeader({
@@ -25,7 +38,6 @@ export function ProfileHeader({
   avatarUrl,
   userId,
   username,
-  logCount,
   followerCount,
   followingCount,
 }: ProfileHeaderProps) {
@@ -35,17 +47,21 @@ export function ProfileHeader({
   const [imgError, setImgError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const handle = username?.trim() ? `@${username.trim()}` : null;
+
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
     try {
       const supabase = createClient();
-      const ext = file.name.split(".").pop() ?? "jpg";
-      const path = `avatars/${userId}.${ext}`;
-      await supabase.storage
-        .from("log-photos")
-        .upload(path, file, { upsert: true });
+      const blob = await resizeImageBeforeUpload(file, 400, 0.85);
+      const path = `avatars/${userId}.webp`;
+      await supabase.storage.from("log-photos").upload(path, blob, {
+        upsert: true,
+        cacheControl: "3600",
+        contentType: "image/webp",
+      });
       const {
         data: { publicUrl },
       } = supabase.storage.from("log-photos").getPublicUrl(path);
@@ -79,146 +95,202 @@ export function ProfileHeader({
     }
   }
 
-  const btnStyle: React.CSSProperties = {
-    background: "var(--color-surface)",
-    border: "1px solid var(--color-border)",
-    color: "var(--color-text-secondary)",
-    borderRadius: 20,
-    padding: "8px 18px",
-    fontSize: 13,
-    fontWeight: 500,
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    cursor: "pointer",
-  };
-
   return (
     <>
-      <header className="flex flex-col items-center gap-5 pt-2">
-        {/* Username */}
-        <h1
-          style={{
-            color: "var(--color-text-primary)",
-            fontSize: 22,
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
-          }}
-        >
-          {displayName}
-        </h1>
-
-        {/* Avatar */}
-        <button
-          type="button"
-          onClick={() => setShowOverlay(true)}
-          className="relative flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500"
-          style={{
-            width: 80,
-            height: 80,
-            boxShadow: "0 4px 16px rgba(0,0,0,0.15)",
-          }}
-          aria-label="View or change profile photo"
-        >
-          {currentAvatarUrl && !imgError ? (
-            <Image
-              src={currentAvatarUrl}
-              alt={displayName}
-              fill
-              className="object-cover"
-              unoptimized
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <span
-              style={{ fontSize: 28, fontWeight: 600, color: "white" }}
-              className="flex h-full w-full items-center justify-center"
-            >
-              {initial}
-            </span>
-          )}
-        </button>
-
-        {/* Nav buttons */}
-        <div className="flex items-center gap-3">
-          <button type="button" onClick={() => void handleShare()} style={btnStyle}>
-            <Icon name="GellogShare" size={14} strokeWidth={2} />
-            Share
+      <header className="flex w-full flex-col gap-4">
+        <div className="flex w-full items-start justify-end gap-3">
+          <button
+            type="button"
+            onClick={() => void handleShare()}
+            style={ROUND_BTN}
+            aria-label="Share profile"
+          >
+            <Icon name="GellogShare" size={20} strokeWidth={2} />
           </button>
-          <Link href="/settings" style={btnStyle}>
-            <Icon name="GellogSettings" size={14} strokeWidth={2} />
-            Settings
+          <Link href="/settings" style={ROUND_BTN} aria-label="Settings">
+            <Icon name="GellogSettings" size={20} strokeWidth={2} />
           </Link>
         </div>
 
-        {/* Stats strip */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1px 1fr 1px 1fr",
-            alignItems: "center",
-            width: "100%",
-            padding: "16px 0",
-            background: "var(--color-surface)",
-            border: "1px solid var(--color-border)",
-            borderRadius: 20,
-          }}
-        >
-          {/* Logs */}
-          <div className="flex flex-col items-center gap-0.5">
-            <span
+        <div className="flex flex-col items-center gap-2 pb-1">
+          <button
+            type="button"
+            onClick={() => setShowOverlay(true)}
+            className="relative flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-white dark:bg-zinc-900"
+            style={{
+              width: 86,
+              height: 86,
+              border: "3px solid var(--color-teal)",
+              boxShadow: "0 4px 16px rgba(0,0,0,0.12)",
+            }}
+            aria-label="View or change profile photo"
+          >
+            <span className="relative block h-20 w-20 overflow-hidden rounded-full">
+              {currentAvatarUrl && !imgError ? (
+                <Image
+                  src={currentAvatarUrl}
+                  alt={displayName}
+                  width={80}
+                  height={80}
+                  className="h-full w-full object-cover"
+                  priority
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <span
+                  style={{
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: "var(--color-on-brand)",
+                    background: "var(--color-teal)",
+                  }}
+                  className="flex h-full w-full items-center justify-center"
+                >
+                  {initial}
+                </span>
+              )}
+            </span>
+          </button>
+
+          <h1
+            style={{
+              color: "var(--color-text-primary)",
+              fontSize: 20,
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              marginTop: 4,
+            }}
+          >
+            {displayName}
+          </h1>
+
+          {handle ? (
+            <p
               style={{
-                color: "var(--color-text-primary)",
-                fontSize: 18,
-                fontWeight: 700,
+                color: "var(--color-text-secondary)",
+                fontSize: 14,
               }}
             >
-              {logCount}
-            </span>
-            <span
-              style={{ color: "var(--color-text-secondary)", fontSize: 13 }}
-            >
-              Logs
-            </span>
-          </div>
+              {handle}
+            </p>
+          ) : null}
 
-          <div style={{ background: "var(--color-border)", height: 32 }} />
-
-          <div className="flex items-center justify-center">
-            <Link
-              href={`/profile/${username}/connections?tab=followers`}
-              className="flex flex-col items-center gap-0.5"
-              style={{ textDecoration: "none" }}
-            >
-              <span style={{ color: "var(--color-text-primary)", fontSize: 18, fontWeight: 700 }}>
-                {followerCount}
-              </span>
-              <span style={{ color: "var(--color-text-secondary)", fontSize: 13 }}>
-                Followers
-              </span>
-            </Link>
-          </div>
-
-          <div style={{ background: "var(--color-border)", height: 32 }} />
-
-          <div className="flex items-center justify-center">
-            <Link
-              href={`/profile/${username}/connections?tab=following`}
-              className="flex flex-col items-center gap-0.5"
-              style={{ textDecoration: "none" }}
-            >
-              <span style={{ color: "var(--color-text-primary)", fontSize: 18, fontWeight: 700 }}>
-                {followingCount}
-              </span>
-              <span style={{ color: "var(--color-text-secondary)", fontSize: 13 }}>
-                Following
-              </span>
-            </Link>
+          <div className="mt-1 flex items-center gap-4">
+            {username?.trim() ? (
+              <>
+                <Link
+                  href={`/profile/${username.trim()}/connections?tab=following`}
+                  className="flex items-baseline gap-1"
+                  style={{ textDecoration: "none" }}
+                >
+                  <span
+                    style={{
+                      color: "var(--color-text-primary)",
+                      fontSize: 16,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {followingCount}
+                  </span>
+                  <span
+                    style={{
+                      color: "var(--color-text-secondary)",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Following
+                  </span>
+                </Link>
+                <div
+                  style={{
+                    width: 1,
+                    height: 16,
+                    background: "var(--color-text-secondary)",
+                    opacity: 0.35,
+                  }}
+                />
+                <Link
+                  href={`/profile/${username.trim()}/connections?tab=followers`}
+                  className="flex items-baseline gap-1"
+                  style={{ textDecoration: "none" }}
+                >
+                  <span
+                    style={{
+                      color: "var(--color-text-primary)",
+                      fontSize: 16,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {followerCount}
+                  </span>
+                  <span
+                    style={{
+                      color: "var(--color-text-secondary)",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Followers
+                  </span>
+                </Link>
+              </>
+            ) : (
+              <div className="flex items-center gap-4">
+                <span className="flex items-baseline gap-1">
+                  <span
+                    style={{
+                      color: "var(--color-text-primary)",
+                      fontSize: 16,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {followingCount}
+                  </span>
+                  <span
+                    style={{
+                      color: "var(--color-text-secondary)",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Following
+                  </span>
+                </span>
+                <div
+                  style={{
+                    width: 1,
+                    height: 16,
+                    background: "var(--color-text-secondary)",
+                    opacity: 0.35,
+                  }}
+                />
+                <span className="flex items-baseline gap-1">
+                  <span
+                    style={{
+                      color: "var(--color-text-primary)",
+                      fontSize: 16,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {followerCount}
+                  </span>
+                  <span
+                    style={{
+                      color: "var(--color-text-secondary)",
+                      fontSize: 12,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Followers
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -227,7 +299,6 @@ export function ProfileHeader({
         onChange={(e) => void handleFileChange(e)}
       />
 
-      {/* Avatar full-screen overlay */}
       {showOverlay && (
         <div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center"
@@ -238,25 +309,27 @@ export function ProfileHeader({
             className="flex flex-col items-center gap-6"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Zoomed avatar */}
             <div
               className="relative overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500"
               style={{ width: 250, height: 250 }}
             >
-              {currentAvatarUrl ? (
+              {currentAvatarUrl && !imgError ? (
                 <Image
                   src={currentAvatarUrl}
                   alt={displayName}
-                  fill
-                  className="object-cover"
-                  unoptimized
+                  width={250}
+                  height={250}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                  onError={() => setImgError(true)}
                 />
               ) : (
                 <span
                   style={{
                     fontSize: 80,
                     fontWeight: 600,
-                    color: "white",
+                    color: "var(--color-on-brand)",
+                    background: "var(--color-teal)",
                   }}
                   className="flex h-full w-full items-center justify-center"
                 >
@@ -265,7 +338,6 @@ export function ProfileHeader({
               )}
             </div>
 
-            {/* Buttons */}
             <div className="flex w-56 flex-col gap-3">
               <button
                 type="button"

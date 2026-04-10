@@ -46,7 +46,7 @@ function LogDetailSkeleton() {
               <div className="h-5 flex-1 rounded bg-zinc-200 dark:bg-zinc-700" />
               <div className="h-8 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
             </div>
-            <div className="aspect-[8/5] w-full rounded-2xl bg-zinc-200 dark:bg-zinc-700" />
+            <div className="aspect-[4/3] w-full rounded-2xl bg-gray-200 dark:bg-zinc-700" />
             <div className="mt-3 flex gap-2">
               <div className="h-6 w-16 rounded-full bg-zinc-200 dark:bg-zinc-700" />
               <div className="h-6 w-20 rounded-full bg-zinc-200 dark:bg-zinc-700" />
@@ -306,7 +306,7 @@ export function LogDetailClient({ logId }: Props) {
               <Avatar
                 username={currentProfile?.username}
                 avatarUrl={currentProfile?.avatar_url}
-                size={30}
+                size={40}
               />
               <div className="relative flex flex-1 items-end">
                 <textarea

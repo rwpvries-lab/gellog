@@ -1,8 +1,10 @@
+import { GellogLogo } from "@/app/components/GellogLogo";
+import { NotifPromptBanner } from "@/app/components/NotifPromptBanner";
 import { createClient } from "@/src/lib/supabase/server";
+import type { IceCreamLog } from "@/src/components/FeedCard";
+import { Bell } from "lucide-react";
 import Link from "next/link";
 import { IceCreamFeedClient } from "./IceCreamFeedClient";
-import { NotifPromptBanner } from "@/app/components/NotifPromptBanner";
-import type { IceCreamLog } from "@/src/components/FeedCard";
 
 export const revalidate = 30;
 
@@ -37,6 +39,7 @@ export default async function IceCreamFeedPage() {
       id,
       user_id,
       salon_name,
+      salon_city,
       salon_lat,
       salon_lng,
       salon_place_id,
@@ -125,16 +128,25 @@ export default async function IceCreamFeedPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[color:var(--color-surface-alt)] px-4 pb-24 pt-6">
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
-        <header className="flex items-center justify-between gap-3">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-2xl font-bold tracking-tight text-[color:var(--color-text-primary)]">
-              Ice cream feed
-            </h1>
-            <p className="text-sm leading-relaxed text-[color:var(--color-text-secondary)]">
-              Latest scoops from the community.
-            </p>
+    <main className="min-h-screen bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-teal)_6%,var(--color-surface-alt))_0%,var(--color-surface-alt)_38%,color-mix(in_srgb,var(--color-orange)_5%,var(--color-surface-alt))_100%)] px-4 pb-24 pt-4">
+      <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
+        <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <span className="min-w-0" aria-hidden />
+          <Link
+            href="/icecream/feed"
+            className="flex justify-center"
+            aria-label="Gellog feed home"
+          >
+            <GellogLogo size={40} priority />
+          </Link>
+          <div className="flex min-w-0 justify-end">
+            <Link
+              href="/settings"
+              className="flex h-10 w-10 items-center justify-center rounded-full text-[color:var(--color-text-secondary)] transition-colors hover:bg-[color:var(--color-surface)] hover:text-[color:var(--color-teal)]"
+              aria-label="Notification settings"
+            >
+              <Bell className="h-[1.35rem] w-[1.35rem]" strokeWidth={2} aria-hidden />
+            </Link>
           </div>
         </header>
 
@@ -147,14 +159,6 @@ export default async function IceCreamFeedPage() {
           initialFollowingUserIds={initialFollowingUserIds}
         />
       </div>
-
-      <Link
-        href="/icecream/logs/new"
-        className="fixed bottom-6 right-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--color-orange),var(--color-teal))] text-3xl font-semibold text-[color:var(--color-on-brand)] shadow-[0_10px_28px_color-mix(in_srgb,var(--color-orange)_28%,transparent)] ring-2 ring-[color:var(--color-surface)] transition hover:brightness-110 focus:outline-none focus:ring-4 focus:ring-[color:color-mix(in_srgb,var(--color-teal)_45%,transparent)]"
-        aria-label="Log a new ice cream"
-      >
-        +
-      </Link>
     </main>
   );
 }

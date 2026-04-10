@@ -3,13 +3,12 @@
 import { RatingStarsDisplay } from "@/app/components/RatingStars";
 import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
 import { Toast, useToast, copyToClipboard } from "@/src/components/Toast";
-import { avatarColour } from "@/app/log/[id]/CommentsSection";
 import { createClient } from "@/src/lib/supabase/client";
 import { formatVisitDate } from "@/src/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const DIETARY_TAG_SET = new Set(["Sugar-free", "Dairy-free", "Vegan", "Nut-free", "Gluten-free"]);
 
@@ -35,6 +34,7 @@ export type IceCreamLog = {
   id: string;
   user_id: string;
   salon_name: string;
+  salon_city?: string | null;
   salon_lat: number | null;
   salon_lng: number | null;
   salon_place_id: string | null;
@@ -111,6 +111,34 @@ function formatWeather(log: IceCreamLog): string | null {
   if (pieces.length === 0) return null;
   return pieces.join(" · ");
 }
+
+/** Compact weather + city for feed metadata (no UV). */
+function formatFeedWeatherLine(log: IceCreamLog): string | null {
+  const tempNumber =
+    typeof log.weather_temp === "number"
+      ? log.weather_temp
+      : log.weather_temp != null
+        ? Number(log.weather_temp)
+        : null;
+  const tempPart =
+    tempNumber != null && Number.isFinite(tempNumber)
+      ? `${Math.round(tempNumber)}°C`
+      : null;
+  const city = log.salon_city?.trim() || null;
+  const condition =
+    log.weather_condition && log.weather_condition.trim().length > 0
+      ? log.weather_condition.trim()
+      : null;
+
+  if (tempPart && city) return `${tempPart} · ${city}`;
+  if (tempPart && condition) return `${tempPart} · ${condition}`;
+  if (tempPart) return tempPart;
+  if (city) return city;
+  if (condition) return condition;
+  return null;
+}
+
+const FEED_COLLAPSED_FLAVOUR_CAP = 3;
 
 type AdvancedRating = { label: string; value: number };
 
@@ -200,6 +228,8 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
 
 type FeedCardProps = {
   log: IceCreamLog;
+  /** Main feed hero layout; other surfaces use default. */
+  layout?: "default" | "feed";
   currentUserId?: string;
   /** True if the viewer follows the log author (used for friends-only photos on public logs). */
   viewerFollowsAuthor?: boolean;
@@ -212,6 +242,7 @@ type FeedCardProps = {
 
 export function FeedCard({
   log,
+  layout = "default",
   currentUserId,
   viewerFollowsAuthor = false,
   showOwnerActions = false,
@@ -229,8 +260,14 @@ export function FeedCard({
   const [liked, setLiked] = useState(log.user_has_liked ?? false);
   const [likeLoading, setLikeLoading] = useState(false);
   const [avatarImgError, setAvatarImgError] = useState(false);
+  const [photoImgError, setPhotoImgError] = useState(false);
 
   const { toast, showToast, dismissToast } = useToast();
+
+  useEffect(() => {
+    setAvatarImgError(false);
+    setPhotoImgError(false);
+  }, [log.id]);
 
   const isOwnLog = currentUserId != null && log.user_id === currentUserId;
 
@@ -300,7 +337,10 @@ export function FeedCard({
   const canSeePrice =
     pricePaid != null && (!log.price_hidden_from_others || isOwnLog);
   const weather = formatWeather(log);
+  const feedWeatherLine = formatFeedWeatherLine(log);
   const fullDate = formatFullDate(log.visited_at);
+
+  const isFeedLayout = layout === "feed" && !isDetailPage;
 
   const ratingBorderClass =
     log.overall_rating >= 4
@@ -316,12 +356,61 @@ export function FeedCard({
   const highestFlavourRating =
     numericFlavourRatings.length > 0 ? Math.max(...numericFlavourRatings) : null;
 
-  const avatarColor = avatarColour(profile?.username);
+  const photoInitial = (log.salon_name?.trim() || "G").charAt(0).toUpperCase();
+
+  const pillBase =
+    "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold text-[color:var(--color-on-brand)]";
+
+  function renderHeroMedia() {
+    if (canSeePhoto && photoUrl && !photoImgError) {
+      return (
+        <Image
+          src={photoUrl}
+          alt={`Photo from ${log.salon_name}`}
+          width={800}
+          height={600}
+          className="h-full w-full object-cover"
+          loading="lazy"
+          onError={() => setPhotoImgError(true)}
+        />
+      );
+    }
+    if (canSeePhoto && photoUrl && photoImgError) {
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center bg-[color:var(--color-teal)]">
+          <span className="text-3xl font-bold text-[color:var(--color-on-brand)]">
+            {photoInitial}
+          </span>
+        </div>
+      );
+    }
+    if (showPhotoPlaceholder) {
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-[color:var(--color-surface-alt)]">
+          <span className="text-2xl" aria-hidden>
+            👥
+          </span>
+          <p className="px-4 text-center text-xs font-medium text-[color:var(--color-text-secondary)]">
+            Photo visible to followers only
+          </p>
+        </div>
+      );
+    }
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center bg-[color:color-mix(in_srgb,var(--color-teal)_12%,var(--color-surface-alt))]">
+        <span className="text-4xl" aria-hidden>
+          🍦
+        </span>
+      </div>
+    );
+  }
 
   return (
     <>
       <article
-        className={`overflow-hidden rounded-3xl bg-[color:var(--color-surface)] shadow-sm ring-1 backdrop-blur-sm ${ratingBorderClass} ${
+        className={`overflow-hidden rounded-3xl bg-[color:var(--color-surface)] shadow-sm ring-1 backdrop-blur-sm ${
+          isFeedLayout ? "" : ratingBorderClass
+        } ${
           isOwnLog
             ? "ring-[color:color-mix(in_srgb,var(--color-orange)_45%,var(--color-border))]"
             : "ring-[color:var(--color-border)]"
@@ -331,7 +420,128 @@ export function FeedCard({
         }}
         style={{ cursor: isDetailPage ? "default" : "pointer" }}
       >
-        {/* ── COLLAPSED: always visible ── */}
+        {isFeedLayout ? (
+          <>
+            <div className="relative aspect-[4/3] w-full overflow-hidden bg-[color:var(--color-surface-alt)]">
+              {renderHeroMedia()}
+            </div>
+            <div className="space-y-3 px-4 pb-3 pt-4">
+              <div>
+                <h2 className="text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--color-text-primary)]">
+                  {log.salon_place_id ? (
+                    <Link
+                      href={`/salon/${log.salon_place_id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[color:var(--color-text-primary)] decoration-[color:color-mix(in_srgb,var(--color-teal)_55%,var(--color-border))] decoration-2 underline-offset-4 transition-colors hover:text-[color:var(--color-teal)]"
+                    >
+                      {log.salon_name}
+                    </Link>
+                  ) : (
+                    log.salon_name
+                  )}
+                </h2>
+                {log.salon_city?.trim() ? (
+                  <p className="mt-0.5 text-sm text-[color:var(--color-text-secondary)]">
+                    {log.salon_city.trim()}
+                  </p>
+                ) : null}
+              </div>
+
+              {log.log_flavours.length > 0 ? (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateRows: expanded ? "0fr" : "minmax(0, 1fr)",
+                    transition: "grid-template-rows 280ms ease",
+                  }}
+                >
+                  <div className="min-h-0 overflow-hidden">
+                    <div className="flex flex-wrap gap-2">
+                      {log.log_flavours.slice(0, FEED_COLLAPSED_FLAVOUR_CAP).map((flavour, i) => (
+                        <span
+                          key={flavour.id}
+                          className={`${pillBase} ${
+                            i % 2 === 0
+                              ? "bg-[color:var(--color-orange)]"
+                              : "bg-[color:var(--color-teal)]"
+                          }`}
+                        >
+                          {flavour.flavour_name}
+                        </span>
+                      ))}
+                      {!expanded && log.log_flavours.length > FEED_COLLAPSED_FLAVOUR_CAP ? (
+                        <span
+                          className={`${pillBase} bg-[color:var(--color-surface-alt)] text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]`}
+                        >
+                          +{log.log_flavours.length - FEED_COLLAPSED_FLAVOUR_CAP}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  {log.vessel ? (
+                    <span className="inline-flex shrink-0 align-middle">
+                      <VesselIllustration
+                        vessel={log.vessel}
+                        flavours={log.log_flavours.slice(0, 3).map((f, i) => ({
+                          name: f.flavour_name,
+                          colorHex: getFlavourColor(f.flavour_name, i),
+                        }))}
+                        size="small"
+                      />
+                    </span>
+                  ) : (
+                    <span className="text-lg leading-none" aria-hidden>
+                      🍦
+                    </span>
+                  )}
+                  <RatingStarsDisplay value={log.overall_rating} size="lg" />
+                </div>
+                {canSeePrice && pricePaid != null ? (
+                  <span className="shrink-0 text-sm font-semibold tabular-nums text-[color:var(--color-text-primary)]">
+                    €{pricePaid.toFixed(2)}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
+                  {log.visibility === "public" ? (
+                    <>
+                      <span aria-hidden>🌐</span>
+                      Public
+                    </>
+                  ) : log.visibility === "friends" ? (
+                    <>
+                      <span aria-hidden>👥</span>
+                      Friends
+                    </>
+                  ) : (
+                    <>
+                      <span aria-hidden>🔒</span>
+                      Private
+                    </>
+                  )}
+                </span>
+                {feedWeatherLine ? (
+                  <span className="inline-flex max-w-[min(12rem,100%)] items-center gap-0.5 truncate rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
+                    <span className="shrink-0" aria-hidden>
+                      ☀️
+                    </span>
+                    <span className="min-w-0 truncate">{feedWeatherLine}</span>
+                  </span>
+                ) : null}
+                <span className="inline-flex items-center rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
+                  {timeAgo}
+                </span>
+              </div>
+            </div>
+          </>
+        ) : (
         <div className="p-4 pb-3">
           {/* Header: avatar · username · time ago [· edit/delete] */}
           <div className="mb-3 flex items-center gap-2 text-xs text-[color:var(--color-text-secondary)]">
@@ -345,17 +555,14 @@ export function FeedCard({
                   <Image
                     src={profile.avatar_url}
                     alt={displayName}
-                    width={22}
-                    height={22}
-                    className="h-5.5 w-5.5 rounded-full object-cover"
-                    unoptimized
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                    loading="lazy"
                     onError={() => setAvatarImgError(true)}
                   />
                 ) : (
-                  <div
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-[color:var(--color-on-brand)]"
-                    style={{ backgroundColor: avatarColor }}
-                  >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -369,17 +576,14 @@ export function FeedCard({
                   <Image
                     src={profile.avatar_url}
                     alt={displayName}
-                    width={22}
-                    height={22}
-                    className="h-5.5 w-5.5 rounded-full object-cover"
-                    unoptimized
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 shrink-0 rounded-full object-cover"
+                    loading="lazy"
                     onError={() => setAvatarImgError(true)}
                   />
                 ) : (
-                  <div
-                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[9px] font-semibold text-[color:var(--color-on-brand)]"
-                    style={{ backgroundColor: avatarColor }}
-                  >
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -471,15 +675,23 @@ export function FeedCard({
           </div>
 
           {/* Photo */}
-          {canSeePhoto && photoUrl ? (
-            <div className="relative mt-3 aspect-[8/5] w-full overflow-hidden rounded-2xl">
+          {canSeePhoto && photoUrl && !photoImgError ? (
+            <div className="relative mt-3 aspect-[4/3] w-full overflow-hidden rounded-2xl">
               <Image
                 src={photoUrl}
                 alt={`Photo from ${log.salon_name}`}
-                width={800}
-                height={500}
+                width={400}
+                height={300}
                 className="h-full w-full object-cover"
+                loading="lazy"
+                onError={() => setPhotoImgError(true)}
               />
+            </div>
+          ) : canSeePhoto && photoUrl && photoImgError ? (
+            <div className="mt-3 flex aspect-[4/3] w-full flex-col items-center justify-center rounded-2xl bg-[color:var(--color-teal)]">
+              <span className="text-3xl font-bold text-[color:var(--color-on-brand)]">
+                {photoInitial}
+              </span>
             </div>
           ) : showPhotoPlaceholder ? (
             <div className="mt-3 flex aspect-[8/5] w-full flex-col items-center justify-center gap-1 rounded-2xl bg-[color:var(--color-surface-alt)] ring-1 ring-[color:var(--color-border)]">
@@ -516,6 +728,7 @@ export function FeedCard({
             </div>
           ) : null}
         </div>
+        )}
 
         {/* ── EXPANDED: animated section ── */}
         <div
@@ -650,90 +863,220 @@ export function FeedCard({
                   </button>
                 </div>
               ) : null}
+
+              {isFeedLayout ? (
+                <div className="pb-1">
+                  <button
+                    type="button"
+                    onClick={(e) => void handleShare(e)}
+                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--color-surface-alt)] px-3 py-1.5 text-xs font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
+                    aria-label="Share"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                      <polyline points="16 6 12 2 8 6" />
+                      <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                    Share
+                  </button>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
 
-        {/* ── Action row: balanced like · comment · share ── */}
-        <div
-          className="grid grid-cols-3 items-center border-t border-[color:var(--color-border)] px-2 py-2.5"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Like */}
-          <button
-            type="button"
-            onClick={(e) => void handleLike(e)}
-            disabled={!currentUserId || likeLoading}
-            className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)] disabled:cursor-default"
-            style={{ color: liked ? "var(--color-orange)" : "var(--color-text-secondary)" }}
-            aria-label={liked ? "Unlike" : "Like"}
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill={liked ? "currentColor" : "none"}
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-            {likeCount > 0 && <span>{likeCount}</span>}
-          </button>
-
-          {/* Comments */}
-          <Link
-            href={isDetailPage ? "#comments" : `/log/${log.id}#comments`}
+        {isFeedLayout ? (
+          <div
+            className="flex items-center justify-between gap-3 border-t border-[color:var(--color-border)] px-4 py-3"
             onClick={(e) => e.stopPropagation()}
-            className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)]"
-            style={{ color: "var(--color-text-secondary)" }}
-            aria-label="Comments"
           >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+            <div className="min-w-0 flex-1">
+              {profile?.username ? (
+                <Link
+                  href={isOwnLog ? "/icecream/profile" : `/profile/${profile.username}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex min-w-0 items-center gap-2"
+                >
+                  {profile.avatar_url && !avatarImgError ? (
+                    <Image
+                      src={profile.avatar_url}
+                      alt={displayName}
+                      width={36}
+                      height={36}
+                      className="h-9 w-9 shrink-0 rounded-full object-cover"
+                      loading="lazy"
+                      onError={() => setAvatarImgError(true)}
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="truncate text-sm font-medium text-[color:var(--color-text-primary)]">
+                    {displayName}
+                  </span>
+                </Link>
+              ) : (
+                <div className="flex min-w-0 items-center gap-2">
+                  {profile?.avatar_url && !avatarImgError ? (
+                    <Image
+                      src={profile.avatar_url}
+                      alt={displayName}
+                      width={36}
+                      height={36}
+                      className="h-9 w-9 shrink-0 rounded-full object-cover"
+                      loading="lazy"
+                      onError={() => setAvatarImgError(true)}
+                    />
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
+                      {displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className="truncate text-sm font-medium text-[color:var(--color-text-primary)]">
+                    {displayName}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={(e) => void handleLike(e)}
+                disabled={!currentUserId || likeLoading}
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)] disabled:cursor-default"
+                style={{ color: liked ? "var(--color-orange)" : "var(--color-text-secondary)" }}
+                aria-label={liked ? "Unlike" : "Like"}
+              >
+                <svg
+                  width="15"
+                  height="15"
+                  viewBox="0 0 24 24"
+                  fill={liked ? "currentColor" : "none"}
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                {likeCount > 0 ? <span>{likeCount}</span> : null}
+              </button>
+              <Link
+                href={isDetailPage ? "#comments" : `/log/${log.id}#comments`}
+                onClick={(e) => e.stopPropagation()}
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-xs font-medium text-[color:var(--color-text-secondary)] transition hover:bg-[color:var(--color-surface-alt)]"
+                aria-label="Comments"
+              >
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                {(log.comment_count ?? 0) > 0 ? <span>{log.comment_count}</span> : null}
+              </Link>
+            </div>
+          </div>
+        ) : (
+          <div
+            className="grid grid-cols-3 items-center border-t border-[color:var(--color-border)] px-2 py-2.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Like */}
+            <button
+              type="button"
+              onClick={(e) => void handleLike(e)}
+              disabled={!currentUserId || likeLoading}
+              className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)] disabled:cursor-default"
+              style={{ color: liked ? "var(--color-orange)" : "var(--color-text-secondary)" }}
+              aria-label={liked ? "Unlike" : "Like"}
             >
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-            </svg>
-            {(log.comment_count ?? 0) > 0 && <span>{log.comment_count}</span>}
-          </Link>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill={liked ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+              {likeCount > 0 && <span>{likeCount}</span>}
+            </button>
 
-          {/* Share */}
-          <button
-            type="button"
-            onClick={(e) => void handleShare(e)}
-            className="mx-auto flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)]"
-            style={{ color: "var(--color-text-secondary)" }}
-            aria-label="Share"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
+            {/* Comments */}
+            <Link
+              href={isDetailPage ? "#comments" : `/log/${log.id}#comments`}
+              onClick={(e) => e.stopPropagation()}
+              className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)]"
+              style={{ color: "var(--color-text-secondary)" }}
+              aria-label="Comments"
             >
-              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-              <polyline points="16 6 12 2 8 6" />
-              <line x1="12" y1="2" x2="12" y2="15" />
-            </svg>
-            Share
-          </button>
-        </div>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+              {(log.comment_count ?? 0) > 0 && <span>{log.comment_count}</span>}
+            </Link>
+
+            {/* Share */}
+            <button
+              type="button"
+              onClick={(e) => void handleShare(e)}
+              className="mx-auto flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)]"
+              style={{ color: "var(--color-text-secondary)" }}
+              aria-label="Share"
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <polyline points="16 6 12 2 8 6" />
+                <line x1="12" y1="2" x2="12" y2="15" />
+              </svg>
+              Share
+            </button>
+          </div>
+        )}
 
         {!isDetailPage ? (
           <div

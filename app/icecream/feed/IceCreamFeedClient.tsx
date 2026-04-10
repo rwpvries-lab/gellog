@@ -21,6 +21,7 @@ const SELECT_FIELDS = `
   id,
   user_id,
   salon_name,
+  salon_city,
   salon_lat,
   salon_lng,
   salon_place_id,
@@ -255,9 +256,9 @@ export function IceCreamFeedClient({
   const isEmpty = !loading && logs.length === 0;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <div
-        className="flex rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-1 shadow-sm"
+        className="flex border-b border-[color:var(--color-border)]"
         role="tablist"
         aria-label="Feed scope"
       >
@@ -268,13 +269,19 @@ export function IceCreamFeedClient({
             role="tab"
             aria-selected={tab === t}
             onClick={() => void switchTab(t)}
-            className={`flex flex-1 items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+            className={`relative flex flex-1 justify-center px-2 pb-3 pt-1 text-sm font-semibold transition-colors ${
               tab === t
-                ? "bg-[color:var(--color-orange)] text-[color:var(--color-on-brand)] shadow-[0_1px_3px_color-mix(in_srgb,var(--color-text-primary)_12%,transparent)]"
+                ? "text-[color:var(--color-teal)]"
                 : "text-[color:var(--color-text-secondary)] hover:text-[color:var(--color-text-primary)]"
             }`}
           >
             {t === "everyone" ? "Discover" : "Friends"}
+            {tab === t ? (
+              <span
+                className="absolute bottom-0 left-3 right-3 h-0.5 rounded-full bg-[color:var(--color-teal)]"
+                aria-hidden
+              />
+            ) : null}
           </button>
         ))}
       </div>
@@ -283,6 +290,7 @@ export function IceCreamFeedClient({
         <FeedCard
           key={log.id}
           log={log}
+          layout="feed"
           currentUserId={currentUserId}
           viewerFollowsAuthor={followingIds.has(log.user_id)}
         />

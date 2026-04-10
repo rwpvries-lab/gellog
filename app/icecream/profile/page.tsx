@@ -4,9 +4,10 @@ import { redirect } from "next/navigation";
 import type { HeatmapDayData } from "./IceCreamHeatmap";
 import { ProfileGellogClient } from "./ProfileGellogClient";
 import { ProfileFeedClient } from "./ProfileFeedClient";
-import { MySalonProfileShortcut } from "@/app/components/MySalonOwnerAccess";
+import { MySalonProfileCard } from "@/app/components/MySalonOwnerAccess";
 import { ProfileHeader } from "./ProfileHeader";
-import { ActivitySection, type WeekData } from "./ActivitySection";
+import { ProfileSummaryCard } from "./ProfileSummaryCard";
+import { ProfilePassportStrip } from "./ProfilePassportStrip";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,6 +16,7 @@ type Profile = {
   username: string | null;
   display_name: string | null;
   avatar_url: string | null;
+  subscription_tier: "free" | "premium";
 };
 
 type LogFlavour = {
@@ -30,6 +32,7 @@ type LogFlavour = {
 type IceCreamLog = {
   id: string;
   salon_name: string;
+  salon_place_id: string | null;
   overall_rating: number;
   visited_at: string;
   price_paid: number | null;
@@ -64,6 +67,38 @@ type RankedFlavour = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Pick the Google place id that best matches logs for this salon name (visit count, then recency). */
+function resolveSalonPlaceId(logs: IceCreamLog[], salonName: string): string | null {
+  const name = salonName.trim();
+  const counts = new Map<string, { visits: number; lastVisited: Date }>();
+  for (const log of logs) {
+    if (log.salon_name.trim() !== name) continue;
+    const pid = log.salon_place_id?.trim();
+    if (!pid) continue;
+    const visited = new Date(log.visited_at);
+    const cur = counts.get(pid);
+    if (!cur) counts.set(pid, { visits: 1, lastVisited: visited });
+    else {
+      counts.set(pid, {
+        visits: cur.visits + 1,
+        lastVisited: visited > cur.lastVisited ? visited : cur.lastVisited,
+      });
+    }
+  }
+  if (counts.size === 0) return null;
+  let bestId: string | null = null;
+  let bestVisits = -1;
+  let bestLast = new Date(0);
+  for (const [pid, { visits, lastVisited }] of counts) {
+    if (visits > bestVisits || (visits === bestVisits && lastVisited > bestLast)) {
+      bestId = pid;
+      bestVisits = visits;
+      bestLast = lastVisited;
+    }
+  }
+  return bestId;
+}
 
 function deriveStats(logs: IceCreamLog[]) {
   const totalAllTime = logs.length;
@@ -212,6 +247,26 @@ function deriveStats(logs: IceCreamLog[]) {
   const averagePerVisit =
     logsWithPrice.length >= 3 ? totalSpent! / logsWithPrice.length : null;
 
+  const flavoursRollup = Array.from(flavourMap.values())
+    .map((s) => ({ name: s.name, timesTried: s.timesTried }))
+    .sort(
+      (a, b) =>
+        b.timesTried - a.timesTried || a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
+    );
+
+  const salonsRollup = Array.from(salonMap.values())
+    .map((s) => ({
+      name: s.name,
+      visitCount: s.count,
+      lastVisitedIso: s.lastVisited.toISOString(),
+      placeId: resolveSalonPlaceId(logs, s.name),
+    }))
+    .sort(
+      (a, b) =>
+        b.visitCount - a.visitCount ||
+        b.lastVisitedIso.localeCompare(a.lastVisitedIso),
+    );
+
   return {
     totalAllTime,
     totalThisYear,
@@ -221,47 +276,11 @@ function deriveStats(logs: IceCreamLog[]) {
     bestWeather,
     totalSpent,
     averagePerVisit,
+    uniqueFlavourCount: flavourMap.size,
+    uniqueSalonCount: salonMap.size,
+    flavoursRollup,
+    salonsRollup,
   };
-}
-
-function computeWeeklyData(logs: IceCreamLog[]): WeekData[] {
-  const now = new Date();
-  const result: WeekData[] = [];
-
-  for (let i = 11; i >= 0; i--) {
-    const weekEnd = new Date(now);
-    weekEnd.setDate(now.getDate() - i * 7);
-    weekEnd.setHours(23, 59, 59, 999);
-
-    const weekStart = new Date(weekEnd);
-    weekStart.setDate(weekEnd.getDate() - 6);
-    weekStart.setHours(0, 0, 0, 0);
-
-    const weekLogs = logs.filter((log) => {
-      const d = new Date(log.visited_at);
-      return d >= weekStart && d <= weekEnd;
-    });
-
-    const flavoursSet = new Set<string>();
-    const salonsSet = new Set<string>();
-    weekLogs.forEach((log) => {
-      (log.log_flavours ?? []).forEach((f) => {
-        const name = f.flavour_name?.trim();
-        if (name) flavoursSet.add(name);
-      });
-      const salon = log.salon_name?.trim();
-      if (salon) salonsSet.add(salon);
-    });
-
-    result.push({
-      weekLabel: `${weekStart.toLocaleString("en-US", { month: "short" })} ${weekStart.getDate()}`,
-      logs: weekLogs.length,
-      flavours: flavoursSet.size,
-      salons: salonsSet.size,
-    });
-  }
-
-  return result;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -287,13 +306,13 @@ export default async function IceCreamProfilePage() {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, username, display_name, avatar_url")
+      .select("id, username, display_name, avatar_url, subscription_tier")
       .eq("id", user.id)
       .single<Profile>(),
     supabase
       .from("ice_cream_logs")
       .select(
-        `id, salon_name, overall_rating, visited_at, price_paid, weather_condition,
+        `id, salon_name, salon_place_id, overall_rating, visited_at, price_paid, weather_condition,
          log_flavours (id, flavour_name, rating, rating_texture, rating_originality, rating_intensity, rating_presentation)`,
       )
       .eq("user_id", user.id),
@@ -338,9 +357,22 @@ export default async function IceCreamProfilePage() {
     bestWeather,
     totalSpent,
     averagePerVisit,
+    uniqueFlavourCount,
+    uniqueSalonCount,
+    flavoursRollup,
+    salonsRollup,
   } = deriveStats(logs);
 
-  const weeklyData = computeWeeklyData(logs);
+  const hasIceCreamPlus = profile?.subscription_tier === "premium";
+
+  const passportStamps = Array.from(
+    new Map(
+      logs
+        .map((l) => l.salon_name.trim())
+        .filter(Boolean)
+        .map((name) => [name, name] as const),
+    ).values(),
+  ).slice(0, 16);
 
   const heatmapData: Record<string, HeatmapDayData> = {};
   logs.forEach((log) => {
@@ -368,25 +400,28 @@ export default async function IceCreamProfilePage() {
       className="px-4 pb-24 pt-6"
     >
       <div className="mx-auto flex w-full max-w-xl flex-col gap-5 pb-4">
-        <MySalonProfileShortcut />
-
-        {/* ── Section 1: Profile Header ── */}
+        {/* ── Profile header (Figma: actions, avatar, name, @handle, follow stats) ── */}
         <ProfileHeader
           displayName={displayName}
           initial={initial}
           avatarUrl={profile?.avatar_url ?? null}
           userId={user.id}
           username={profile?.username ?? ""}
-          logCount={totalAllTime}
           followerCount={followerCount ?? 0}
           followingCount={followingCount ?? 0}
         />
 
-        {/* ── Section 2: Activity Chart ── */}
-        <ActivitySection weeklyData={weeklyData} />
+        <ProfileSummaryCard
+          flavourCount={uniqueFlavourCount}
+          logCount={totalAllTime}
+          salonCount={uniqueSalonCount}
+          flavoursRollup={flavoursRollup}
+          salonsRollup={salonsRollup}
+        />
 
-        {/* ── Section 3: Quick Access Grid + sheets ── */}
+        {/* Quick access: stats / flavours / activity sheets; passport → full page (Ice Cream+ only) */}
         <ProfileGellogClient
+          hasIceCreamPlus={hasIceCreamPlus}
           stats={{
             totalAllTime,
             totalThisYear,
@@ -400,20 +435,28 @@ export default async function IceCreamProfilePage() {
           heatmapData={heatmapData}
         />
 
-        {/* ── Section 4: Recent Logs ── */}
-        <section>
+        <MySalonProfileCard />
+
+        {hasIceCreamPlus ? (
+          <ProfilePassportStrip
+            stamps={passportStamps.map((name, i) => ({ id: `${i}-${name}`, label: name }))}
+          />
+        ) : null}
+
+        {/* Your logs feed */}
+        <section id="profile-your-logs">
           <p
             style={{
-              color: "var(--color-text-secondary)",
-              fontSize: 13,
-              letterSpacing: "0.08em",
+              color: "var(--color-teal)",
+              fontSize: 12,
+              letterSpacing: "0.1em",
               textTransform: "uppercase",
               fontWeight: 600,
             }}
-            className="mb-3"
+            className="mb-3 scroll-mt-6"
           >
-            Recent Logs
-          </p>
+            Your logs
+         </p>
           <ProfileFeedClient
             initialLogs={feedLogs}
             pageSize={FEED_PAGE_SIZE}

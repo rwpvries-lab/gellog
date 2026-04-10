@@ -32,14 +32,13 @@ export function timeAgo(dateStr: string): string {
 export function Avatar({
   username,
   avatarUrl,
-  size = 28,
+  size = 40,
 }: {
   username?: string | null;
   avatarUrl?: string | null;
   size?: number;
 }) {
   const [imgError, setImgError] = useState(false);
-  const colour = avatarColour(username);
   return avatarUrl && !imgError ? (
     <Image
       src={avatarUrl}
@@ -48,13 +47,13 @@ export function Avatar({
       height={size}
       className="shrink-0 rounded-full object-cover"
       style={{ width: size, height: size }}
-      unoptimized
+      loading="lazy"
       onError={() => setImgError(true)}
     />
   ) : (
     <div
-      className="flex shrink-0 items-center justify-center rounded-full font-semibold text-white"
-      style={{ width: size, height: size, backgroundColor: colour, fontSize: size * 0.36 }}
+      className="flex shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] font-semibold text-[color:var(--color-on-brand)]"
+      style={{ width: size, height: size, fontSize: size * 0.36 }}
     >
       {(username ?? "?").charAt(0).toUpperCase()}
     </div>
@@ -90,7 +89,7 @@ function CommentItem({
   return (
     <div className="flex gap-2.5">
       <Link href={`/profile/${username}`} className="shrink-0">
-        <Avatar username={username} avatarUrl={comment.profiles?.avatar_url} size={28} />
+        <Avatar username={username} avatarUrl={comment.profiles?.avatar_url} size={40} />
       </Link>
 
       <div className="flex flex-1 flex-col gap-1">

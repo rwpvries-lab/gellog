@@ -1,6 +1,7 @@
 "use client";
 
 import { createClient } from "@/src/lib/supabase/client";
+import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -139,6 +140,7 @@ export function DashboardClient({
   const [logoUrl, setLogoUrl] = useState(salonProfile.logo_url);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [logoImgError, setLogoImgError] = useState(false);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   const [saving, setSaving] = useState(false);
@@ -199,10 +201,15 @@ export function DashboardClient({
         setSaving(false);
         return;
       }
-      const filePath = `${salonProfile.place_id}/${Date.now()}-${logoFile.name}`;
+      const blob = await resizeImageBeforeUpload(logoFile, 400, 0.85);
+      const filePath = `${salonProfile.place_id}/${Date.now()}.webp`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from("salon-logos")
-        .upload(filePath, logoFile, { upsert: true });
+        .upload(filePath, blob, {
+          upsert: true,
+          cacheControl: "3600",
+          contentType: "image/webp",
+        });
       if (uploadError) {
         setSaveError("Logo upload failed. Please try again.");
         setSaving(false);
@@ -212,6 +219,7 @@ export function DashboardClient({
       setLogoUrl(newLogoPath);
       setLogoFile(null);
       setLogoPreview(null);
+      setLogoImgError(false);
     }
 
     const { error } = await supabase
@@ -235,6 +243,10 @@ export function DashboardClient({
   }
 
   const displayLogoUrl = logoPreview ?? getLogoUrl(logoUrl);
+
+  useEffect(() => {
+    setLogoImgError(false);
+  }, [displayLogoUrl]);
 
   return (
     <main className="mx-auto max-w-lg px-4 py-8">
@@ -290,17 +302,19 @@ export function DashboardClient({
             onClick={() => logoInputRef.current?.click()}
             className="group relative flex-shrink-0"
           >
-            {displayLogoUrl ? (
+            {displayLogoUrl && !logoImgError ? (
               <Image
                 src={displayLogoUrl}
                 alt={salonName}
-                width={64}
-                height={64}
+                width={60}
+                height={60}
                 className="rounded-2xl object-cover ring-1 ring-zinc-100 dark:ring-zinc-800"
+                loading="lazy"
+                onError={() => setLogoImgError(true)}
               />
             ) : (
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-zinc-100 text-2xl dark:bg-zinc-800">
-                🍦
+              <div className="flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-[color:var(--color-teal)] text-lg font-semibold text-[color:var(--color-on-brand)] ring-1 ring-zinc-100 dark:ring-zinc-800">
+                {salonName.charAt(0).toUpperCase()}
               </div>
             )}
             <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 opacity-0 transition group-hover:opacity-100">

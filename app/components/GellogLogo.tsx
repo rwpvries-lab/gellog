@@ -15,6 +15,7 @@ export function GellogLogo({ size = 96, className, priority }: GellogLogoProps) 
       height={size}
       className={className}
       priority={priority}
+      loading={priority ? undefined : "lazy"}
     />
   );
 }

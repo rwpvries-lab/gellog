@@ -7,14 +7,50 @@ import { useEffect, useRef, useState } from "react";
 import { FollowButton } from "@/app/profile/[username]/FollowButton";
 import { autocompletePassesSalonFilter } from "@/src/lib/looksLikeIceCreamSalon";
 
+const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+function publicSalonLogoUrl(path: string | null): string | null {
+  if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) return path;
+  if (!supabaseBase) return path;
+  return `${supabaseBase}/storage/v1/object/public/salon-logos/${path}`;
+}
+
 function AvatarFill({ avatarUrl, displayName, initial }: { avatarUrl: string | null; displayName: string; initial: string }) {
   const [imgError, setImgError] = useState(false);
   return avatarUrl && !imgError ? (
-    <Image src={avatarUrl} alt={displayName} fill className="object-cover" unoptimized onError={() => setImgError(true)} />
+    <Image
+      src={avatarUrl}
+      alt={displayName}
+      fill
+      className="object-cover"
+      sizes="40px"
+      loading="lazy"
+      onError={() => setImgError(true)}
+    />
   ) : (
-    <span className="flex h-full w-full items-center justify-center text-sm font-semibold">
+    <span className="flex h-full w-full items-center justify-center bg-[color:var(--color-teal)] text-sm font-semibold text-[color:var(--color-on-brand)]">
       {initial}
     </span>
+  );
+}
+
+function SalonSearchLogo({ logoUrl, salonName }: { logoUrl: string; salonName: string }) {
+  const [imgError, setImgError] = useState(false);
+  const src = publicSalonLogoUrl(logoUrl);
+  return src && !imgError ? (
+    <Image
+      src={src}
+      alt={salonName}
+      width={60}
+      height={60}
+      className="h-full w-full object-cover"
+      sizes="40px"
+      loading="lazy"
+      onError={() => setImgError(true)}
+    />
+  ) : (
+    <span className="flex h-full w-full items-center justify-center text-lg">🍦</span>
   );
 }
 
@@ -299,7 +335,7 @@ export default function SearchPage() {
                   >
                     <Link
                       href={`/profile/${profile.username}`}
-                      className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500 text-white shadow-sm"
+                      className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-700"
                     >
                       <AvatarFill avatarUrl={profile.avatar_url} displayName={displayName} initial={initial} />
                     </Link>
@@ -349,12 +385,7 @@ export default function SearchPage() {
                 >
                   <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-teal-50 dark:bg-teal-950/30">
                     {salon.logo_url && salon.is_claimed ? (
-                      <Image
-                        src={salon.logo_url}
-                        alt={salon.salon_name}
-                        fill
-                        className="object-cover"
-                      />
+                      <SalonSearchLogo logoUrl={salon.logo_url} salonName={salon.salon_name} />
                     ) : (
                       <span className="flex h-full w-full items-center justify-center text-lg">
                         🍦

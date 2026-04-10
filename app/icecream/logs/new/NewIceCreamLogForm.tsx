@@ -9,6 +9,7 @@ import {
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
 import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
 import { createClient } from "@/src/lib/supabase/client";
+import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import { useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -406,10 +407,14 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
         if (!user) {
           throw new Error("You must be logged in to upload a photo.");
         }
-        const filePath = `${user.id}/${Date.now()}-${photoFile.name}`;
+        const blob = await resizeImageBeforeUpload(photoFile, 1200, 0.85);
+        const filePath = `${user.id}/${Date.now()}.webp`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("log-photos")
-          .upload(filePath, photoFile);
+          .upload(filePath, blob, {
+            cacheControl: "3600",
+            contentType: "image/webp",
+          });
 
         if (uploadError) {
           throw uploadError;

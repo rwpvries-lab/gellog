@@ -273,6 +273,23 @@ export default function SignupPage() {
                     minLength={6}
                   />
                 </div>
+                <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
+                  By signing up you agree to our{" "}
+                  <Link
+                    href="/terms"
+                    className="text-teal-600 hover:underline dark:text-teal-400"
+                  >
+                    Terms &amp; Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy"
+                    className="text-teal-600 hover:underline dark:text-teal-400"
+                  >
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
                 <button
                   type="submit"
                   disabled={loading}

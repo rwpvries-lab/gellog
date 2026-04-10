@@ -14,6 +14,33 @@ export type PersonProfile = {
   avatar_url: string | null;
 };
 
+function ConnectionAvatar({
+  avatarUrl,
+  name,
+  personInitial,
+}: {
+  avatarUrl: string | null;
+  name: string;
+  personInitial: string;
+}) {
+  const [imgError, setImgError] = useState(false);
+  return avatarUrl && !imgError ? (
+    <Image
+      src={avatarUrl}
+      alt={name}
+      width={40}
+      height={40}
+      className="h-full w-full object-cover"
+      loading="lazy"
+      onError={() => setImgError(true)}
+    />
+  ) : (
+    <span className="flex h-full w-full items-center justify-center bg-[color:var(--color-teal)] text-sm font-semibold text-[color:var(--color-on-brand)]">
+      {personInitial}
+    </span>
+  );
+}
+
 // ─── Following row: Follows you badge + unfollow (hide badge during confirm) ──
 
 function FollowingRowAction({
@@ -563,22 +590,13 @@ export function ConnectionsClient({
                     {/* Avatar */}
                     <Link
                       href={handle ? `/profile/${handle}` : "#"}
-                      className="relative flex-shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500"
-                      style={{ width: 44, height: 44 }}
+                      className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full"
                     >
-                      {person.avatar_url ? (
-                        <Image
-                          src={person.avatar_url}
-                          alt={name}
-                          fill
-                          className="object-cover"
-                          unoptimized
-                        />
-                      ) : (
-                        <span className="flex h-full w-full items-center justify-center text-sm font-semibold text-white">
-                          {personInitial}
-                        </span>
-                      )}
+                      <ConnectionAvatar
+                        avatarUrl={person.avatar_url}
+                        name={name}
+                        personInitial={personInitial}
+                      />
                     </Link>
 
                     {/* Name + handle */}

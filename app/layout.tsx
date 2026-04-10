@@ -50,8 +50,10 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider>
-          <SplashWrapper />
-          <div className="min-h-screen pb-20">{children}</div>
+          {user ? <SplashWrapper /> : null}
+          <div className={user ? "min-h-screen pb-28" : "min-h-screen"}>
+            {children}
+          </div>
           {user ? <BottomNav /> : null}
         </ThemeProvider>
       </body>
