@@ -6,7 +6,10 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GellogDirections } from "@/src/components/icons";
 import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
-import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
+import {
+  LOCATION_DENIED_TROUBLESHOOT_HINT,
+  LOCATION_DENIED_USER_MESSAGE,
+} from "@/src/lib/locationMessages";
 import type { SalonPin, UserSubmittedPin } from "./page";
 
 declare global {
@@ -522,9 +525,13 @@ export function MapClient({
   /** Offset FAB below dismissible location banner when both are visible. */
   const locateFabTop =
     locationBannerMessage != null
-      ? pickerReturnTo
-        ? "top-36"
-        : "top-28"
+      ? locationBannerMessage === LOCATION_DENIED_USER_MESSAGE
+        ? pickerReturnTo
+          ? "top-[11.5rem]"
+          : "top-44"
+        : pickerReturnTo
+          ? "top-36"
+          : "top-28"
       : floatingTop;
 
   return (
@@ -594,6 +601,11 @@ export function MapClient({
             message={locationBannerMessage}
             onDismiss={() => setLocationBannerMessage(null)}
             className="border-zinc-200 bg-white text-sm text-zinc-700 shadow-md dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
+            detail={
+              locationBannerMessage === LOCATION_DENIED_USER_MESSAGE
+                ? LOCATION_DENIED_TROUBLESHOOT_HINT
+                : null
+            }
           />
         </div>
       ) : null}

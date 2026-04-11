@@ -38,6 +38,20 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: supabaseStorageRemotePatterns(),
   },
+  /** Ensure geolocation is not stripped by a CDN default; `(self)` = this origin only. */
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "geolocation=(self)",
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;

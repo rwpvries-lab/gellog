@@ -3,6 +3,9 @@
 import { createClient } from "@/src/lib/supabase/client";
 import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import { deletePushSubscription, subscribeToPush } from "@/src/lib/push";
+import {
+  LOCATION_DENIED_TROUBLESHOOT_HINT,
+} from "@/src/lib/locationMessages";
 import { userFacingPushError } from "@/src/lib/userFacingError";
 import { useThemeToggle } from "@/src/app/ThemeProvider";
 import { type Visibility } from "@/src/components/VisibilityPicker";
@@ -248,20 +251,20 @@ export function SettingsClient({
     if (geoPerm === "granted") {
       return;
     }
-    if (geoPerm === "denied") {
-      setGeoHint(
-        "To enable location, go to your browser Settings > Site permissions > Location.",
-      );
-      return;
-    }
     if (!("geolocation" in navigator) || !navigator.geolocation) {
       setGeoHint("Location isn't supported in this browser.");
       return;
     }
+    /**
+     * Always call getCurrentPosition on tap (including when the chip says Denied).
+     * iOS Safari often mis-reports `permissions.query` while the site is set to Allow;
+     * a real request can still succeed.
+     */
     setGeoRequesting(true);
     navigator.geolocation.getCurrentPosition(
       async () => {
         setGeoRequesting(false);
+        setGeoHint(null);
         try {
           if (navigator.permissions?.query) {
             const s = await navigator.permissions.query({
@@ -275,7 +278,7 @@ export function SettingsClient({
           setGeoPerm("granted");
         }
       },
-      async () => {
+      async (err) => {
         setGeoRequesting(false);
         try {
           if (navigator.permissions?.query) {
@@ -289,8 +292,18 @@ export function SettingsClient({
         } catch {
           setGeoPerm("denied");
         }
+        const code = (err as GeolocationPositionError).code;
+        if (code === 1) {
+          setGeoHint(
+            `To enable location, go to your browser Settings > Site permissions > Location. ${LOCATION_DENIED_TROUBLESHOOT_HINT}`,
+          );
+        } else {
+          setGeoHint(
+            "We couldn’t read your location. Check that Location Services are on and try again.",
+          );
+        }
       },
-      { maximumAge: 0, timeout: 15000 },
+      { maximumAge: 0, timeout: 15000, enableHighAccuracy: false },
     );
   }
 
