@@ -1,7 +1,9 @@
 "use client";
 
 import { createClient } from "@/src/lib/supabase/client";
+import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { ICE_CREAM_AUTOCOMPLETE_DESCRIPTION_TERMS } from "@/src/lib/looksLikeIceCreamSalon";
+import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
 import { useEffect, useRef, useState } from "react";
 
 type Prediction = {
@@ -73,15 +75,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
   const [addFormSubmitting, setAddFormSubmitting] = useState(false);
   const [locatingMe, setLocatingMe] = useState(false);
   const [addToast, setAddToast] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && "geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => { userLocationRef.current = { lat: pos.coords.latitude, lng: pos.coords.longitude }; },
-        () => {}
-      );
-    }
-  }, []);
+  const [addFormLocationBanner, setAddFormLocationBanner] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -242,18 +236,27 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
     setAddFormCity("");
     setAddFormLat(null);
     setAddFormLng(null);
+    setAddFormLocationBanner(null);
     setShowAddForm(true);
   }
 
   async function handleLocateMe() {
-    if (!navigator.geolocation) return;
+    if (!navigator.geolocation) {
+      setAddFormLocationBanner("Location isn't supported in this browser.");
+      return;
+    }
+    setAddFormLocationBanner(null);
     setLocatingMe(true);
     try {
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 }),
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          timeout: 8000,
+          maximumAge: 0,
+        }),
       );
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
+      userLocationRef.current = { lat, lng };
       setAddFormLat(lat);
       setAddFormLng(lng);
 
@@ -272,8 +275,11 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
           if (locality) setAddFormCity(locality.long_name);
         }
       }
-    } catch {
-      // geolocation denied or timed out — lat/lng stay null
+    } catch (e: unknown) {
+      const code = (e as GeolocationPositionError | undefined)?.code;
+      if (code === 1) {
+        setAddFormLocationBanner(LOCATION_DENIED_USER_MESSAGE);
+      }
     } finally {
       setLocatingMe(false);
     }
@@ -461,6 +467,10 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                       {locatingMe ? "Locating…" : addFormLat ? "Re-locate" : "Use my location"}
                     </button>
                   </div>
+                  <LocationPermissionBanner
+                    message={addFormLocationBanner}
+                    onDismiss={() => setAddFormLocationBanner(null)}
+                  />
                   <input
                     type="text"
                     value={addFormAddress}

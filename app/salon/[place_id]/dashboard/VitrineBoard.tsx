@@ -2,6 +2,7 @@
 
 import { FlavorColorPicker } from "@/src/components/FlavorColorPicker";
 import { createClient } from "@/src/lib/supabase/client";
+import { userFacingSaveError } from "@/src/lib/userFacingError";
 import { useState } from "react";
 
 const DEFAULT_HEX = "#F9A8D4";
@@ -165,7 +166,12 @@ export function VitrineBoard({ placeId, initialFlavours, initialLog }: Props) {
       .select()
       .maybeSingle<VitrineFlavour>();
     if (error) {
-      setAddError(error.message);
+      setAddError(
+        userFacingSaveError(
+          error,
+          "Couldn't add that to your vitrine. Please try again.",
+        ),
+      );
     } else if (data) {
       setFlavours((list) => [...list, data]);
       setNewName("");
@@ -174,7 +180,7 @@ export function VitrineBoard({ placeId, initialFlavours, initialLog }: Props) {
       setAdding(false);
       await appendLog(data.id, true);
     } else {
-      setAddError("No row returned — check RLS policies.");
+      setAddError("Could not save the vitrine update. Please refresh and try again.");
     }
     setAddSaving(false);
   }

@@ -2,6 +2,7 @@
 
 import { FlavorColorPicker } from "@/src/components/FlavorColorPicker";
 import { createClient } from "@/src/lib/supabase/client";
+import { userFacingSaveError } from "@/src/lib/userFacingError";
 import { useRef, useState } from "react";
 
 const DEFAULT_HEX = "#A8C5A0"; // Pistachio
@@ -126,7 +127,9 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
       .select()
       .maybeSingle<Flavour>();
     if (error) {
-      setAddError(`Could not add flavour: ${error.message}`);
+      setAddError(
+        userFacingSaveError(error, "Could not add that flavour. Please try again."),
+      );
     } else if (data) {
       setFlavours((prev) => [...prev, data]);
       setNewName("");
@@ -134,7 +137,7 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
       setNewColourPickerOpen(false);
       setAddingNew(false);
     } else {
-      setAddError("No data returned — check RLS policies.");
+      setAddError("Could not add that flavour. Please refresh and try again.");
     }
     setAddSaving(false);
   }

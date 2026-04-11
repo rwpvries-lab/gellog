@@ -6,10 +6,13 @@ import {
   PhotoVisibilityPicker,
   type PhotoVisibility,
 } from "@/src/components/PhotoVisibilityPicker";
+import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
 import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
 import { createClient } from "@/src/lib/supabase/client";
 import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
+import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
+import { userFacingSaveError } from "@/src/lib/userFacingError";
 import { useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -353,6 +356,7 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherUnavailable, setWeatherUnavailable] = useState(false);
   const [weatherUnsupported, setWeatherUnsupported] = useState(false);
+  const [weatherLocationBanner, setWeatherLocationBanner] = useState<string | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [showFlavourPrompt, setShowFlavourPrompt] = useState(false);
   const [priceWarning, setPriceWarning] = useState<number | null>(null);
@@ -524,9 +528,9 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
         })();
       }
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Something went wrong.";
-      setError(message);
+      setError(
+        userFacingSaveError(err, "We couldn't save your log. Please try again."),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -576,17 +580,24 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
     setWeatherLoading(true);
     setWeatherUnavailable(false);
     setWeatherUnsupported(false);
+    setWeatherLocationBanner(null);
 
     const position = await new Promise<GeolocationPosition | null>((resolve) => {
       navigator.geolocation.getCurrentPosition(
         (pos) => resolve(pos),
-        () => resolve(null),
-        { enableHighAccuracy: false, timeout: 10000 }
+        (err) => {
+          if (err.code === err.PERMISSION_DENIED) {
+            setWeatherLocationBanner(LOCATION_DENIED_USER_MESSAGE);
+          } else {
+            setWeatherUnavailable(true);
+          }
+          resolve(null);
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 },
       );
     });
 
     if (!position) {
-      setWeatherUnavailable(true);
       setWeatherLoading(false);
       return;
     }
@@ -889,10 +900,10 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
                   <div className="flex flex-col gap-2 pt-1">
                     {(
                       [
-                        { key: "ratingTexture" as const, label: "Textuur (Texture)" },
-                        { key: "ratingOriginality" as const, label: "Originaliteit (Originality)" },
-                        { key: "ratingIntensity" as const, label: "Intensiteit (Intensity)" },
-                        { key: "ratingPresentation" as const, label: "Presentatie (Presentation)" },
+                        { key: "ratingTexture" as const, label: "Texture" },
+                        { key: "ratingOriginality" as const, label: "Originality" },
+                        { key: "ratingIntensity" as const, label: "Intensity" },
+                        { key: "ratingPresentation" as const, label: "Presentation" },
                       ] as const
                     ).map(({ key, label }) => (
                       <StarRating
@@ -975,8 +986,8 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
           <div className="flex gap-6">
             {(
               [
-                { value: "cone" as const, label: "Hoorntje" },
-                { value: "cup" as const, label: "Bakje" },
+                { value: "cone" as const, label: "Cone" },
+                { value: "cup" as const, label: "Cup" },
               ] as const
             ).map(({ value, label }) => {
               const isSelected = vessel === value;
@@ -1039,6 +1050,10 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
           </span>
         </button>
         <div className="mt-4 flex flex-col gap-2 border-t border-[color:var(--color-border)] pt-4">
+          <LocationPermissionBanner
+            message={weatherLocationBanner}
+            onDismiss={() => setWeatherLocationBanner(null)}
+          />
           {!isToday(visitedAt) ? (
             <p className="text-xs text-[color:var(--color-text-secondary)]">
               No weather data available for past visits
@@ -1119,9 +1134,6 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
               }}
             />
           </label>
-          <p className="text-xs text-[color:var(--color-text-secondary)]">
-            Stored in the <code className="text-[color:var(--color-text-primary)]">log-photos</code> bucket.
-          </p>
           {photoFile ? (
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium text-[color:var(--color-text-secondary)]">
@@ -1213,7 +1225,7 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
         disabled={submitting}
         className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[color:var(--color-orange)] px-6 text-sm font-semibold text-[color:var(--color-on-brand)] transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)] focus:ring-offset-2 focus:ring-offset-[color:var(--color-surface-alt)] disabled:opacity-60"
       >
-        {submitting ? "Scooping…" : "Opslaan"}
+        {submitting ? "Scooping…" : "Save Log"}
       </button>
     </form>
   );

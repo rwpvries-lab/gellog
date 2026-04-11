@@ -5,6 +5,7 @@ import { createClient } from "@/src/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { userFacingAuthMessage } from "@/src/lib/userFacingError";
 
 function GoogleIcon() {
   return (
@@ -47,7 +48,7 @@ export default function LoginPage() {
         password,
       });
       if (signInError) {
-        setError(signInError.message);
+        setError(userFacingAuthMessage(signInError.message));
         setLoading(false);
         return;
       }

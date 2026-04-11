@@ -4,7 +4,9 @@ import { shouldShowIceCreamMapMarker } from "@/src/lib/looksLikeIceCreamSalon";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { GellogDirections, GellogClose } from "@/src/components/icons";
+import { GellogDirections } from "@/src/components/icons";
+import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
+import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
 import type { SalonPin, UserSubmittedPin } from "./page";
 
 declare global {
@@ -82,8 +84,9 @@ export function MapClient({
   const [mapReady, setMapReady] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [locationDenied, setLocationDenied] = useState(false);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+  /** Set only after the user taps “my location” — never from automatic prompts. */
+  const [locationBannerMessage, setLocationBannerMessage] = useState<string | null>(null);
+  const [locatingUser, setLocatingUser] = useState(false);
 
   // Lock body scroll
   useEffect(() => {
@@ -408,27 +411,12 @@ export function MapClient({
       );
     }
 
-    function getUserLocationAndInit() {
-      if (!navigator.geolocation) {
-        setLocationDenied(true);
-        initMap(AMSTERDAM);
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          setUserLocation(loc);
-          initMap(loc);
-        },
-        () => {
-          setLocationDenied(true);
-          initMap(AMSTERDAM);
-        },
-      );
+    function startMap() {
+      initMap(AMSTERDAM);
     }
 
     if (window.google?.maps) {
-      getUserLocationAndInit();
+      startMap();
     } else {
       const existingScript = document.querySelector(
         `script[src*="maps.googleapis.com/maps/api/js"]`,
@@ -437,7 +425,7 @@ export function MapClient({
         const interval = setInterval(() => {
           if (window.google?.maps) {
             clearInterval(interval);
-            getUserLocationAndInit();
+            startMap();
           }
         }, 100);
         return () => {
@@ -449,7 +437,7 @@ export function MapClient({
       const script = document.createElement("script");
       script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places`;
       script.async = true;
-      script.onload = getUserLocationAndInit;
+      script.onload = startMap;
       document.head.appendChild(script);
     }
 
@@ -477,9 +465,39 @@ export function MapClient({
     }
   }
 
-  function handleLocateMe() {
-    if (!userLocation || !mapInstanceRef.current) return;
-    mapInstanceRef.current.panTo(userLocation);
+  function handleRequestMyLocation() {
+    if (!mapReady || !mapInstanceRef.current) return;
+    setLocationBannerMessage(null);
+
+    if (userLocation) {
+      mapInstanceRef.current.panTo(userLocation);
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setLocationBannerMessage("Location isn't supported in this browser.");
+      return;
+    }
+
+    setLocatingUser(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setUserLocation(loc);
+        mapInstanceRef.current?.panTo(loc);
+        setLocationBannerMessage(null);
+        setLocatingUser(false);
+      },
+      (err) => {
+        setLocatingUser(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setLocationBannerMessage(LOCATION_DENIED_USER_MESSAGE);
+        } else {
+          setLocationBannerMessage("We couldn't get your location. Try again.");
+        }
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 },
+    );
   }
 
   function confirmPickerSelection() {
@@ -501,6 +519,13 @@ export function MapClient({
   const NAV_HEIGHT = 80;
   const floatingTop = pickerReturnTo ? "top-16" : "top-3";
   const toastTop = pickerReturnTo ? "top-24" : "top-3";
+  /** Offset FAB below dismissible location banner when both are visible. */
+  const locateFabTop =
+    locationBannerMessage != null
+      ? pickerReturnTo
+        ? "top-36"
+        : "top-28"
+      : floatingTop;
 
   return (
     <div className="fixed inset-0" style={{ zIndex: 10 }}>
@@ -540,38 +565,38 @@ export function MapClient({
         </div>
       )}
 
-      {/* Locate-me button */}
-      {userLocation && (
+      {/* My location — requests geolocation only on tap (never on page load). */}
+      {mapReady && (
         <button
           type="button"
-          aria-label="Centre map on my location"
-          onClick={handleLocateMe}
-          className={`absolute right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md dark:bg-zinc-800 ${floatingTop}`}
+          aria-label={
+            userLocation ? "Centre map on my location" : "Use my location to centre the map"
+          }
+          onClick={handleRequestMyLocation}
+          disabled={locatingUser}
+          className={`absolute right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-[top] disabled:opacity-60 dark:bg-zinc-800 ${locateFabTop}`}
           style={{ zIndex: 30 }}
         >
-          <GellogDirections size={20} className="text-blue-500" />
+          {locatingUser ? (
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500 dark:border-zinc-600 dark:border-t-blue-400" />
+          ) : (
+            <GellogDirections size={20} className="text-blue-500" />
+          )}
         </button>
       )}
 
-      {/* Location denied banner */}
-      {locationDenied && !bannerDismissed && (
+      {locationBannerMessage ? (
         <div
-          className={`absolute inset-x-3 flex items-center justify-between rounded-2xl bg-white px-4 py-3 shadow-md dark:bg-zinc-800 ${floatingTop}`}
-          style={{ zIndex: 30 }}
+          className={`absolute inset-x-3 ${floatingTop}`}
+          style={{ zIndex: 35 }}
         >
-          <p className="text-sm text-zinc-600 dark:text-zinc-300">
-            Enable location to see nearby salons
-          </p>
-          <button
-            type="button"
-            aria-label="Dismiss"
-            onClick={() => setBannerDismissed(true)}
-            className="ml-3 flex-shrink-0 text-zinc-400"
-          >
-            <GellogClose size={16} />
-          </button>
+          <LocationPermissionBanner
+            message={locationBannerMessage}
+            onDismiss={() => setLocationBannerMessage(null)}
+            className="border-zinc-200 bg-white text-sm text-zinc-700 shadow-md dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200"
+          />
         </div>
-      )}
+      ) : null}
 
       {selected && (
         <div

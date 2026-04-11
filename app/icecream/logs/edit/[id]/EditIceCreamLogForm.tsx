@@ -6,8 +6,11 @@ import {
   PhotoVisibilityPicker,
   type PhotoVisibility,
 } from "@/src/components/PhotoVisibilityPicker";
+import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
 import { createClient } from "@/src/lib/supabase/client";
+import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
+import { userFacingSaveError } from "@/src/lib/userFacingError";
 import { useRouter } from "next/navigation";
 import { useLayoutEffect, useRef, useState } from "react";
 
@@ -280,6 +283,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherUnavailable, setWeatherUnavailable] = useState(false);
   const [weatherUnsupported, setWeatherUnsupported] = useState(false);
+  const [weatherLocationBanner, setWeatherLocationBanner] = useState<string | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [showFlavourPrompt, setShowFlavourPrompt] = useState(false);
   const [priceWarning, setPriceWarning] = useState<number | null>(null);
@@ -352,10 +356,25 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
     setWeatherLoading(true);
     setWeatherUnavailable(false);
     setWeatherUnsupported(false);
+    setWeatherLocationBanner(null);
     const position = await new Promise<GeolocationPosition | null>((resolve) => {
-      navigator.geolocation.getCurrentPosition((pos) => resolve(pos), () => resolve(null), { enableHighAccuracy: false, timeout: 10000 });
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve(pos),
+        (err) => {
+          if (err.code === err.PERMISSION_DENIED) {
+            setWeatherLocationBanner(LOCATION_DENIED_USER_MESSAGE);
+          } else {
+            setWeatherUnavailable(true);
+          }
+          resolve(null);
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 },
+      );
     });
-    if (!position) { setWeatherUnavailable(true); setWeatherLoading(false); return; }
+    if (!position) {
+      setWeatherLoading(false);
+      return;
+    }
     const { latitude, longitude } = position.coords;
     try {
       const url = new URL("https://api.open-meteo.com/v1/forecast");
@@ -451,7 +470,9 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
 
       router.push("/icecream/feed");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(
+        userFacingSaveError(err, "We couldn't update your log. Please try again."),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -520,6 +541,10 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
 
         {/* Weather */}
         <div className="flex flex-col gap-2">
+          <LocationPermissionBanner
+            message={weatherLocationBanner}
+            onDismiss={() => setWeatherLocationBanner(null)}
+          />
           {!isToday(visitedAt) ? (
             <p className="text-xs text-zinc-500 dark:text-zinc-500">No weather data available for past visits</p>
           ) : weather ? (
@@ -652,10 +677,10 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
                     <div className="flex flex-col gap-2 pt-1">
                       {(
                         [
-                          { key: "ratingTexture", label: "Textuur (Texture)" },
-                          { key: "ratingOriginality", label: "Originaliteit (Originality)" },
-                          { key: "ratingIntensity", label: "Intensiteit (Intensity)" },
-                          { key: "ratingPresentation", label: "Presentatie (Presentation)" },
+                          { key: "ratingTexture", label: "Texture" },
+                          { key: "ratingOriginality", label: "Originality" },
+                          { key: "ratingIntensity", label: "Intensity" },
+                          { key: "ratingPresentation", label: "Presentation" },
                         ] as const
                       ).map(({ key, label }) => (
                         <StarRating
@@ -725,8 +750,8 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           <div className="flex gap-3">
             {(
               [
-                { value: "cone", emoji: "🍦", label: "Hoorntje" },
-                { value: "cup", emoji: "🍧", label: "Bakje" },
+                { value: "cone", emoji: "🍦", label: "Cone" },
+                { value: "cup", emoji: "🍧", label: "Cup" },
               ] as const
             ).map(({ value, emoji, label }) => {
               const selected = vessel === value;

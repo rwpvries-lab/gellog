@@ -2,6 +2,7 @@
 
 import { GellogLogo } from "@/app/components/GellogLogo";
 import { createClient } from "@/src/lib/supabase/client";
+import { userFacingAuthMessage } from "@/src/lib/userFacingError";
 import { Toast, useToast } from "@/src/components/Toast";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -167,7 +168,7 @@ export default function SignupPage() {
         },
       });
       if (signUpError) {
-        setError(signUpError.message);
+        setError(userFacingAuthMessage(signUpError.message));
         setLoading(false);
         return;
       }

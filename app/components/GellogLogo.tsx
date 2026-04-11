@@ -13,7 +13,7 @@ export function GellogLogo({ size = 96, className, priority }: GellogLogoProps) 
       alt="Gellog"
       width={size}
       height={size}
-      className={className}
+      className={["rounded-full", className].filter(Boolean).join(" ")}
       priority={priority}
       loading={priority ? undefined : "lazy"}
     />

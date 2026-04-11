@@ -3,12 +3,13 @@
 import { createClient } from "@/src/lib/supabase/client";
 import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import { deletePushSubscription, subscribeToPush } from "@/src/lib/push";
+import { userFacingPushError } from "@/src/lib/userFacingError";
 import { useThemeToggle } from "@/src/app/ThemeProvider";
 import { type Visibility } from "@/src/components/VisibilityPicker";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Icon } from "@/src/components/icons";
 
 // ─── Shared primitives ────────────────────────────────────────────────────────
@@ -47,6 +48,52 @@ function Sep() {
         marginLeft: 16,
       }}
     />
+  );
+}
+
+type GeolocationPermissionUi = "granted" | "denied" | "prompt";
+
+function LocationPermissionChip({
+  state,
+  requesting,
+}: {
+  state: GeolocationPermissionUi;
+  requesting: boolean;
+}) {
+  const label =
+    state === "granted"
+      ? "Granted"
+      : state === "denied"
+        ? "Denied"
+        : "Not set";
+  const chipStyle: CSSProperties =
+    state === "granted"
+      ? {
+          background: "color-mix(in srgb, var(--color-teal) 20%, transparent)",
+          color: "var(--color-teal)",
+        }
+      : state === "denied"
+        ? {
+            background: "var(--color-error-surface)",
+            color: "var(--color-error)",
+          }
+        : {
+            background: "var(--color-surface-alt)",
+            color: "var(--color-text-secondary)",
+          };
+  return (
+    <span
+      style={{
+        fontSize: 12,
+        fontWeight: 600,
+        padding: "5px 11px",
+        borderRadius: 999,
+        flexShrink: 0,
+        ...chipStyle,
+      }}
+    >
+      {requesting ? "…" : label}
+    </span>
   );
 }
 
@@ -132,6 +179,10 @@ export function SettingsClient({
   const [notifLoading, setNotifLoading] = useState(false);
   const [notifError, setNotifError] = useState<string | null>(null);
 
+  const [geoPerm, setGeoPerm] = useState<GeolocationPermissionUi>("prompt");
+  const [geoHint, setGeoHint] = useState<string | null>(null);
+  const [geoRequesting, setGeoRequesting] = useState(false);
+
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
 
@@ -157,6 +208,91 @@ export function SettingsClient({
   useEffect(() => {
     setAccountAvatarImgError(false);
   }, [avatarUrl]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let registered: PermissionStatus | null = null;
+    const onChange = () => {
+      if (registered) {
+        setGeoPerm(registered.state as GeolocationPermissionUi);
+      }
+    };
+
+    void (async () => {
+      if (typeof window === "undefined") return;
+      if (!navigator.permissions?.query) {
+        if (!cancelled) setGeoPerm("prompt");
+        return;
+      }
+      try {
+        const status = await navigator.permissions.query({
+          name: "geolocation" as PermissionName,
+        });
+        if (cancelled) return;
+        registered = status;
+        setGeoPerm(status.state as GeolocationPermissionUi);
+        status.addEventListener("change", onChange);
+      } catch {
+        if (!cancelled) setGeoPerm("prompt");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      registered?.removeEventListener("change", onChange);
+    };
+  }, []);
+
+  function handleLocationRowClick() {
+    setGeoHint(null);
+    if (geoPerm === "granted") {
+      return;
+    }
+    if (geoPerm === "denied") {
+      setGeoHint(
+        "To enable location, go to your browser Settings > Site permissions > Location.",
+      );
+      return;
+    }
+    if (!("geolocation" in navigator) || !navigator.geolocation) {
+      setGeoHint("Location isn't supported in this browser.");
+      return;
+    }
+    setGeoRequesting(true);
+    navigator.geolocation.getCurrentPosition(
+      async () => {
+        setGeoRequesting(false);
+        try {
+          if (navigator.permissions?.query) {
+            const s = await navigator.permissions.query({
+              name: "geolocation" as PermissionName,
+            });
+            setGeoPerm(s.state as GeolocationPermissionUi);
+          } else {
+            setGeoPerm("granted");
+          }
+        } catch {
+          setGeoPerm("granted");
+        }
+      },
+      async () => {
+        setGeoRequesting(false);
+        try {
+          if (navigator.permissions?.query) {
+            const s = await navigator.permissions.query({
+              name: "geolocation" as PermissionName,
+            });
+            setGeoPerm(s.state as GeolocationPermissionUi);
+          } else {
+            setGeoPerm("denied");
+          }
+        } catch {
+          setGeoPerm("denied");
+        }
+      },
+      { maximumAge: 0, timeout: 15000 },
+    );
+  }
 
   async function handleVisibilityChange(v: Visibility) {
     setDefaultVisibility(v);
@@ -186,7 +322,12 @@ export function SettingsClient({
         setNotificationsEnabled(true);
       }
     } catch (e) {
-      setNotifError(e instanceof Error ? e.message : "Something went wrong.");
+      setNotifError(
+        userFacingPushError(
+          e,
+          "Couldn't update notification settings. Please try again.",
+        ),
+      );
     } finally {
       setNotifLoading(false);
     }
@@ -800,6 +941,51 @@ export function SettingsClient({
               </p>
             )}
           </div>
+
+          <Sep />
+
+          {/* Location (geolocation permission) */}
+          <div style={{ ...ROW, flexDirection: "column", alignItems: "stretch", padding: "0 16px" }}>
+            <button
+              type="button"
+              onClick={handleLocationRowClick}
+              disabled={geoRequesting}
+              style={{
+                ...ROW,
+                padding: 0,
+                minHeight: 52,
+                width: "100%",
+                border: "none",
+                background: "none",
+                cursor: geoRequesting ? "wait" : "pointer",
+                textAlign: "left",
+              }}
+            >
+              <span
+                style={{
+                  color: "var(--color-text-primary)",
+                  fontSize: 15,
+                  fontWeight: 500,
+                }}
+              >
+                Location
+              </span>
+              <LocationPermissionChip state={geoPerm} requesting={geoRequesting} />
+            </button>
+            {geoHint ? (
+              <p
+                style={{
+                  color: "var(--color-text-secondary)",
+                  fontSize: 12,
+                  lineHeight: 1.45,
+                  paddingBottom: 12,
+                  marginTop: -4,
+                }}
+              >
+                {geoHint}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -860,7 +1046,7 @@ export function SettingsClient({
           <Sep />
 
           <a
-            href="mailto:hello@gellog.app"
+            href="mailto:support@gellog.app"
             style={{ ...ROW, textDecoration: "none" }}
           >
             <span
@@ -891,7 +1077,7 @@ export function SettingsClient({
                 fontSize: 14,
               }}
             >
-              0.6.0
+              0.7.0
             </span>
           </div>
         </div>
