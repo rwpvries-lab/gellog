@@ -327,6 +327,7 @@ export function FeedCard({
   const timeAgo = formatVisitDate(log.visited_at);
   const photoUrl = getPhotoUrl(log.photo_url);
   const photoVisibility = log.photo_visibility ?? "public";
+  const hasPhotoAttached = Boolean(log.photo_url?.trim());
   const canSeePhoto =
     Boolean(photoUrl) &&
     (isOwnLog ||
@@ -361,49 +362,8 @@ export function FeedCard({
   const pillBase =
     "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold text-[color:var(--color-on-brand)]";
 
-  function renderHeroMedia() {
-    if (canSeePhoto && photoUrl && !photoImgError) {
-      return (
-        <Image
-          src={photoUrl}
-          alt={`Photo from ${log.salon_name}`}
-          width={800}
-          height={600}
-          className="h-full w-full object-cover"
-          loading="lazy"
-          onError={() => setPhotoImgError(true)}
-        />
-      );
-    }
-    if (canSeePhoto && photoUrl && photoImgError) {
-      return (
-        <div className="flex h-full w-full flex-col items-center justify-center bg-[color:var(--color-teal)]">
-          <span className="text-3xl font-bold text-[color:var(--color-on-brand)]">
-            {photoInitial}
-          </span>
-        </div>
-      );
-    }
-    if (showPhotoPlaceholder) {
-      return (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-[color:var(--color-surface-alt)]">
-          <span className="text-2xl" aria-hidden>
-            👥
-          </span>
-          <p className="px-4 text-center text-xs font-medium text-[color:var(--color-text-secondary)]">
-            Photo visible to followers only
-          </p>
-        </div>
-      );
-    }
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center bg-[color:color-mix(in_srgb,var(--color-teal)_12%,var(--color-surface-alt))]">
-        <span className="text-4xl" aria-hidden>
-          🍦
-        </span>
-      </div>
-    );
-  }
+  /** Feed layout: only show a tall hero when there is a photo the viewer can see. */
+  const feedHeroVisible = isFeedLayout && hasPhotoAttached && canSeePhoto && Boolean(photoUrl);
 
   return (
     <>
@@ -422,9 +382,37 @@ export function FeedCard({
       >
         {isFeedLayout ? (
           <>
-            <div className="relative aspect-[4/3] w-full overflow-hidden bg-[color:var(--color-surface-alt)]">
-              {renderHeroMedia()}
-            </div>
+            {feedHeroVisible && photoUrl ? (
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[color:var(--color-surface-alt)]">
+                {!photoImgError ? (
+                  <Image
+                    src={photoUrl}
+                    alt={`Photo from ${log.salon_name}`}
+                    width={800}
+                    height={600}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                    onError={() => setPhotoImgError(true)}
+                  />
+                ) : (
+                  <div className="flex h-full w-full flex-col items-center justify-center bg-[color:var(--color-teal)]">
+                    <span className="text-3xl font-bold text-[color:var(--color-on-brand)]">
+                      {photoInitial}
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : null}
+            {showPhotoPlaceholder ? (
+              <div className="flex items-center gap-2 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] px-4 py-2.5">
+                <span className="text-base" aria-hidden>
+                  👥
+                </span>
+                <p className="text-xs font-medium text-[color:var(--color-text-secondary)]">
+                  Photo visible to followers only
+                </p>
+              </div>
+            ) : null}
             <div className="space-y-3 px-4 pb-3 pt-4">
               <div>
                 <h2 className="text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--color-text-primary)]">

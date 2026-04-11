@@ -1,5 +1,6 @@
 'use client';
 
+import { AppShell } from "@/app/components/AppShell";
 import { createClient } from "@/src/lib/supabase/client";
 import Image from "next/image";
 import Link from "next/link";
@@ -80,11 +81,11 @@ type FollowStatus = Record<string, boolean>;
 
 function SkeletonRow() {
   return (
-    <div className="flex animate-pulse items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+    <div className="flex animate-pulse items-center gap-3 rounded-2xl bg-[color:var(--color-surface)] p-3 shadow-sm ring-1 ring-[color:var(--color-border)]">
+      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-[color:var(--color-surface-alt)]" />
       <div className="flex flex-1 flex-col gap-2">
-        <div className="h-3 w-28 rounded bg-zinc-200 dark:bg-zinc-700" />
-        <div className="h-3 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
+        <div className="h-3 w-28 rounded bg-[color:var(--color-surface-alt)]" />
+        <div className="h-3 w-16 rounded bg-[color:var(--color-surface-alt)]" />
       </div>
     </div>
   );
@@ -275,10 +276,9 @@ export default function SearchPage() {
   const noSalonResults = salonSearched && salonResults.length === 0 && placesResults.length === 0;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-teal-50 px-4 pb-24 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40">
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
+    <AppShell>
         <header className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-2xl font-bold tracking-tight text-[color:var(--color-text-primary)]">
             Search
           </h1>
         </header>
@@ -289,11 +289,11 @@ export default function SearchPage() {
           onChange={(e) => setQuery(e.target.value)}
           placeholder={activeTab === "people" ? "Find people…" : "Find salons…"}
           autoFocus
-          className="w-full rounded-2xl border-0 bg-white px-4 py-3 text-sm text-zinc-900 shadow-sm ring-1 ring-zinc-200 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-teal-400 dark:bg-zinc-900 dark:text-zinc-50 dark:ring-zinc-700 dark:placeholder:text-zinc-500 dark:focus:ring-teal-500"
+          className="w-full rounded-2xl border-0 bg-[color:var(--color-surface)] px-4 py-3 text-sm text-[color:var(--color-text-primary)] shadow-sm ring-1 ring-[color:var(--color-border)] placeholder:text-[color:var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)]"
         />
 
         {/* Tabs */}
-        <div className="flex gap-1 rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800">
+        <div className="flex gap-1 rounded-2xl bg-[color:var(--color-surface-alt)] p-1 ring-1 ring-[color:var(--color-border)]">
           {(["people", "salons"] as const).map((tab) => (
             <button
               key={tab}
@@ -301,8 +301,8 @@ export default function SearchPage() {
               onClick={() => setActiveTab(tab)}
               className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-colors ${
                 activeTab === tab
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-900 dark:text-zinc-50"
-                  : "text-zinc-500 dark:text-zinc-400"
+                  ? "bg-[color:var(--color-surface)] text-[color:var(--color-text-primary)] shadow-sm ring-1 ring-[color:var(--color-border)]"
+                  : "text-[color:var(--color-text-secondary)]"
               }`}
             >
               {tab === "people" ? "People" : "Salons"}
@@ -319,7 +319,7 @@ export default function SearchPage() {
                 <SkeletonRow />
               </>
             ) : searched && results.length === 0 ? (
-              <p className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="py-8 text-center text-sm text-[color:var(--color-text-secondary)]">
                 No users found for &ldquo;{query.trim()}&rdquo;
               </p>
             ) : (
@@ -331,11 +331,11 @@ export default function SearchPage() {
                 return (
                   <div
                     key={profile.id}
-                    className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+                    className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface)] p-3 shadow-sm ring-1 ring-[color:var(--color-border)]"
                   >
                     <Link
                       href={`/profile/${profile.username}`}
-                      className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-700"
+                      className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full shadow-sm ring-1 ring-[color:var(--color-border)]"
                     >
                       <AvatarFill avatarUrl={profile.avatar_url} displayName={displayName} initial={initial} />
                     </Link>
@@ -344,10 +344,10 @@ export default function SearchPage() {
                       href={`/profile/${profile.username}`}
                       className="flex flex-1 flex-col"
                     >
-                      <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      <span className="text-sm font-semibold text-[color:var(--color-text-primary)]">
                         {displayName}
                       </span>
-                      <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                      <span className="text-xs text-[color:var(--color-text-secondary)]">
                         {profile.log_count} public scoop
                         {profile.log_count !== 1 ? "s" : ""}
                       </span>
@@ -371,7 +371,7 @@ export default function SearchPage() {
               <SkeletonRow />
             </>
           ) : noSalonResults ? (
-            <p className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="py-8 text-center text-sm text-[color:var(--color-text-secondary)]">
               No salons found for &ldquo;{query.trim()}&rdquo;
             </p>
           ) : !salonSearched ? null : (
@@ -381,9 +381,9 @@ export default function SearchPage() {
                 <Link
                   key={salon.place_id}
                   href={`/salon/${encodeURIComponent(salon.place_id)}`}
-                  className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+                  className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface)] p-3 shadow-sm ring-1 ring-[color:var(--color-border)]"
                 >
-                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-teal-50 dark:bg-teal-950/30">
+                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-full bg-[color:var(--color-teal-bg)]">
                     {salon.logo_url && salon.is_claimed ? (
                       <SalonSearchLogo logoUrl={salon.logo_url} salonName={salon.salon_name} />
                     ) : (
@@ -394,17 +394,17 @@ export default function SearchPage() {
                   </div>
 
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                    <span className="truncate text-sm font-semibold text-[color:var(--color-text-primary)]">
                       {salon.salon_name}
                     </span>
-                    <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="text-xs text-[color:var(--color-text-secondary)]">
                       ★ {salon.avg_rating.toFixed(1)} · {salon.visit_count}{" "}
                       {salon.visit_count === 1 ? "visit" : "visits"}
                     </span>
                   </div>
 
                   {salon.is_claimed && (
-                    <span className="flex-shrink-0 rounded-full bg-teal-100 px-2 py-0.5 text-xs font-medium text-teal-700 dark:bg-teal-900/40 dark:text-teal-400">
+                    <span className="flex-shrink-0 rounded-full bg-[color:var(--color-teal-bg)] px-2 py-0.5 text-xs font-medium text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_35%,var(--color-border))]">
                       Claimed
                     </span>
                   )}
@@ -416,24 +416,24 @@ export default function SearchPage() {
                 <Link
                   key={place.place_id}
                   href={`/salon/${encodeURIComponent(place.place_id)}`}
-                  className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+                  className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface)] p-3 shadow-sm ring-1 ring-[color:var(--color-border)]"
                 >
-                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-zinc-100 dark:bg-zinc-800">
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[color:var(--color-surface-alt)]">
                     <span className="text-lg">🍦</span>
                   </div>
 
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                    <span className="truncate text-sm font-semibold text-[color:var(--color-text-primary)]">
                       {place.main_text}
                     </span>
                     {place.secondary_text ? (
-                      <span className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                      <span className="truncate text-xs text-[color:var(--color-text-secondary)]">
                         {place.secondary_text}
                       </span>
                     ) : null}
                   </div>
 
-                  <span className="flex-shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                  <span className="flex-shrink-0 rounded-full bg-[color:var(--color-surface-alt)] px-2 py-0.5 text-xs font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
                     Not yet on Gellog
                   </span>
                 </Link>
@@ -441,7 +441,6 @@ export default function SearchPage() {
             </>
           )}
         </div>
-      </div>
-    </main>
+    </AppShell>
   );
 }

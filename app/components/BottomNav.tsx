@@ -73,39 +73,38 @@ export function BottomNav() {
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}
     >
-      <div className="pointer-events-auto relative mx-auto max-w-2xl">
+      <div className="pointer-events-auto mx-auto max-w-2xl">
         <div
-          className="relative overflow-visible"
           style={{
             background: "var(--color-surface)",
             borderTop: "1px solid var(--color-border)",
             boxShadow: "0 -4px 24px rgba(0, 0, 0, 0.08)",
           }}
         >
-          <Link
-            href="/icecream/logs/new"
-            className="absolute left-1/2 top-0 z-20 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full transition hover:brightness-110 active:brightness-95"
-            style={{
-              background: "var(--color-teal)",
-              color: "var(--color-on-brand)",
-              boxShadow:
-                "0 4px 18px color-mix(in srgb, var(--color-teal) 45%, transparent)",
-            }}
-            aria-label="Log a new ice cream"
-          >
-            <Plus size={28} strokeWidth={2.5} aria-hidden />
-          </Link>
-
-          <div className="flex items-center justify-between gap-1 px-1 pb-2 pt-4">
-            <div className="flex flex-1 items-center justify-evenly">
+          <div className="flex items-stretch px-1 py-2">
+            <div className="flex min-h-[52px] flex-1 items-center justify-evenly">
               {LEFT_ITEMS.map((item) => (
                 <NavIconLink key={item.href} item={item} />
               ))}
             </div>
 
-            <div className="w-14 shrink-0" aria-hidden />
+            <div className="flex shrink-0 items-center justify-center px-1">
+              <Link
+                href="/icecream/logs/new"
+                className="flex h-12 w-12 items-center justify-center rounded-full transition hover:brightness-110 active:brightness-95"
+                style={{
+                  background: "var(--color-teal)",
+                  color: "var(--color-on-brand)",
+                  boxShadow:
+                    "0 2px 12px color-mix(in srgb, var(--color-teal) 40%, transparent)",
+                }}
+                aria-label="Log a new ice cream"
+              >
+                <Plus size={26} strokeWidth={2.5} aria-hidden />
+              </Link>
+            </div>
 
-            <div className="flex flex-1 items-center justify-evenly">
+            <div className="flex min-h-[52px] flex-1 items-center justify-evenly">
               {RIGHT_ITEMS.map((item) => (
                 <NavIconLink key={item.href} item={item} />
               ))}

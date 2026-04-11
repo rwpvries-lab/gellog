@@ -1,5 +1,6 @@
 'use client';
 
+import { AppShell } from "@/app/components/AppShell";
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
 import { createClient } from "@/src/lib/supabase/client";
 import { notFound, useRouter } from "next/navigation";
@@ -25,57 +26,52 @@ const LOG_SELECT = `
 
 function LogDetailSkeleton() {
   return (
-    <main
-      className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-teal-50 px-4 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40"
-      style={{ paddingBottom: 120 }}
-    >
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
+    <AppShell contentClassName="pb-32">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-700" />
-          <div className="h-4 w-12 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700" />
+          <div className="h-8 w-8 animate-pulse rounded-full bg-[color:var(--color-surface-alt)]" />
+          <div className="h-4 w-12 animate-pulse rounded bg-[color:var(--color-surface-alt)]" />
         </div>
 
-        <div className="animate-pulse overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-          <div className="border-l-4 border-l-zinc-200 p-3 dark:border-l-zinc-700">
+        <div className="animate-pulse overflow-hidden rounded-3xl bg-[color:var(--color-surface)] shadow-sm ring-1 ring-[color:var(--color-border)]">
+          <div className="border-l-4 border-l-[color:var(--color-border)] p-3">
             <div className="mb-2 flex items-center gap-2">
-              <div className="h-5 w-5 rounded-full bg-zinc-200 dark:bg-zinc-700" />
-              <div className="h-3 w-28 rounded bg-zinc-200 dark:bg-zinc-700" />
-              <div className="h-3 w-12 rounded bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-5 w-5 rounded-full bg-[color:var(--color-surface-alt)]" />
+              <div className="h-3 w-28 rounded bg-[color:var(--color-surface-alt)]" />
+              <div className="h-3 w-12 rounded bg-[color:var(--color-surface-alt)]" />
             </div>
             <div className="mb-2 flex justify-between gap-3">
-              <div className="h-5 flex-1 rounded bg-zinc-200 dark:bg-zinc-700" />
-              <div className="h-8 w-16 rounded bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-5 flex-1 rounded bg-[color:var(--color-surface-alt)]" />
+              <div className="h-8 w-16 rounded bg-[color:var(--color-surface-alt)]" />
             </div>
-            <div className="aspect-[4/3] w-full rounded-2xl bg-gray-200 dark:bg-zinc-700" />
+            <div className="aspect-[4/3] w-full rounded-2xl bg-[color:var(--color-surface-alt)]" />
             <div className="mt-3 flex gap-2">
-              <div className="h-6 w-16 rounded-full bg-zinc-200 dark:bg-zinc-700" />
-              <div className="h-6 w-20 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-6 w-16 rounded-full bg-[color:var(--color-surface-alt)]" />
+              <div className="h-6 w-20 rounded-full bg-[color:var(--color-surface-alt)]" />
             </div>
           </div>
-          <div className="flex gap-3 border-t border-zinc-100 px-3 py-2 dark:border-zinc-800">
-            <div className="h-6 w-14 rounded-full bg-zinc-200 dark:bg-zinc-700" />
-            <div className="h-6 w-14 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+          <div className="flex gap-3 border-t border-[color:var(--color-border)] px-3 py-2">
+            <div className="h-6 w-14 rounded-full bg-[color:var(--color-surface-alt)]" />
+            <div className="h-6 w-14 rounded-full bg-[color:var(--color-surface-alt)]" />
           </div>
         </div>
 
         <section className="space-y-3">
-          <div className="h-4 w-24 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700" />
+          <div className="h-4 w-24 animate-pulse rounded bg-[color:var(--color-surface-alt)]" />
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="flex animate-pulse gap-3 rounded-2xl bg-white/80 p-3 ring-1 ring-zinc-100 dark:bg-zinc-900/50 dark:ring-zinc-800"
+              className="flex animate-pulse gap-3 rounded-2xl bg-[color:var(--color-surface)] p-3 ring-1 ring-[color:var(--color-border)]"
             >
-              <div className="h-9 w-9 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-9 w-9 shrink-0 rounded-full bg-[color:var(--color-surface-alt)]" />
               <div className="flex flex-1 flex-col gap-2 pt-0.5">
-                <div className="h-3 w-20 rounded bg-zinc-200 dark:bg-zinc-700" />
-                <div className="h-3 w-full rounded bg-zinc-200 dark:bg-zinc-700" />
-                <div className="h-3 w-4/5 rounded bg-zinc-200 dark:bg-zinc-700" />
+                <div className="h-3 w-20 rounded bg-[color:var(--color-surface-alt)]" />
+                <div className="h-3 w-full rounded bg-[color:var(--color-surface-alt)]" />
+                <div className="h-3 w-4/5 rounded bg-[color:var(--color-surface-alt)]" />
               </div>
             </div>
           ))}
         </section>
-      </div>
-    </main>
+    </AppShell>
   );
 }
 
@@ -297,7 +293,7 @@ export function LogDetailClient({ logId }: Props) {
   const inputBar =
     phase === "ready" && log ? (
       <div
-        className="border-t border-zinc-100 bg-white/95 px-4 py-3 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/95"
+        className="border-t border-[color:var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_92%,transparent)] px-4 py-3 backdrop-blur-md supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)]"
         style={{ position: "fixed", bottom: navHeight, left: 0, right: 0, zIndex: 40 }}
       >
         <div className="mx-auto flex max-w-xl items-end gap-2">
@@ -321,12 +317,12 @@ export function LogDetailClient({ logId }: Props) {
                   }}
                   placeholder="Add a comment…"
                   rows={1}
-                  className="w-full resize-none rounded-2xl bg-zinc-100 px-3.5 py-2.5 pr-10 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-orange-300 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500"
+                  className="w-full resize-none rounded-2xl bg-[color:var(--color-surface-alt)] px-3.5 py-2.5 pr-10 text-sm text-[color:var(--color-text-primary)] placeholder:text-[color:var(--color-text-tertiary)] focus:outline-none focus:ring-2 focus:ring-[color:color-mix(in_srgb,var(--color-orange)_45%,var(--color-teal))]"
                   style={{ maxHeight: 120, overflowY: "auto" }}
                 />
                 {remaining <= 100 && (
                   <span
-                    className={`absolute bottom-2.5 right-3 text-[10px] font-medium ${remaining < 0 ? "text-red-500" : "text-zinc-400"}`}
+                    className={`absolute bottom-2.5 right-3 text-[10px] font-medium ${remaining < 0 ? "text-[color:var(--color-error)]" : "text-[color:var(--color-text-tertiary)]"}`}
                   >
                     {remaining}
                   </span>
@@ -336,7 +332,7 @@ export function LogDetailClient({ logId }: Props) {
                 type="button"
                 disabled={!inputValue.trim() || submitting}
                 onClick={() => void handleSubmit()}
-                className="shrink-0 rounded-full bg-orange-500 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-orange-600 disabled:opacity-40"
+                className="shrink-0 rounded-full bg-[color:var(--color-orange)] px-4 py-2.5 text-xs font-semibold text-[color:var(--color-on-brand)] transition hover:brightness-110 disabled:opacity-40"
               >
                 {submitting ? "…" : "Post"}
               </button>
@@ -345,7 +341,7 @@ export function LogDetailClient({ logId }: Props) {
             <button
               type="button"
               onClick={() => router.push("/login")}
-              className="flex flex-1 items-center justify-center rounded-2xl bg-zinc-100 px-4 py-2.5 text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+              className="flex flex-1 items-center justify-center rounded-2xl bg-[color:var(--color-surface-alt)] px-4 py-2.5 text-sm text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]"
             >
               Sign in to comment
             </button>
@@ -364,16 +360,14 @@ export function LogDetailClient({ logId }: Props) {
 
   return (
     <>
-      <main
-        className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-teal-50 px-4 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40"
-        style={{ paddingBottom: navHeight + inputBarHeight + 16 }}
+      <AppShell
+        mainStyle={{ paddingBottom: navHeight + inputBarHeight + 16 }}
       >
-        <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => router.back()}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-zinc-500 shadow-sm ring-1 ring-zinc-100 transition hover:bg-zinc-50 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:bg-zinc-800"
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-[color:var(--color-surface)] text-[color:var(--color-text-secondary)] shadow-[var(--shadow-float)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
               aria-label="Go back"
             >
               <svg
@@ -389,7 +383,7 @@ export function LogDetailClient({ logId }: Props) {
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
-            <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Log</span>
+            <span className="text-sm font-semibold text-[color:var(--color-text-primary)]">Log</span>
           </div>
 
           <FeedCard
@@ -408,8 +402,7 @@ export function LogDetailClient({ logId }: Props) {
               onDelete={handleDelete}
             />
           </section>
-        </div>
-      </main>
+      </AppShell>
 
       {mounted && inputBar ? createPortal(inputBar, document.body) : null}
     </>

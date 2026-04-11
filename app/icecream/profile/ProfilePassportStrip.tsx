@@ -45,7 +45,7 @@ export function ProfilePassportStrip({ stamps }: ProfilePassportStripProps) {
                 className="flex w-[72px] shrink-0 flex-col items-center gap-2"
               >
                 <div
-                  className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-white dark:bg-zinc-900"
+                  className="flex h-[72px] w-[72px] items-center justify-center rounded-full bg-[color:var(--color-surface)] ring-1 ring-[color:var(--color-border)]"
                   style={{
                     border: `2px dashed ${accentTeal ? "var(--color-teal)" : "var(--color-orange)"}`,
                     boxShadow: "0 2px 8px rgba(0,0,0,0.06)",

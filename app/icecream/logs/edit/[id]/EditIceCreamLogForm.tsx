@@ -460,15 +460,15 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-6 rounded-3xl border border-orange-100 bg-gradient-to-b from-orange-50 via-white to-teal-50 p-6 shadow-xl shadow-orange-100/60 dark:border-zinc-800 dark:from-zinc-900 dark:via-zinc-950 dark:to-teal-950/30"
+      className="flex flex-col gap-6 rounded-3xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-6 shadow-[var(--shadow-card-sm)]"
     >
       <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">Edit scoop</h1>
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">Update your ice cream adventure.</p>
+        <h1 className="text-2xl font-bold text-[color:var(--color-text-primary)]">Edit scoop</h1>
+        <p className="text-sm text-[color:var(--color-text-secondary)]">Update your ice cream adventure.</p>
       </div>
 
       {error ? (
-        <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-700 ring-1 ring-red-100 dark:bg-red-950/60 dark:text-red-200 dark:ring-red-900/60">
+        <p className="rounded-2xl bg-[color:var(--color-error-surface)] px-4 py-3 text-sm text-[color:var(--color-error)] ring-1 ring-[color:var(--color-error-border)]">
           {error}
         </p>
       ) : null}
@@ -476,7 +476,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
       <div className="flex flex-col gap-4">
         {/* Salon name */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="salon-name" className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
+          <label htmlFor="salon-name" className="text-sm font-medium text-[color:var(--color-text-primary)]">
             Salon name
           </label>
           <SalonInput value={salonName} onPlaceSelect={handlePlaceSelect} userId={userId} />
@@ -486,20 +486,20 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
         <button
           type="button"
           onClick={openSheet}
-          className="flex w-full items-center gap-3 rounded-2xl bg-zinc-100 px-4 py-3 text-left text-sm text-zinc-700 transition hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+          className="flex w-full items-center gap-3 rounded-2xl bg-[color:var(--color-surface-alt)] px-4 py-3 text-left text-sm text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
         >
           <span className="text-base leading-none">🕐</span>
           <span className="flex-1">{formatTriggerLabel(visitedAt)}</span>
-          <span className="text-zinc-400">›</span>
+          <span className="text-[color:var(--color-text-tertiary)]">›</span>
         </button>
 
         {sheetOpen && (
           <div className="fixed inset-0 z-50 flex flex-col justify-end">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setSheetOpen(false)} />
-            <div className="relative rounded-t-[20px] bg-white shadow-2xl">
+            <div className="absolute inset-0 bg-[color:var(--color-backdrop)]" onClick={() => setSheetOpen(false)} />
+            <div className="relative rounded-t-[20px] bg-[color:var(--color-surface)] shadow-2xl ring-1 ring-[color:var(--color-border)]">
               <div className="flex items-center justify-between px-5 py-4">
-                <button type="button" onClick={() => setSheetOpen(false)} className="text-sm text-zinc-500">Cancel</button>
-                <button type="button" onClick={confirmSheet} className="text-sm font-semibold text-amber-600">Bevestigen</button>
+                <button type="button" onClick={() => setSheetOpen(false)} className="text-sm text-[color:var(--color-text-secondary)]">Cancel</button>
+                <button type="button" onClick={confirmSheet} className="text-sm font-semibold text-[color:var(--color-orange)]">Done</button>
               </div>
               <div className="flex pb-8">
                 <ScrollDrum items={getLast30Days()} selectedValue={draftDay} onChange={setDraftDay} />

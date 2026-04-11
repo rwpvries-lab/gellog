@@ -52,9 +52,9 @@ export default function PrivacyPolicyPage() {
           </a>
         </p>
         <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
-          Sidus Studio is registered with the Dutch Chamber of Commerce (Kamer van
-          Koophandel) as a sole proprietorship (eenmanszaak). We are the data
-          controller responsible for your personal data.
+          Sidus Studio is registered with the Dutch Chamber of Commerce as a sole
+          proprietorship. We are the data controller responsible for your personal
+          data.
         </p>
       </section>
 
@@ -372,8 +372,8 @@ export default function PrivacyPolicyPage() {
           . We will respond within 30 days.
         </p>
         <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
-          You also have the right to lodge a complaint with the Dutch data
-          protection authority: Autoriteit Persoonsgegevens (
+          You also have the right to lodge a complaint with the Dutch Data
+          Protection Authority (
           <a
             className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
             href="https://autoriteitpersoonsgegevens.nl"

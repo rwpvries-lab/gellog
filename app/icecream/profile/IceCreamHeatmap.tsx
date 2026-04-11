@@ -282,7 +282,7 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
                 zIndex: 50,
                 pointerEvents: 'none',
               }}
-              className="rounded-2xl bg-white px-3.5 py-2.5 shadow-lg ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-700"
+              className="rounded-2xl bg-[color:var(--color-surface)] px-3.5 py-2.5 shadow-[var(--shadow-card-sm)] ring-1 ring-[color:var(--color-border)]"
             >
               <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                 {formatDateLabel(hoverTooltip.dateStr)}

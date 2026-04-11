@@ -20,7 +20,7 @@ export default async function IceCreamPassportPlaceholderPage() {
         style={{
           background: "var(--color-surface)",
           border: "1px solid var(--color-border)",
-          boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+          boxShadow: "var(--shadow-card-sm)",
         }}
       >
         <h1
@@ -39,7 +39,7 @@ export default async function IceCreamPassportPlaceholderPage() {
       </div>
       <Link
         href="/icecream/profile"
-        className="rounded-full px-6 py-3 text-sm font-semibold text-white transition hover:opacity-90"
+        className="rounded-full px-6 py-3 text-sm font-semibold text-[color:var(--color-on-brand)] transition hover:brightness-110"
         style={{ background: "var(--color-teal)" }}
       >
         Back to profile

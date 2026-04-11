@@ -105,7 +105,7 @@ const CARD_STYLE: CSSProperties = {
   background: "var(--color-surface)",
   border: "1px solid var(--color-border)",
   borderRadius: 14,
-  boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+  boxShadow: "var(--shadow-card-sm)",
 };
 
 type ProfileGellogClientProps = {

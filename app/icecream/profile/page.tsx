@@ -1,3 +1,4 @@
+import { AppShell } from "@/app/components/AppShell";
 import { createClient } from "@/src/lib/supabase/server";
 import type { IceCreamLog as FeedIceCreamLog } from "@/src/components/FeedCard";
 import { redirect } from "next/navigation";
@@ -395,11 +396,7 @@ export default async function IceCreamProfilePage() {
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <main
-      style={{ background: "var(--color-surface-alt)", minHeight: "100vh" }}
-      className="px-4 pb-24 pt-6"
-    >
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-5 pb-4">
+    <AppShell contentClassName="pb-4">
         {/* ── Profile header (Figma: actions, avatar, name, @handle, follow stats) ── */}
         <ProfileHeader
           displayName={displayName}
@@ -463,8 +460,6 @@ export default async function IceCreamProfilePage() {
             currentUserId={user.id}
           />
         </section>
-
-      </div>
-    </main>
+    </AppShell>
   );
 }

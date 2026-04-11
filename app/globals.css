@@ -31,6 +31,16 @@
   --color-avatar-2: #c13a2d;
   --color-avatar-3: #d02e2e;
   --color-avatar-4: #3531b7;
+
+  /* Page shells — match profile (surface-alt) with optional soft brand wash */
+  --page-gradient-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-teal) 6%, var(--color-surface-alt)) 0%,
+    var(--color-surface-alt) 38%,
+    color-mix(in srgb, var(--color-orange) 5%, var(--color-surface-alt)) 100%
+  );
+  --shadow-card-sm: 0 2px 12px rgba(0, 0, 0, 0.06);
+  --shadow-float: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .dark {
@@ -60,6 +70,15 @@
   --color-avatar-2: #e34d3d;
   --color-avatar-3: #ef5350;
   --color-avatar-4: #5c58d6;
+
+  --page-gradient-bg: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-teal) 12%, var(--color-surface-alt)) 0%,
+    var(--color-surface-alt) 40%,
+    color-mix(in srgb, var(--color-orange) 7%, #141414) 100%
+  );
+  --shadow-card-sm: 0 2px 20px rgba(0, 0, 0, 0.45);
+  --shadow-float: 0 2px 14px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {

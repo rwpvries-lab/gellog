@@ -1,3 +1,4 @@
+import { AppShell } from "@/app/components/AppShell";
 import { GellogLogo } from "@/app/components/GellogLogo";
 import { NotifPromptBanner } from "@/app/components/NotifPromptBanner";
 import { createClient } from "@/src/lib/supabase/server";
@@ -128,8 +129,7 @@ export default async function IceCreamFeedPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-teal)_6%,var(--color-surface-alt))_0%,var(--color-surface-alt)_38%,color-mix(in_srgb,var(--color-orange)_5%,var(--color-surface-alt))_100%)] px-4 pb-24 pt-4">
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
+    <AppShell variant="wash" className="pt-4">
         <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <span className="min-w-0" aria-hidden />
           <Link
@@ -158,8 +158,7 @@ export default async function IceCreamFeedPage() {
           currentUserId={user?.id}
           initialFollowingUserIds={initialFollowingUserIds}
         />
-      </div>
-    </main>
+    </AppShell>
   );
 }
 

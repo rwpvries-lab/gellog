@@ -89,17 +89,17 @@ export function ProfileFeedClient({
 
   if (logs.length === 0) {
     return (
-      <div className="mt-2 flex flex-col items-center justify-center rounded-3xl bg-white px-8 py-12 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+      <div className="mt-2 flex flex-col items-center justify-center rounded-3xl bg-[color:var(--color-surface)] px-8 py-12 text-center shadow-sm ring-1 ring-[color:var(--color-border)]">
         <span className="mb-4 text-5xl">🍦</span>
-        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+        <p className="text-sm font-semibold text-[color:var(--color-text-primary)]">
           No logs yet
         </p>
-        <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+        <p className="mt-1 text-xs text-[color:var(--color-text-secondary)]">
           Track your first gelato adventure.
         </p>
         <Link
           href="/log"
-          className="mt-5 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-teal-500 px-5 py-2.5 text-xs font-semibold text-white shadow-md shadow-orange-300/50 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-white dark:shadow-none dark:focus:ring-offset-zinc-950"
+          className="mt-5 inline-flex items-center justify-center rounded-full bg-[color:var(--color-orange)] px-5 py-2.5 text-xs font-semibold text-[color:var(--color-on-brand)] shadow-[var(--shadow-float)] transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)] focus:ring-offset-2 focus:ring-offset-[color:var(--color-surface)]"
         >
           Log your first gelato
         </Link>
@@ -119,14 +119,14 @@ export function ProfileFeedClient({
         />
       ))}
 
-      <div className="flex items-center justify-center py-2 text-xs text-zinc-500 dark:text-zinc-400">
+      <div className="flex items-center justify-center py-2 text-xs text-[color:var(--color-text-secondary)]">
         {loading ? (
           <span>Loading more scoops…</span>
         ) : hasMore ? (
           <button
             type="button"
             onClick={() => void fetchMore()}
-            className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-teal-700 shadow-sm ring-1 ring-teal-100 transition hover:bg-teal-50 dark:bg-zinc-900 dark:text-teal-300 dark:ring-teal-900"
+            className="rounded-full bg-[color:var(--color-surface)] px-4 py-1.5 text-xs font-semibold text-[color:var(--color-teal)] shadow-sm ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_35%,var(--color-border))] transition hover:brightness-95 dark:hover:brightness-110"
           >
             Load more
           </button>
@@ -136,7 +136,7 @@ export function ProfileFeedClient({
       </div>
 
       {error ? (
-        <p className="pb-4 text-center text-xs text-red-600 dark:text-red-300">
+        <p className="pb-4 text-center text-xs text-[color:var(--color-error)]">
           {error}
         </p>
       ) : null}

@@ -4,7 +4,10 @@ import Link from "next/link";
 
 export default function IceCreamFeedLoading() {
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,color-mix(in_srgb,var(--color-teal)_6%,var(--color-surface-alt))_0%,var(--color-surface-alt)_38%,color-mix(in_srgb,var(--color-orange)_5%,var(--color-surface-alt))_100%)] px-4 pb-24 pt-4">
+    <main
+      className="px-4 pb-24 pt-4"
+      style={{ background: "var(--page-gradient-bg)", minHeight: "100vh" }}
+    >
       <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
         <header className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
           <span className="min-w-0" aria-hidden />

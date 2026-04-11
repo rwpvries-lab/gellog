@@ -23,7 +23,7 @@ const ROUND_BTN: CSSProperties = {
   height: 40,
   borderRadius: 999,
   background: "var(--color-surface)",
-  boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+  boxShadow: "var(--shadow-float)",
   border: "1px solid var(--color-border)",
   display: "flex",
   alignItems: "center",
@@ -116,7 +116,7 @@ export function ProfileHeader({
           <button
             type="button"
             onClick={() => setShowOverlay(true)}
-            className="relative flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-white dark:bg-zinc-900"
+            className="relative flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[color:var(--color-surface)] ring-1 ring-[color:var(--color-border)]"
             style={{
               width: 86,
               height: 86,

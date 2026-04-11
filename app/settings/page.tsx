@@ -1,3 +1,4 @@
+import { AppShell } from "@/app/components/AppShell";
 import { createClient } from "@/src/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { SettingsClient } from "./SettingsClient";
@@ -59,10 +60,7 @@ export default async function SettingsPage({
     : null;
 
   return (
-    <main
-      style={{ background: "var(--color-surface-alt)", minHeight: "100vh" }}
-      className="px-4 pb-24 pt-6"
-    >
+    <AppShell contained={false}>
       <SettingsClient
         userId={user.id}
         email={user.email ?? ""}
@@ -80,6 +78,6 @@ export default async function SettingsPage({
         }
         showUpgradeSuccess={upgrade === "success"}
       />
-    </main>
+    </AppShell>
   );
 }

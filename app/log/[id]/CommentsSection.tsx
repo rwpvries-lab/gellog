@@ -96,18 +96,18 @@ function CommentItem({
         <div className="flex items-center gap-2">
           <Link
             href={`/profile/${username}`}
-            className="text-xs font-semibold text-zinc-900 dark:text-zinc-50"
+            className="text-xs font-semibold text-[color:var(--color-text-primary)]"
           >
             {username}
           </Link>
-          <span className="text-[10px] text-zinc-400">{timeAgo(comment.created_at)}</span>
+          <span className="text-[10px] text-[color:var(--color-text-tertiary)]">{timeAgo(comment.created_at)}</span>
 
           {isOwn && (
             <div className="relative ml-auto">
               <button
                 type="button"
                 onClick={() => setShowMenu((s) => !s)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-[color:var(--color-text-tertiary)] hover:bg-[color:var(--color-surface-alt)]"
                 aria-label="Comment options"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -117,7 +117,7 @@ function CommentItem({
                 </svg>
               </button>
               {showMenu && (
-                <div className="absolute right-0 top-6 z-10 w-28 rounded-2xl bg-white py-1 shadow-lg ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+                <div className="absolute right-0 top-6 z-10 w-28 rounded-2xl bg-[color:var(--color-surface)] py-1 shadow-[var(--shadow-card-sm)] ring-1 ring-[color:var(--color-border)]">
                   <button
                     type="button"
                     onClick={() => {
@@ -125,7 +125,7 @@ function CommentItem({
                       setEditingId(comment.id);
                       setShowMenu(false);
                     }}
-                    className="w-full px-3 py-2 text-left text-xs text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                    className="w-full px-3 py-2 text-left text-xs text-[color:var(--color-text-primary)] hover:bg-[color:var(--color-surface-alt)]"
                   >
                     Edit
                   </button>
@@ -135,7 +135,7 @@ function CommentItem({
                       setShowDeleteConfirm(true);
                       setShowMenu(false);
                     }}
-                    className="w-full px-3 py-2 text-left text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                    className="w-full px-3 py-2 text-left text-xs text-[color:var(--color-error)] hover:bg-[color:var(--color-error-surface)]"
                   >
                     Delete
                   </button>
@@ -152,13 +152,13 @@ function CommentItem({
               onChange={(e) => setEditContent(e.target.value.slice(0, 500))}
               autoFocus
               rows={2}
-              className="w-full resize-none rounded-2xl bg-zinc-50 px-3 py-2 text-sm text-zinc-900 ring-1 ring-zinc-200 focus:outline-none focus:ring-orange-300 dark:bg-zinc-800 dark:text-zinc-50 dark:ring-zinc-700"
+              className="w-full resize-none rounded-2xl bg-[color:var(--color-surface-alt)] px-3 py-2 text-sm text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] focus:outline-none focus:ring-2 focus:ring-[color:color-mix(in_srgb,var(--color-orange)_40%,var(--color-teal))]"
             />
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setEditingId(null)}
-                className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                className="rounded-full bg-[color:var(--color-surface-alt)] px-3 py-1 text-xs font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)]"
               >
                 Cancel
               </button>
@@ -169,21 +169,21 @@ function CommentItem({
                   await onEdit(comment.id, editContent.trim());
                   setEditingId(null);
                 }}
-                className="rounded-full bg-orange-500 px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
+                className="rounded-full bg-[color:var(--color-orange)] px-3 py-1 text-xs font-semibold text-[color:var(--color-on-brand)] disabled:opacity-50"
               >
                 Save
               </button>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-zinc-700 dark:text-zinc-200">{comment.content}</p>
+          <p className="text-sm text-[color:var(--color-text-primary)]">{comment.content}</p>
         )}
 
         {editingId !== comment.id && currentUserId && (
           <button
             type="button"
             onClick={() => onReply(username)}
-            className="self-start text-[10px] font-medium text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+            className="self-start text-[10px] font-medium text-[color:var(--color-text-tertiary)] hover:text-[color:var(--color-text-secondary)]"
           >
             Reply
           </button>
@@ -195,7 +195,7 @@ function CommentItem({
             <button
               type="button"
               onClick={() => setShowDeleteConfirm(false)}
-              className="text-xs text-zinc-500"
+              className="text-xs text-[color:var(--color-text-secondary)]"
             >
               Cancel
             </button>
@@ -213,12 +213,12 @@ function CommentItem({
         )}
 
         {replies.length > 0 && (
-          <div className="mt-1.5 flex flex-col gap-3 border-l-2 border-zinc-100 pl-3 dark:border-zinc-800">
+          <div className="mt-1.5 flex flex-col gap-3 border-l-2 border-[color:var(--color-border)] pl-3">
             {replies.length > 2 && (
               <button
                 type="button"
                 onClick={() => setShowReplies((s) => !s)}
-                className="self-start text-[10px] font-medium text-teal-600 dark:text-teal-400"
+                className="self-start text-[10px] font-medium text-[color:var(--color-teal)]"
               >
                 {showReplies ? "Hide replies" : `Show replies (${replies.length})`}
               </button>
@@ -267,10 +267,10 @@ export function CommentsSection({ comments, currentUserId, onReply, onEdit, onDe
 
   return (
     <div className="flex flex-col gap-4 pb-4">
-      <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">{heading}</h2>
+      <h2 className="text-sm font-semibold text-[color:var(--color-text-primary)]">{heading}</h2>
 
       {count === 0 ? (
-        <div className="flex flex-col items-center gap-2 rounded-3xl bg-white px-6 py-10 text-center ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+        <div className="flex flex-col items-center gap-2 rounded-3xl bg-[color:var(--color-surface)] px-6 py-10 text-center ring-1 ring-[color:var(--color-border)]">
           <svg
             width="32"
             height="32"
@@ -280,11 +280,11 @@ export function CommentsSection({ comments, currentUserId, onReply, onEdit, onDe
             strokeWidth="1.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-zinc-300 dark:text-zinc-600"
+            className="text-[color:var(--color-text-tertiary)]"
           >
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm font-medium text-[color:var(--color-text-secondary)]">
             Be the first to comment
           </p>
         </div>

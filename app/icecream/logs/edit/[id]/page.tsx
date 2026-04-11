@@ -1,3 +1,4 @@
+import { AppShell } from "@/app/components/AppShell";
 import { GellogLogo } from "@/app/components/GellogLogo";
 import { createClient } from "@/src/lib/supabase/server";
 import { notFound, redirect } from "next/navigation";
@@ -62,17 +63,17 @@ export default async function EditIceCreamLogPage({
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gradient-to-b from-orange-100 via-orange-50 to-teal-100 px-4 py-8 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40">
-      <main className="w-full max-w-md">
-        <div className="mb-6 flex justify-center">
-          <GellogLogo size={88} />
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+    <AppShell contained={false}>
+      <div className="mx-auto flex w-full max-w-md flex-col gap-5 pb-4">
+        <div className="flex flex-col items-center gap-2">
+          <GellogLogo size={88} priority />
+          <p className="text-center text-sm text-[color:var(--color-text-secondary)]">
             Edit your scoop
           </p>
         </div>
         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
         <EditIceCreamLogForm userId={user.id} log={log as any} />
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

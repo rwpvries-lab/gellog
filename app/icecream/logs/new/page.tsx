@@ -1,3 +1,4 @@
+import { AppShell } from "@/app/components/AppShell";
 import { GellogLogo } from "@/app/components/GellogLogo";
 import { createClient } from "@/src/lib/supabase/server";
 import { redirect } from "next/navigation";
@@ -91,11 +92,11 @@ export default async function NewIceCreamLogPage({
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-[color:var(--color-surface-alt)] px-4 py-8">
-      <main className="w-full max-w-md">
-        <div className="mb-6 flex justify-center">
-          <GellogLogo size={88} />
-          <p className="mt-2 text-sm text-[color:var(--color-text-secondary)]">
+    <AppShell contained={false}>
+      <div className="mx-auto flex w-full max-w-md flex-col gap-5 pb-4">
+        <div className="flex flex-col items-center gap-2">
+          <GellogLogo size={88} priority />
+          <p className="text-center text-sm text-[color:var(--color-text-secondary)]">
             New scoop, who this?
           </p>
         </div>
@@ -104,8 +105,8 @@ export default async function NewIceCreamLogPage({
           defaultVisibility={defaultVisibility}
           initialSalonData={initialSalonData}
         />
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }
 
