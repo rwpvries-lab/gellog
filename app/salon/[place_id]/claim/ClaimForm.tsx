@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  getOwnerVerifiedSalonCount,
+  isAtVerifiedSalonCap,
+  OWNER_VERIFIED_SALON_CAP,
+} from "@/src/lib/ownerSalonCap";
 import { createClient } from "@/src/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -30,6 +35,16 @@ export function ClaimForm({ placeId, currentUserId, prefillEmail }: ClaimFormPro
     setError(null);
 
     const supabase = createClient();
+
+    const verifiedCount = await getOwnerVerifiedSalonCount(supabase, currentUserId);
+    if (isAtVerifiedSalonCap(verifiedCount)) {
+      setError(
+        `You can have at most ${OWNER_VERIFIED_SALON_CAP} verified salons on your plan. Contact support@gellog.app for more.`,
+      );
+      setSubmitting(false);
+      return;
+    }
+
     const { data: updated, error: updateError } = await supabase
       .from("salon_profiles")
       .update({

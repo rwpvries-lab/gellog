@@ -3,17 +3,27 @@
 import { FlavorColorPicker } from "@/src/components/FlavorColorPicker";
 import { createClient } from "@/src/lib/supabase/client";
 import { userFacingSaveError } from "@/src/lib/userFacingError";
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
-const DEFAULT_HEX = "#A8C5A0"; // Pistachio
+const DEFAULT_HEX = "#A8C5A0";
 
-export type Flavour = {
+export type VitrineFlavour = {
   id: string;
-  salon_id: string;
+  salon_place_id: string;
   name: string;
-  colour_hex: string;
-  is_available: boolean;
-  position: number;
+  colour: string;
+  is_visible: boolean;
+  display_started_at: string | null;
+  total_display_seconds: number | null;
+  created_at?: string;
+};
+
+export type VitrineVisibilityLogRow = {
+  id: string;
+  salon_place_id: string;
+  flavour_id: string;
+  set_visible: boolean;
+  changed_at: string;
 };
 
 export type Suggestion = {
@@ -24,15 +34,44 @@ export type Suggestion = {
 };
 
 type Props = {
-  salonId: string;
-  initialFlavours: Flavour[];
+  placeId: string;
+  initialFlavours: VitrineFlavour[];
   initialSuggestions: Suggestion[];
+  onVisibilityLogAppend?: (row: VitrineVisibilityLogRow) => void;
+  onFlavoursSnapshot?: (rows: { id: string; name: string }[]) => void;
 };
 
-export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: Props) {
-  const [flavours, setFlavours] = useState<Flavour[]>(
-    [...initialFlavours].sort((a, b) => a.position - b.position),
+function EyeOpenIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M12 5c-5 0-9 5-9 7s4 7 9 7 9-5 9-7-4-7-9-7zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8z"
+      />
+      <circle cx="12" cy="12" r="2" fill="currentColor" />
+    </svg>
   );
+}
+
+function EyeClosedIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        fill="currentColor"
+        d="M3 4.5 5.5 7.1C3.9 8.4 3 10.1 3 12c0 2 4 7 9 7 1.4 0 2.7-.4 3.9-1l2.1 2.1 1.1-1.1-18-18L3 4.5zm4.3 4.3 2 2A3.8 3.8 0 0 0 12 14.2c.5 0 1-.1 1.4-.3l1.6 1.6A8.9 8.9 0 0 1 12 16c-3.4 0-6.4-2.7-7.7-4.2.3-.5.8-1.1 1.3-1.6l1.7 1.6zm13.6 3.2C18.1 9.4 15.1 7 12 7c-.8 0-1.6.1-2.3.4l8.3 8.3c.6-.7 1-1.4 1.3-2.3z"
+      />
+    </svg>
+  );
+}
+
+export function FlavourBoard({
+  placeId,
+  initialFlavours,
+  initialSuggestions,
+  onVisibilityLogAppend,
+  onFlavoursSnapshot,
+}: Props) {
+  const [flavours, setFlavours] = useState<VitrineFlavour[]>(initialFlavours);
   const [suggestions, setSuggestions] = useState<Suggestion[]>(
     initialSuggestions.filter((s) => s.status === "pending"),
   );
@@ -49,83 +88,132 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
-  const dragIdRef = useRef<string | null>(null);
-  const [dragOverId, setDragOverId] = useState<string | null>(null);
-
   const supabase = createClient();
 
-  // ── Name editing ──────────────────────────────────────────
+  useEffect(() => {
+    onFlavoursSnapshot?.(flavours.map((f) => ({ id: f.id, name: f.name })));
+  }, [flavours, onFlavoursSnapshot]);
+
+  async function appendLog(flavourId: string, setVisible: boolean) {
+    const { data, error } = await supabase
+      .from("vitrine_visibility_log")
+      .insert({
+        salon_place_id: placeId,
+        flavour_id: flavourId,
+        set_visible: setVisible,
+      })
+      .select()
+      .maybeSingle<VitrineVisibilityLogRow>();
+    if (!error && data) {
+      onVisibilityLogAppend?.(data);
+    }
+  }
 
   async function saveName(id: string) {
     const trimmed = editingNameValue.trim();
     setEditingNameId(null);
     if (!trimmed) return;
-    const { error } = await supabase
-      .from("salon_flavours")
-      .update({ name: trimmed })
-      .eq("id", id);
+    const { error } = await supabase.from("vitrine_flavours").update({ name: trimmed }).eq("id", id);
     if (!error) {
-      setFlavours((prev) =>
-        prev.map((f) => (f.id === id ? { ...f, name: trimmed } : f)),
-      );
+      setFlavours((prev) => prev.map((f) => (f.id === id ? { ...f, name: trimmed } : f)));
     }
   }
 
-  // ── Colour ────────────────────────────────────────────────
-
-  async function handleColourChange(id: string, colour_hex: string) {
-    // Optimistic update — picker stays open
-    setFlavours((prev) =>
-      prev.map((f) => (f.id === id ? { ...f, colour_hex } : f)),
-    );
-    await supabase.from("salon_flavours").update({ colour_hex }).eq("id", id);
+  async function handleColourChange(id: string, colour: string) {
+    setFlavours((prev) => prev.map((f) => (f.id === id ? { ...f, colour } : f)));
+    await supabase.from("vitrine_flavours").update({ colour }).eq("id", id);
   }
 
-  // ── Available toggle ──────────────────────────────────────
+  async function toggleVitrine(row: VitrineFlavour) {
+    const next = !row.is_visible;
+    const prevSnap = { ...row };
 
-  async function toggleAvailable(id: string, current: boolean) {
-    const { error } = await supabase
-      .from("salon_flavours")
-      .update({ is_available: !current })
-      .eq("id", id);
-    if (!error) {
-      setFlavours((prev) =>
-        prev.map((f) => (f.id === id ? { ...f, is_available: !current } : f)),
+    if (next) {
+      setFlavours((list) =>
+        list.map((f) =>
+          f.id === row.id
+            ? {
+                ...f,
+                is_visible: true,
+                display_started_at: new Date().toISOString(),
+              }
+            : f,
+        ),
       );
+      const { error } = await supabase
+        .from("vitrine_flavours")
+        .update({
+          is_visible: true,
+          display_started_at: new Date().toISOString(),
+        })
+        .eq("id", row.id);
+      if (error) {
+        setFlavours((list) => list.map((f) => (f.id === row.id ? prevSnap : f)));
+        return;
+      }
+      await appendLog(row.id, true);
+    } else {
+      const started = row.display_started_at;
+      const addSeconds = started
+        ? Math.max(0, Math.floor((Date.now() - new Date(started).getTime()) / 1000))
+        : 0;
+      const baseTotal = Number(row.total_display_seconds ?? 0);
+      const newTotal = baseTotal + addSeconds;
+
+      setFlavours((list) =>
+        list.map((f) =>
+          f.id === row.id
+            ? {
+                ...f,
+                is_visible: false,
+                display_started_at: null,
+                total_display_seconds: newTotal,
+              }
+            : f,
+        ),
+      );
+
+      const { error } = await supabase
+        .from("vitrine_flavours")
+        .update({
+          is_visible: false,
+          display_started_at: null,
+          total_display_seconds: newTotal,
+        })
+        .eq("id", row.id);
+      if (error) {
+        setFlavours((list) => list.map((f) => (f.id === row.id ? prevSnap : f)));
+        return;
+      }
+      await appendLog(row.id, false);
     }
   }
-
-  // ── Delete ────────────────────────────────────────────────
 
   async function deleteFlavour(id: string) {
     setConfirmDeleteId(null);
-    const { error } = await supabase
-      .from("salon_flavours")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("vitrine_flavours").delete().eq("id", id);
     if (!error) {
       setFlavours((prev) => prev.filter((f) => f.id !== id));
     }
   }
-
-  // ── Add new ───────────────────────────────────────────────
 
   async function addFlavour() {
     const trimmed = newName.trim();
     if (!trimmed) return;
     setAddSaving(true);
     setAddError(null);
+    const displayStartedAt = new Date().toISOString();
     const { data, error } = await supabase
-      .from("salon_flavours")
+      .from("vitrine_flavours")
       .insert({
-        salon_id: salonId,
+        salon_place_id: placeId,
         name: trimmed,
-        colour_hex: newColour,
-        is_available: true,
-        position: flavours.length,
+        colour: newColour,
+        is_visible: true,
+        display_started_at: displayStartedAt,
       })
       .select()
-      .maybeSingle<Flavour>();
+      .maybeSingle<VitrineFlavour>();
     if (error) {
       setAddError(
         userFacingSaveError(error, "Could not add that flavour. Please try again."),
@@ -136,124 +224,84 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
       setNewColour(DEFAULT_HEX);
       setNewColourPickerOpen(false);
       setAddingNew(false);
+      await appendLog(data.id, true);
     } else {
       setAddError("Could not add that flavour. Please refresh and try again.");
     }
     setAddSaving(false);
   }
 
-  // ── Drag to reorder ───────────────────────────────────────
-
-  function handleDragStart(e: React.DragEvent, id: string) {
-    dragIdRef.current = id;
-    e.dataTransfer.effectAllowed = "move";
-  }
-
-  function handleDragOver(e: React.DragEvent, id: string) {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-    setDragOverId(id);
-  }
-
-  async function handleDrop(e: React.DragEvent, targetId: string) {
-    e.preventDefault();
-    const sourceId = dragIdRef.current;
-    setDragOverId(null);
-    dragIdRef.current = null;
-    if (!sourceId || sourceId === targetId) return;
-
-    const sourceIdx = flavours.findIndex((f) => f.id === sourceId);
-    const targetIdx = flavours.findIndex((f) => f.id === targetId);
-    const reordered = [...flavours];
-    const [moved] = reordered.splice(sourceIdx, 1);
-    reordered.splice(targetIdx, 0, moved);
-    const withPositions = reordered.map((f, i) => ({ ...f, position: i }));
-    setFlavours(withPositions);
-    await Promise.all(
-      withPositions.map((f) =>
-        supabase
-          .from("salon_flavours")
-          .update({ position: f.position })
-          .eq("id", f.id),
-      ),
-    );
-  }
-
-  // ── Suggestions ───────────────────────────────────────────
-
   async function approveSuggestion(suggestion: Suggestion) {
+    const displayStartedAt = new Date().toISOString();
     const [{ data: newFlavour }] = await Promise.all([
       supabase
-        .from("salon_flavours")
+        .from("vitrine_flavours")
         .insert({
-          salon_id: salonId,
+          salon_place_id: placeId,
           name: suggestion.name,
-          colour_hex: DEFAULT_HEX,
-          is_available: true,
-          position: flavours.length,
+          colour: DEFAULT_HEX,
+          is_visible: true,
+          display_started_at: displayStartedAt,
         })
         .select()
-        .maybeSingle<Flavour>(),
-      supabase
-        .from("flavour_suggestions")
-        .update({ status: "approved" })
-        .eq("id", suggestion.id),
+        .maybeSingle<VitrineFlavour>(),
+      supabase.from("flavour_suggestions").update({ status: "approved" }).eq("id", suggestion.id),
     ]);
-    if (newFlavour) setFlavours((prev) => [...prev, newFlavour]);
+    if (newFlavour) {
+      setFlavours((prev) => [...prev, newFlavour]);
+      await appendLog(newFlavour.id, true);
+    }
     setSuggestions((prev) => prev.filter((s) => s.id !== suggestion.id));
   }
 
   async function dismissSuggestion(id: string) {
-    await supabase
-      .from("flavour_suggestions")
-      .update({ status: "rejected" })
-      .eq("id", id);
+    await supabase.from("flavour_suggestions").update({ status: "rejected" }).eq("id", id);
     setSuggestions((prev) => prev.filter((s) => s.id !== id));
   }
 
-  // ── Render ────────────────────────────────────────────────
-
   return (
     <div className="flex flex-col gap-2">
-      {/* Flavour rows */}
+      <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Flavour Board</h2>
+          <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+            The eye toggle controls what visitors see on your public salon page. Hiding a flavour does
+            not delete it.
+          </p>
+        </div>
+        {!addingNew ? (
+          <button
+            type="button"
+            onClick={() => setAddingNew(true)}
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#0D9488] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950"
+          >
+            <span className="text-base leading-none">+</span> Add flavour
+          </button>
+        ) : null}
+      </div>
+
       {flavours.length === 0 && !addingNew && (
         <p className="py-2 text-xs text-zinc-400 dark:text-zinc-500">
-          No flavours yet — add your first one below.
+          No flavours yet — use + Add flavour to create one.
         </p>
       )}
 
       {flavours.map((f, idx) => (
         <div key={f.id}>
           <div
-            draggable
-            onDragStart={(e) => handleDragStart(e, f.id)}
-            onDragOver={(e) => handleDragOver(e, f.id)}
-            onDrop={(e) => void handleDrop(e, f.id)}
-            onDragLeave={() => setDragOverId(null)}
             className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 transition ${
-              dragOverId === f.id
-                ? "bg-teal-50 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:ring-teal-800"
-                : "bg-zinc-50 dark:bg-zinc-800/50"
-            } ${!f.is_available ? "opacity-50" : ""}`}
+              !f.is_visible ? "opacity-50" : ""
+            } bg-zinc-50 dark:bg-zinc-800/50`}
           >
-            {/* Drag handle */}
-            <span className="cursor-grab touch-none select-none text-zinc-300 dark:text-zinc-600">
-              ⠿
-            </span>
-
-            {/* Colour swatch — toggles inline picker */}
             <button
               type="button"
-              onClick={() =>
-                setColourPickerOpenId(colourPickerOpenId === f.id ? null : f.id)
-              }
+              onClick={() => setColourPickerOpenId(colourPickerOpenId === f.id ? null : f.id)}
               className="h-6 w-6 flex-shrink-0 rounded-full ring-1 ring-black/10 transition hover:scale-110"
-              style={{ backgroundColor: f.colour_hex }}
+              style={{ backgroundColor: f.colour || DEFAULT_HEX }}
               title="Change colour"
             />
 
-            {/* Name */}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               {editingNameId === f.id ? (
                 <input
                   autoFocus
@@ -273,29 +321,30 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
                     setEditingNameId(f.id);
                     setEditingNameValue(f.name);
                   }}
-                  className="truncate text-sm text-zinc-800 hover:text-zinc-900 dark:text-zinc-200 dark:hover:text-zinc-50"
+                  className="truncate text-left text-sm text-zinc-800 hover:text-zinc-900 dark:text-zinc-200 dark:hover:text-zinc-50"
                 >
                   {f.name}
                 </button>
               )}
             </div>
 
-            {/* Available toggle */}
             <button
               type="button"
-              onClick={() => void toggleAvailable(f.id, f.is_available)}
-              className={`rounded-full px-2 py-0.5 text-xs font-medium transition ${
-                f.is_available
-                  ? "bg-teal-50 text-teal-700 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60"
-                  : "bg-zinc-100 text-zinc-400 ring-1 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-500 dark:ring-zinc-700"
+              onClick={() => void toggleVitrine(f)}
+              className={`flex shrink-0 items-center justify-center rounded-full p-1.5 transition ${
+                f.is_visible
+                  ? "text-teal-600 ring-1 ring-teal-200 dark:text-teal-400 dark:ring-teal-800/60"
+                  : "text-zinc-400 ring-1 ring-zinc-200 dark:text-zinc-500 dark:ring-zinc-700"
               }`}
+              title={f.is_visible ? "On vitrine — tap to hide from public page" : "Off vitrine — tap to show on public page"}
+              aria-label={f.is_visible ? "On vitrine" : "Off vitrine"}
+              aria-pressed={f.is_visible}
             >
-              {f.is_available ? "Available" : "Sold out"}
+              {f.is_visible ? <EyeOpenIcon className="h-5 w-5" /> : <EyeClosedIcon className="h-5 w-5" />}
             </button>
 
-            {/* Delete */}
             {confirmDeleteId === f.id ? (
-              <div className="flex items-center gap-1">
+              <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
                   onClick={() => void deleteFlavour(f.id)}
@@ -315,22 +364,22 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
               <button
                 type="button"
                 onClick={() => setConfirmDeleteId(f.id)}
-                className="text-zinc-300 transition hover:text-red-400 dark:text-zinc-600 dark:hover:text-red-500"
+                className="shrink-0 text-zinc-300 transition hover:text-red-400 dark:text-zinc-600 dark:hover:text-red-500"
+                aria-label="Delete flavour"
               >
                 ✕
               </button>
             )}
           </div>
 
-          {/* Inline colour picker */}
           {colourPickerOpenId === f.id && (
             <div className="mt-1">
               <FlavorColorPicker
-                value={f.colour_hex}
+                value={f.colour || DEFAULT_HEX}
                 onChange={(hex) => void handleColourChange(f.id, hex)}
                 onClose={() => setColourPickerOpenId(null)}
                 flavorName={f.name}
-                allFlavours={flavours.map((fl) => ({ hex: fl.colour_hex, label: fl.name }))}
+                allFlavours={flavours.map((fl) => ({ hex: fl.colour || DEFAULT_HEX, label: fl.name }))}
                 activeIndex={idx}
               />
             </div>
@@ -338,11 +387,9 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
         </div>
       ))}
 
-      {/* Inline add row */}
       {addingNew && (
         <div>
           <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-3 py-2.5 ring-1 ring-teal-200 dark:bg-zinc-800/50 dark:ring-teal-800">
-            {/* Colour swatch for new */}
             <button
               type="button"
               onClick={() => setNewColourPickerOpen(!newColourPickerOpen)}
@@ -389,7 +436,6 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
             </button>
           </div>
 
-          {/* Inline colour picker for new flavour */}
           {newColourPickerOpen && (
             <div className="mt-1">
               <FlavorColorPicker
@@ -398,7 +444,7 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
                 onClose={() => setNewColourPickerOpen(false)}
                 flavorName={newName || "New flavour"}
                 allFlavours={[
-                  ...flavours.map((fl) => ({ hex: fl.colour_hex, label: fl.name })),
+                  ...flavours.map((fl) => ({ hex: fl.colour || DEFAULT_HEX, label: fl.name })),
                   { hex: newColour, label: newName || "New flavour" },
                 ]}
                 activeIndex={flavours.length}
@@ -408,22 +454,8 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
         </div>
       )}
 
-      {addError && (
-        <p className="text-xs text-red-600 dark:text-red-400">{addError}</p>
-      )}
+      {addError && <p className="text-xs text-red-600 dark:text-red-400">{addError}</p>}
 
-      {/* Add flavour button */}
-      {!addingNew && (
-        <button
-          type="button"
-          onClick={() => setAddingNew(true)}
-          className="mt-1 flex items-center gap-2 rounded-full border border-dashed border-zinc-300 px-4 py-2 text-xs font-medium text-zinc-500 transition hover:border-teal-400 hover:text-teal-600 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-teal-600 dark:hover:text-teal-400"
-        >
-          <span className="text-base leading-none">+</span> Add flavour
-        </button>
-      )}
-
-      {/* Suggested by visitors */}
       {suggestions.length > 0 && (
         <div className="mt-4">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -435,9 +467,7 @@ export function FlavourBoard({ salonId, initialFlavours, initialSuggestions }: P
                 key={s.id}
                 className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-3 py-2.5 dark:bg-zinc-800/50"
               >
-                <span className="flex-1 text-sm text-zinc-700 dark:text-zinc-300">
-                  {s.name}
-                </span>
+                <span className="flex-1 text-sm text-zinc-700 dark:text-zinc-300">{s.name}</span>
                 <button
                   type="button"
                   onClick={() => void approveSuggestion(s)}

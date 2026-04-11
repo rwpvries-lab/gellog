@@ -14,7 +14,7 @@ import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
 import { userFacingSaveError } from "@/src/lib/userFacingError";
 import { useRouter } from "next/navigation";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 type NewIceCreamLogFormProps = {
   userId: string;
@@ -32,6 +32,10 @@ type Flavour = {
   ratingIntensity: number | null;
   ratingPresentation: number | null;
 };
+
+function nextFlavourId(existing: { id: number }[]): number {
+  return Math.max(0, ...existing.map((f) => f.id)) + 1;
+}
 
 const DIETARY_TAGS = ["Sugar-free", "Dairy-free", "Vegan", "Nut-free", "Gluten-free"];
 
@@ -306,6 +310,29 @@ function LogCard({
   );
 }
 
+const VITRINE_FALLBACK_COLOUR = "#0D9488";
+
+type VitrineSuggestionRow = { id: string; name: string; colour: string | null };
+
+function vitrinePillColour(colour: string | null | undefined): string {
+  const c = colour?.trim();
+  return c ? c : VITRINE_FALLBACK_COLOUR;
+}
+
+function CheckIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M20 6L9 17l-5-5"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function LogSectionHeading({
   children,
   hint,
@@ -363,8 +390,43 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
   const [visibility, setVisibility] = useState<Visibility>(defaultVisibility);
   const [photoVisibility, setPhotoVisibility] = useState<PhotoVisibility>("public");
   const [hidePriceFromOthers, setHidePriceFromOthers] = useState(false);
+  const [vitrineRows, setVitrineRows] = useState<VitrineSuggestionRow[]>([]);
+  const [vitrineLoading, setVitrineLoading] = useState(false);
+  const [pendingNamedFlavour, setPendingNamedFlavour] = useState<string | null>(null);
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
+
+  useEffect(() => {
+    if (!salonPlaceId) {
+      setVitrineRows([]);
+      setVitrineLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setVitrineLoading(true);
+    const supabase = createClient();
+
+    void supabase
+      .from("vitrine_flavours")
+      .select("id,name,colour")
+      .eq("salon_place_id", salonPlaceId)
+      .eq("is_visible", true)
+      .order("name", { ascending: true })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        setVitrineLoading(false);
+        if (error) {
+          setVitrineRows([]);
+          return;
+        }
+        setVitrineRows((data ?? []) as VitrineSuggestionRow[]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [salonPlaceId]);
 
   function openSalonMapPicker() {
     router.push(`/map?returnTo=${encodeURIComponent("/log")}`);
@@ -498,13 +560,16 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
 
             if (!salonProfile) return;
 
-            const [{ data: existingFlavours }, { data: existingSuggestions }] = await Promise.all([
-              supabase.from("salon_flavours").select("name").eq("salon_id", salonProfile.id),
-              supabase.from("flavour_suggestions").select("name").eq("salon_id", salonProfile.id),
-            ]);
+            const [{ data: vitrineNames }, { data: legacySalonFlavours }, { data: existingSuggestions }] =
+              await Promise.all([
+                supabase.from("vitrine_flavours").select("name").eq("salon_place_id", salonPlaceId),
+                supabase.from("salon_flavours").select("name").eq("salon_id", salonProfile.id),
+                supabase.from("flavour_suggestions").select("name").eq("salon_id", salonProfile.id),
+              ]);
 
             const skipNames = new Set([
-              ...(existingFlavours ?? []).map((f: { name: string }) => f.name.toLowerCase()),
+              ...(vitrineNames ?? []).map((f: { name: string }) => f.name.toLowerCase()),
+              ...(legacySalonFlavours ?? []).map((f: { name: string }) => f.name.toLowerCase()),
               ...(existingSuggestions ?? []).map((f: { name: string }) => f.name.toLowerCase()),
             ]);
 
@@ -539,12 +604,62 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
   function addFlavour() {
     setFlavours((prev) => [
       ...prev,
-      { id: prev.length + 1, name: "", rating: null, tags: [], ratingTexture: null, ratingOriginality: null, ratingIntensity: null, ratingPresentation: null },
+      {
+        id: nextFlavourId(prev),
+        name: "",
+        rating: null,
+        tags: [],
+        ratingTexture: null,
+        ratingOriginality: null,
+        ratingIntensity: null,
+        ratingPresentation: null,
+      },
+    ]);
+  }
+
+  function flavourNameInForm(trimmedLower: string): boolean {
+    return flavours.some((f) => f.name.trim().toLowerCase() === trimmedLower);
+  }
+
+  function applyFlavourNameToForm(rawName: string) {
+    const trimmed = rawName.trim();
+    if (!trimmed) return;
+
+    const lower = trimmed.toLowerCase();
+    if (flavourNameInForm(lower)) return;
+
+    const emptyIdx = flavours.findIndex((f) => !f.name.trim());
+    if (emptyIdx >= 0) {
+      setFlavours((prev) =>
+        prev.map((item, i) => (i === emptyIdx ? { ...item, name: trimmed } : item)),
+      );
+      return;
+    }
+
+    if (flavours.length >= 3) {
+      setPendingNamedFlavour(trimmed);
+      setShowFlavourPrompt(true);
+      return;
+    }
+
+    setFlavours((prev) => [
+      ...prev,
+      {
+        id: nextFlavourId(prev),
+        name: trimmed,
+        rating: null,
+        tags: [],
+        ratingTexture: null,
+        ratingOriginality: null,
+        ratingIntensity: null,
+        ratingPresentation: null,
+      },
     ]);
   }
 
   function handleAddFlavour() {
     if (flavours.length >= 3) {
+      setPendingNamedFlavour(null);
       setShowFlavourPrompt(true);
       return;
     }
@@ -739,6 +854,35 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
         </p>
       </LogCard>
 
+      {!vitrineLoading && vitrineRows.length > 0 ? (
+        <LogCard>
+          <h2 className="text-base font-semibold tracking-tight text-[color:var(--color-text-primary)]">
+            Today&apos;s flavours at this salon
+          </h2>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {vitrineRows.map((row) => {
+              const bg = vitrinePillColour(row.colour);
+              const added = flavourNameInForm(row.name.trim().toLowerCase());
+              return (
+                <button
+                  key={row.id}
+                  type="button"
+                  onClick={() => applyFlavourNameToForm(row.name)}
+                  aria-pressed={added}
+                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white shadow-sm ring-1 ring-black/10 transition dark:ring-white/10 ${
+                    added ? "opacity-60" : "hover:brightness-110"
+                  }`}
+                  style={{ backgroundColor: bg }}
+                >
+                  {added ? <CheckIcon className="shrink-0 opacity-90" /> : null}
+                  {row.name}
+                </button>
+              );
+            })}
+          </div>
+        </LogCard>
+      ) : null}
+
       {sheetOpen ? (
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
           <div
@@ -818,7 +962,25 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
               <button
                 type="button"
                 onClick={() => {
-                  addFlavour();
+                  if (pendingNamedFlavour !== null) {
+                    const name = pendingNamedFlavour;
+                    setPendingNamedFlavour(null);
+                    setFlavours((prev) => [
+                      ...prev,
+                      {
+                        id: nextFlavourId(prev),
+                        name,
+                        rating: null,
+                        tags: [],
+                        ratingTexture: null,
+                        ratingOriginality: null,
+                        ratingIntensity: null,
+                        ratingPresentation: null,
+                      },
+                    ]);
+                  } else {
+                    addFlavour();
+                  }
                   setShowFlavourPrompt(false);
                 }}
                 className="rounded-full bg-[color:var(--color-orange)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-on-brand)] transition hover:brightness-110"
@@ -827,7 +989,10 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
               </button>
               <button
                 type="button"
-                onClick={() => setShowFlavourPrompt(false)}
+                onClick={() => {
+                  setPendingNamedFlavour(null);
+                  setShowFlavourPrompt(false);
+                }}
                 className="rounded-full bg-[color:var(--color-surface-alt)] px-3 py-1.5 text-xs font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
               >
                 Cancel

@@ -5,17 +5,24 @@ import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { FlavourBoard, type Flavour, type Suggestion } from "./FlavourBoard";
-import { VitrineBoard, type VitrineFlavour, type VitrineVisibilityLogRow } from "./VitrineBoard";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  FlavourBoard,
+  type Suggestion,
+  type VitrineFlavour,
+  type VitrineVisibilityLogRow,
+} from "./FlavourBoard";
 import {
   AnalyticsSection,
+  FlavourInsightsCollapsibleSection,
   type FlavourInsightRow,
   type MonthlyRating,
   type TopFlavour,
   type WeatherStat,
   type WeeklyVisit,
 } from "./AnalyticsSection";
+import { SalonDashboardWeatherCard } from "./SalonDashboardWeatherCard";
+import type { SalonDashboardWeatherPayload } from "@/src/lib/salonDashboardWeather";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -24,6 +31,18 @@ function getLogoUrl(path: string | null): string | null {
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   if (!supabaseUrl) return path;
   return `${supabaseUrl}/storage/v1/object/public/salon-logos/${path}`;
+}
+
+/** Fixed UTC string so SSR and browser hydration always match (avoids locale/ICU differences). */
+function formatVisibilityLogInstant(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(d.getUTCDate()).padStart(2, "0");
+  const h = String(d.getUTCHours()).padStart(2, "0");
+  const min = String(d.getUTCMinutes()).padStart(2, "0");
+  return `${y}-${m}-${day} ${h}:${min} UTC`;
 }
 
 type SalonProfile = {
@@ -50,12 +69,17 @@ type Stats = {
   visitsThisMonth: number;
 };
 
+export type OwnerSalonOption = {
+  place_id: string;
+  salon_name: string;
+};
+
 type Props = {
   salonProfile: SalonProfile;
+  ownerSalons: OwnerSalonOption[];
   stats: Stats;
   justClaimed: boolean;
   justUpgraded: boolean;
-  initialFlavours: Flavour[];
   initialSuggestions: Suggestion[];
   weeklyVisits: WeeklyVisit[];
   topFlavours: TopFlavour[];
@@ -64,6 +88,8 @@ type Props = {
   initialVitrineFlavours: VitrineFlavour[];
   initialVitrineLog: VitrineVisibilityLogRow[];
   flavourInsights: FlavourInsightRow[];
+  dashboardWeather: SalonDashboardWeatherPayload | null;
+  salonHasCoordinates: boolean;
 };
 
 function SalonUpgradeButton({
@@ -114,10 +140,10 @@ function SalonUpgradeButton({
 
 export function DashboardClient({
   salonProfile,
+  ownerSalons,
   stats,
   justClaimed,
   justUpgraded,
-  initialFlavours,
   initialSuggestions,
   weeklyVisits,
   topFlavours,
@@ -126,6 +152,8 @@ export function DashboardClient({
   initialVitrineFlavours,
   initialVitrineLog,
   flavourInsights,
+  dashboardWeather,
+  salonHasCoordinates,
 }: Props) {
   const router = useRouter();
   const tier = salonProfile.salon_subscription_tier ?? "free";
@@ -148,6 +176,19 @@ export function DashboardClient({
   const [saved, setSaved] = useState(false);
   const [showClaimed, setShowClaimed] = useState(justClaimed);
   const [showUpgraded, setShowUpgraded] = useState(justUpgraded);
+  const [visibilityLog, setVisibilityLog] = useState<VitrineVisibilityLogRow[]>(initialVitrineLog);
+  const [visibilityHistoryOpen, setVisibilityHistoryOpen] = useState(false);
+  const [flavourNameById, setFlavourNameById] = useState<Record<string, string>>(() =>
+    Object.fromEntries(initialVitrineFlavours.map((f) => [f.id, f.name])),
+  );
+
+  const handleVisibilityLogAppend = useCallback((row: VitrineVisibilityLogRow) => {
+    setVisibilityLog((prev) => [row, ...prev].slice(0, 50));
+  }, []);
+
+  const handleFlavoursSnapshot = useCallback((rows: { id: string; name: string }[]) => {
+    setFlavourNameById(Object.fromEntries(rows.map((r) => [r.id, r.name])));
+  }, []);
 
   useEffect(() => {
     if (justUpgraded) {
@@ -293,6 +334,34 @@ export function DashboardClient({
         </div>
       )}
 
+      {ownerSalons.length > 1 ? (
+        <div className="mb-5 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+          <label
+            htmlFor="dashboard-salon-switcher"
+            className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+          >
+            Current salon
+          </label>
+          <select
+            id="dashboard-salon-switcher"
+            value={salonProfile.place_id}
+            onChange={(e) => {
+              const next = e.target.value;
+              if (next && next !== salonProfile.place_id) {
+                router.push(`/salon/${encodeURIComponent(next)}/dashboard`);
+              }
+            }}
+            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm font-medium text-zinc-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:border-teal-600 dark:focus:ring-teal-900/40"
+          >
+            {ownerSalons.map((s) => (
+              <option key={s.place_id} value={s.place_id}>
+                {s.salon_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      ) : null}
+
       {/* Header card */}
       <div className="mb-5 rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
         <div className="flex items-start gap-4">
@@ -415,6 +484,19 @@ export function DashboardClient({
         ))}
       </div>
 
+      <SalonDashboardWeatherCard weather={dashboardWeather} hasCoordinates={salonHasCoordinates} />
+
+      {/* Flavour Board (menu + public vitrine visibility) */}
+      <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+        <FlavourBoard
+          placeId={salonProfile.place_id}
+          initialFlavours={initialVitrineFlavours}
+          initialSuggestions={initialSuggestions}
+          onVisibilityLogAppend={handleVisibilityLogAppend}
+          onFlavoursSnapshot={handleFlavoursSnapshot}
+        />
+      </div>
+
       {/* Analytics */}
       <AnalyticsSection
         tier={tier}
@@ -423,34 +505,71 @@ export function DashboardClient({
         topFlavours={topFlavours}
         weatherStats={weatherStats}
         monthlyRatings={monthlyRatings}
+      />
+
+      <FlavourInsightsCollapsibleSection
+        tier={tier}
+        placeId={salonProfile.place_id}
         flavourInsights={flavourInsights}
       />
 
-      {/* Flavour Board */}
-      <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-        <h2 className="mb-3 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-          Flavour Board
-        </h2>
-        <FlavourBoard
-          salonId={salonProfile.id}
-          initialFlavours={initialFlavours}
-          initialSuggestions={initialSuggestions}
-        />
-      </div>
-
-      {/* Vitrine — public flavour display */}
-      <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-        <h2 className="mb-1 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-          Vitrine
-        </h2>
-        <p className="mb-4 text-xs text-zinc-500 dark:text-zinc-400">
-          Flavours you mark visible appear on your public salon page. Hiding a flavour does not delete it.
-        </p>
-        <VitrineBoard
-          placeId={salonProfile.place_id}
-          initialFlavours={initialVitrineFlavours}
-          initialLog={initialVitrineLog}
-        />
+      {/* Visibility history — synced from flavour board toggles */}
+      <div className="mb-5 overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+        <button
+          type="button"
+          onClick={() => setVisibilityHistoryOpen((v) => !v)}
+          className="flex w-full items-center justify-between gap-3 px-6 py-4 text-left transition hover:bg-zinc-50 dark:hover:bg-zinc-800/60"
+          aria-expanded={visibilityHistoryOpen}
+        >
+          <span className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+            Visibility history
+          </span>
+          <span
+            className={`inline-block shrink-0 text-zinc-400 transition-transform duration-200 ease-out dark:text-zinc-500 ${
+              visibilityHistoryOpen ? "rotate-90" : ""
+            }`}
+            aria-hidden
+          >
+            ▶
+          </span>
+        </button>
+        <div
+          id="dashboard-visibility-history-panel"
+          aria-hidden={!visibilityHistoryOpen}
+          className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+            visibilityHistoryOpen ? "max-h-[4000px]" : "max-h-0"
+          } ${!visibilityHistoryOpen ? "pointer-events-none" : ""}`}
+        >
+          <div className="border-t border-zinc-100 px-6 pb-5 pt-3 dark:border-zinc-800">
+            <ul className="max-h-64 space-y-1 overflow-y-auto text-xs">
+              {visibilityLog.length === 0 ? (
+                <li className="text-zinc-400 dark:text-zinc-500">No changes yet.</li>
+              ) : (
+                visibilityLog.map((r) => {
+                  const name = flavourNameById[r.flavour_id] ?? "Flavour";
+                  return (
+                    <li key={r.id} className="text-zinc-600 dark:text-zinc-300">
+                      <span className="font-medium text-zinc-800 dark:text-zinc-200">{name}</span>
+                      {" — "}
+                      {r.set_visible ? (
+                        <span className="text-teal-600 dark:text-teal-400">shown</span>
+                      ) : (
+                        <span className="text-zinc-500">hidden</span>
+                      )}
+                      <span
+                        className="text-zinc-400 dark:text-zinc-500"
+                        title={r.changed_at}
+                      >
+                        {" · "}
+                        {formatVisibilityLogInstant(r.changed_at)}
+                      </span>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          </div>
+        </div>
       </div>
 
       {/* Billing */}
@@ -565,7 +684,7 @@ export function DashboardClient({
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 555 000 0000"
+              placeholder="+31 6 00 000 000"
               className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-teal-600 dark:focus:ring-teal-900/40"
             />
           </div>
@@ -601,7 +720,7 @@ export function DashboardClient({
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-teal-500 px-5 py-3 text-sm font-semibold text-white shadow-md shadow-orange-300/50 transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-60 dark:shadow-none dark:focus:ring-offset-zinc-950"
+            className="inline-flex items-center justify-center rounded-full bg-[#D97706] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-60 dark:focus:ring-offset-zinc-950"
           >
             {saving ? "Saving…" : "Save changes"}
           </button>

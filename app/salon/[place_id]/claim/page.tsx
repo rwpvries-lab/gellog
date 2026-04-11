@@ -1,3 +1,8 @@
+import {
+  getOwnerVerifiedSalonCount,
+  isAtVerifiedSalonCap,
+  OWNER_VERIFIED_SALON_CAP,
+} from "@/src/lib/ownerSalonCap";
 import { createClient } from "@/src/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ClaimForm } from "./ClaimForm";
@@ -106,6 +111,40 @@ export default async function SalonClaimPage({
             </a>
             .
           </p>
+        </div>
+      </main>
+    );
+  }
+
+  const verifiedSalonCount = await getOwnerVerifiedSalonCount(supabase, user.id);
+
+  if (isAtVerifiedSalonCap(verifiedSalonCount)) {
+    return (
+      <main className="mx-auto max-w-lg px-4 py-8">
+        <div className="rounded-3xl bg-white px-6 py-8 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+          <span className="mb-4 inline-block text-5xl">📋</span>
+          <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+            Salon limit reached
+          </h1>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            You have reached the maximum of {OWNER_VERIFIED_SALON_CAP} salons on your current plan.
+          </p>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            To manage more salons, contact us at{" "}
+            <a
+              href="mailto:support@gellog.app"
+              className="font-medium text-teal-700 hover:underline dark:text-teal-400"
+            >
+              support@gellog.app
+            </a>
+            .
+          </p>
+          <a
+            href="mailto:support@gellog.app"
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+          >
+            Contact us
+          </a>
         </div>
       </main>
     );

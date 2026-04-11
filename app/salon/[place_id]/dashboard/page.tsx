@@ -1,8 +1,8 @@
+import { fetchSalonDashboardWeather } from "@/src/lib/salonDashboardWeather";
 import { createClient } from "@/src/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { DashboardClient } from "./DashboardClient";
-import type { Flavour, Suggestion } from "./FlavourBoard";
-import type { VitrineFlavour, VitrineVisibilityLogRow } from "./VitrineBoard";
+import { DashboardClient, type OwnerSalonOption } from "./DashboardClient";
+import type { Suggestion, VitrineFlavour, VitrineVisibilityLogRow } from "./FlavourBoard";
 import type {
   FlavourInsightRow,
   MonthlyRating,
@@ -67,6 +67,15 @@ export default async function SalonDashboardPage({
     redirect(`/salon/${place_id}`);
   }
 
+  const { data: ownerSalonRows } = await supabase
+    .from("salon_profiles")
+    .select("place_id, salon_name")
+    .eq("owner_id", user.id)
+    .eq("is_claimed", true)
+    .order("salon_name", { ascending: true });
+
+  const ownerSalons = (ownerSalonRows ?? []) as OwnerSalonOption[];
+
   // Aggregate stats from ice_cream_logs
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
@@ -81,7 +90,6 @@ export default async function SalonDashboardPage({
     { data: logsData },
     { data: flavourData },
     { count: monthCount },
-    { data: salonFlavoursData },
     { data: suggestionsData },
     { data: weeklyVisitsRaw },
     { data: topFlavoursRaw },
@@ -103,11 +111,6 @@ export default async function SalonDashboardPage({
       .select("*", { count: "exact", head: true })
       .eq("salon_place_id", place_id)
       .gte("visited_at", startOfMonth),
-    supabase
-      .from("salon_flavours")
-      .select("*")
-      .eq("salon_id", salonProfile.id)
-      .order("position", { ascending: true }),
     supabase
       .from("flavour_suggestions")
       .select("*")
@@ -211,13 +214,26 @@ export default async function SalonDashboardPage({
     flavourInsightsRows = rows;
   }
 
+  const lat =
+    salonProfile.salon_lat !== null && salonProfile.salon_lat !== undefined
+      ? Number(salonProfile.salon_lat)
+      : NaN;
+  const lng =
+    salonProfile.salon_lng !== null && salonProfile.salon_lng !== undefined
+      ? Number(salonProfile.salon_lng)
+      : NaN;
+  const salonHasCoordinates = Number.isFinite(lat) && Number.isFinite(lng);
+  const dashboardWeather = salonHasCoordinates
+    ? await fetchSalonDashboardWeather(lat, lng)
+    : null;
+
   return (
     <DashboardClient
       salonProfile={salonProfile}
+      ownerSalons={ownerSalons}
       stats={stats}
       justClaimed={claimed === "1"}
       justUpgraded={justUpgraded}
-      initialFlavours={(salonFlavoursData ?? []) as Flavour[]}
       initialSuggestions={(suggestionsData ?? []) as Suggestion[]}
       weeklyVisits={(weeklyVisitsRaw ?? []) as WeeklyVisit[]}
       topFlavours={(topFlavoursRaw ?? []) as TopFlavour[]}
@@ -226,6 +242,8 @@ export default async function SalonDashboardPage({
       initialVitrineFlavours={(vitrineFlavoursRaw ?? []) as VitrineFlavour[]}
       initialVitrineLog={(vitrineLogRaw ?? []) as VitrineVisibilityLogRow[]}
       flavourInsights={flavourInsightsRows}
+      dashboardWeather={dashboardWeather}
+      salonHasCoordinates={salonHasCoordinates}
     />
   );
 }
