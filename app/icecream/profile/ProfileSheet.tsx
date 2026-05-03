@@ -1,6 +1,8 @@
 "use client";
 
 import { GellogClose } from "@/src/components/icons";
+import { Gelato } from "@/src/components/Gelato/Gelato";
+import type { GelatoTokens } from "@/src/lib/gelato-tokens";
 import {
   useCallback,
   useEffect,
@@ -25,9 +27,11 @@ export type ProfileSheetStats = {
 
 export type ProfileSheetRankedFlavour = {
   rank: number;
-  name: string;
-  timesTried: number;
-  averageRating: number;
+  flavourId: string;
+  displayName: string;
+  logCount: number;
+  avgRating: number | null;
+  tokens: GelatoTokens;
 };
 
 const SHEET_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
@@ -73,6 +77,8 @@ type ProfileSheetProps = {
   onClose: () => void;
   stats: ProfileSheetStats;
   rankedFlavours: ProfileSheetRankedFlavour[];
+  uncategorisedLogCount: number;
+  uncategorisedInputNames: string[];
   heatmapData: Record<string, HeatmapDayData>;
 };
 
@@ -81,6 +87,8 @@ export function ProfileSheet({
   onClose,
   stats,
   rankedFlavours,
+  uncategorisedLogCount,
+  uncategorisedInputNames,
   heatmapData,
 }: ProfileSheetProps) {
   const [entered, setEntered] = useState(false);
@@ -273,6 +281,8 @@ export function ProfileSheet({
           {view === "flavours" ? (
             <FlavoursBody
               rankedFlavours={rankedFlavours}
+              uncategorisedLogCount={uncategorisedLogCount}
+              uncategorisedInputNames={uncategorisedInputNames}
               cardBg={cardBg}
               hairline={hairline}
               isDark={isDark}
@@ -376,15 +386,23 @@ function StatsBody({
 
 function FlavoursBody({
   rankedFlavours,
+  uncategorisedLogCount,
+  uncategorisedInputNames,
   cardBg,
   hairline,
   isDark,
 }: {
   rankedFlavours: ProfileSheetRankedFlavour[];
+  uncategorisedLogCount: number;
+  uncategorisedInputNames: string[];
   cardBg: string;
   hairline: string;
   isDark: boolean;
 }) {
+  const [uncExpanded, setUncExpanded] = useState(false);
+  const muted = isDark ? "#aeaeb2" : "#6b7280";
+  const fg = isDark ? "#f9f9f9" : "#111827";
+
   return (
     <div
       className="p-4"
@@ -395,45 +413,85 @@ function FlavoursBody({
       }}
     >
       {rankedFlavours.length === 0 ? (
-        <p className="text-sm" style={{ color: isDark ? "#aeaeb2" : "#6b7280" }}>
-          Keep logging — flavours appear here once you&apos;ve tried them at
-          least twice.
+        <p className="text-sm" style={{ color: muted }}>
+          Keep logging — resolved flavours show here once they match the flavour
+          catalogue.
         </p>
       ) : (
         <ul className="flex flex-col">
           {rankedFlavours.map((flavour) => (
             <li
-              key={flavour.name}
-              className="flex items-center justify-between gap-3 border-t py-2.5 first:border-t-0 first:pt-0 last:pb-0"
+              key={flavour.flavourId}
+              className="flex items-center gap-2 border-t py-2.5 first:border-t-0 first:pt-0 last:pb-0"
               style={{ borderColor: hairline }}
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-500 text-xs font-semibold text-white">
-                  #{flavour.rank}
-                </div>
-                <div className="flex flex-col">
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: isDark ? "#f9f9f9" : "#111827" }}
-                  >
-                    {flavour.name}
-                  </span>
-                  <span className="text-xs" style={{ color: isDark ? "#aeaeb2" : "#6b7280" }}>
-                    {flavour.timesTried} scoop
-                    {flavour.timesTried === 1 ? "" : "s"}
-                  </span>
-                </div>
+              <div
+                className="flex w-7 shrink-0 items-center justify-center text-xs font-bold"
+                style={{ color: fg }}
+                aria-label={`Rank ${flavour.rank}`}
+              >
+                #{flavour.rank}
+              </div>
+              <div className="flex shrink-0 items-center justify-center">
+                <Gelato
+                  variant="scoop"
+                  tokens={flavour.tokens}
+                  size={48}
+                  seed={flavour.flavourId}
+                  className="flex"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium" style={{ color: fg }}>
+                  {flavour.displayName}
+                </span>
               </div>
               <span
-                className="text-sm font-semibold"
+                className="shrink-0 tabular-nums text-sm font-medium"
+                style={{ color: fg }}
+              >
+                {flavour.logCount}×
+              </span>
+              <span
+                className="w-11 shrink-0 text-right text-sm font-semibold tabular-nums"
                 style={{ color: isDark ? "#fb923c" : "#ea580c" }}
               >
-                {flavour.averageRating.toFixed(1)} ★
+                {flavour.avgRating != null ? `${flavour.avgRating.toFixed(1)} ★` : "—"}
               </span>
             </li>
           ))}
         </ul>
       )}
+
+      {uncategorisedLogCount > 0 ? (
+        <div className="mt-3 border-t pt-3" style={{ borderColor: hairline }}>
+          <button
+            type="button"
+            onClick={() => setUncExpanded((v) => !v)}
+            className="w-full text-left text-xs font-medium underline-offset-2 hover:underline"
+            style={{ color: muted }}
+            aria-expanded={uncExpanded}
+          >
+            {uncategorisedLogCount}{" "}
+            {uncategorisedLogCount === 1 ? "log" : "logs"} uncategorised
+          </button>
+          {uncExpanded ? (
+            uncategorisedInputNames.length > 0 ? (
+              <ul className="mt-2 flex list-disc flex-col gap-1 pl-5 text-xs" style={{ color: fg }}>
+                {uncategorisedInputNames.map((name) => (
+                  <li key={name} className="marker:text-zinc-400">
+                    {name}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-xs" style={{ color: muted }}>
+                No typed names on file for these entries.
+              </p>
+            )
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

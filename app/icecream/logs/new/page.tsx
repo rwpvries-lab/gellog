@@ -8,7 +8,7 @@ import type { SalonData } from "@/src/components/SalonInput";
 export default async function NewIceCreamLogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ place_id?: string; salon_name?: string }>;
+  searchParams: Promise<{ place_id?: string; salon_name?: string; flavour?: string }>;
 }) {
   const supabase = await createClient();
   const {
@@ -30,7 +30,7 @@ export default async function NewIceCreamLogPage({
     "public";
 
   // Pre-fill salon from query params (e.g. coming from undiscovered salon page)
-  const { place_id, salon_name } = await searchParams;
+  const { place_id, salon_name, flavour } = await searchParams;
   let initialSalonData: SalonData | null = null;
 
   if (place_id && salon_name) {
@@ -104,6 +104,7 @@ export default async function NewIceCreamLogPage({
           userId={user.id}
           defaultVisibility={defaultVisibility}
           initialSalonData={initialSalonData}
+          initialPrefillFlavour={typeof flavour === "string" ? flavour : null}
         />
       </div>
     </AppShell>

@@ -8,11 +8,17 @@ import {
 } from "@/src/components/PhotoVisibilityPicker";
 import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
+import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
+import {
+  getFlavourScoopUrl,
+  mapFlavourToSlug,
+  useFlavourScoop,
+} from "@/src/lib/flavour-scoop";
 import { createClient } from "@/src/lib/supabase/client";
 import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
 import { userFacingSaveError } from "@/src/lib/userFacingError";
 import { useRouter } from "next/navigation";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 type LogFlavourRow = {
   id: string;
@@ -156,6 +162,21 @@ function isToday(datetimeLocalValue: string): boolean {
   return datetimeLocalValue.startsWith(todayDateStr());
 }
 
+function withAlpha(hex: string, alpha: number): string {
+  const clean = hex.replace("#", "");
+  const normalized =
+    clean.length === 3
+      ? clean
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : clean;
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 const DRUM_ITEM_H = 44;
 const DRUM_VISIBLE = 5;
 
@@ -296,6 +317,37 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   );
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
+  const strawberryScoopUrl = getFlavourScoopUrl("strawberry");
+  const selectedFlavours = useMemo(
+    () =>
+      flavours
+        .map((flavour) => flavour.name.trim())
+        .filter((name) => name.length > 0)
+        .slice(0, 3),
+    [flavours],
+  );
+  const primaryFlavour = selectedFlavours[0] ?? "Strawberry";
+  const { scoopUrl, loading: scoopLoading } = useFlavourScoop(primaryFlavour);
+  const [previewScoopUrl, setPreviewScoopUrl] = useState(strawberryScoopUrl);
+
+  useEffect(() => {
+    setPreviewScoopUrl(scoopUrl || strawberryScoopUrl);
+  }, [scoopUrl, strawberryScoopUrl]);
+
+  const flavourGlowColors = useMemo(() => {
+    if (selectedFlavours.length === 0) return ["#F9A8D4"];
+    return selectedFlavours.map((name, i) => getFlavourColor(mapFlavourToSlug(name), i));
+  }, [selectedFlavours]);
+
+  const vesselGlowBackground = useMemo(() => {
+    const glowLayers = flavourGlowColors
+      .map(
+        (color, i) =>
+          `radial-gradient(circle at ${25 + i * 25}% 0%, ${withAlpha(color, 0.24)} 0%, transparent 55%)`,
+      )
+      .join(", ");
+    return glowLayers ? `${glowLayers}, var(--color-surface, white)` : "var(--color-surface, white)";
+  }, [flavourGlowColors]);
 
   function handlePlaceSelect(data: SalonData) {
     setSalonName(data.salon_name);
@@ -750,25 +802,47 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           <div className="flex gap-3">
             {(
               [
-                { value: "cone", emoji: "🍦", label: "Cone" },
-                { value: "cup", emoji: "🍧", label: "Cup" },
+                { value: "cone", label: "Cone" },
+                { value: "cup", label: "Cup" },
               ] as const
-            ).map(({ value, emoji, label }) => {
+            ).map(({ value, label }) => {
               const selected = vessel === value;
+              const activeFlavours = selectedFlavours.map((name, i) => ({
+                name,
+                colorHex: getFlavourColor(mapFlavourToSlug(name), i),
+              }));
               return (
-                <button
+                <div
                   key={value}
-                  type="button"
-                  onClick={() => setVessel(selected ? null : value)}
-                  className={
-                    selected
-                      ? "flex flex-1 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold shadow-sm transition bg-[#D97706] text-white"
-                      : "flex flex-1 items-center justify-center gap-2 rounded-2xl border-2 border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-zinc-800"
-                  }
+                  className="flex flex-1 flex-col items-center gap-3 rounded-2xl px-2 py-2"
+                  style={{ background: vesselGlowBackground }}
                 >
-                  <span>{emoji}</span>
-                  <span>{label}</span>
-                </button>
+                  <VesselIllustration
+                    vessel={value}
+                    flavours={activeFlavours}
+                    selected={selected}
+                    size="medium"
+                    onClick={() => setVessel(selected ? null : value)}
+                    hideBuiltInScoops
+                    dynamicScoopSrc={previewScoopUrl}
+                    dynamicScoopAlt={`${primaryFlavour} scoop`}
+                    dynamicScoopLoading={scoopLoading}
+                    onDynamicScoopError={() =>
+                      setPreviewScoopUrl((current) =>
+                        current === strawberryScoopUrl ? current : strawberryScoopUrl,
+                      )
+                    }
+                  />
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: selected ? 600 : 500,
+                      color: selected ? "var(--color-orange)" : "var(--color-text-secondary)",
+                    }}
+                  >
+                    {label}
+                  </span>
+                </div>
               );
             })}
           </div>

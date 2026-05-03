@@ -2,6 +2,7 @@
 
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
 import { createClient } from "@/src/lib/supabase/client";
+import { applyResolvedFlavoursToLogRow, LOG_FLAVOURS_RESOLVED_SELECT } from "@/src/lib/log-flavours-resolved";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -42,16 +43,7 @@ const SELECT_FIELDS = `
     username,
     avatar_url
   ),
-  log_flavours (
-    id,
-    flavour_name,
-    rating,
-    tags,
-    rating_texture,
-    rating_originality,
-    rating_intensity,
-    rating_presentation
-  )
+  ${LOG_FLAVOURS_RESOLVED_SELECT}
 `;
 
 export function IceCreamFeedClient({
@@ -186,7 +178,9 @@ export function IceCreamFeedClient({
       return;
     }
 
-    const raw = (data ?? []) as unknown as IceCreamLog[];
+    const raw = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
+      applyResolvedFlavoursToLogRow(row),
+    ) as unknown as IceCreamLog[];
     const newLogs = await enrichWithLikes(raw);
 
     setLogs((prev) => [...prev, ...newLogs]);
@@ -245,7 +239,9 @@ export function IceCreamFeedClient({
       return;
     }
 
-    const raw = (data ?? []) as unknown as IceCreamLog[];
+    const raw = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
+      applyResolvedFlavoursToLogRow(row),
+    ) as unknown as IceCreamLog[];
     const newLogs = await enrichWithLikes(raw);
     setLogs(newLogs);
     setPage(1);

@@ -3,6 +3,7 @@ import { GellogLogo } from "@/app/components/GellogLogo";
 import { NotifPromptBanner } from "@/app/components/NotifPromptBanner";
 import { createClient } from "@/src/lib/supabase/server";
 import type { IceCreamLog } from "@/src/components/FeedCard";
+import { applyResolvedFlavoursToLogRow, LOG_FLAVOURS_RESOLVED_SELECT } from "@/src/lib/log-flavours-resolved";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { IceCreamFeedClient } from "./IceCreamFeedClient";
@@ -61,16 +62,7 @@ export default async function IceCreamFeedPage() {
         username,
         avatar_url
       ),
-      log_flavours (
-        id,
-        flavour_name,
-        rating,
-        tags,
-        rating_texture,
-        rating_originality,
-        rating_intensity,
-        rating_presentation
-      )
+      ${LOG_FLAVOURS_RESOLVED_SELECT}
     `,
     )
     .eq("visibility", "public")
@@ -80,7 +72,9 @@ export default async function IceCreamFeedPage() {
     logCountQuery,
   ]);
 
-  const rawLogs = (data ?? []) as unknown as IceCreamLog[];
+  const rawLogs = ((data ?? []) as unknown as Record<string, unknown>[]).map((row) =>
+    applyResolvedFlavoursToLogRow(row),
+  ) as unknown as IceCreamLog[];
   const initialFollowingUserIds = (followingRows ?? []).map((r) => r.following_id);
 
   // Fetch like counts + user's own likes for the fetched log ids
@@ -125,7 +119,12 @@ export default async function IceCreamFeedPage() {
 
   if (error) {
     // eslint-disable-next-line no-console
-    console.error("Failed to load ice cream logs:", error);
+    console.error("Failed to load ice cream logs:", {
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      hint: error.hint,
+    });
   }
 
   return (

@@ -9,6 +9,12 @@ import { MySalonProfileCard } from "@/app/components/MySalonOwnerAccess";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
 import { ProfilePassportStrip } from "./ProfilePassportStrip";
+import type { ProfileSheetRankedFlavour } from "./ProfileSheet";
+import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
+import {
+  buildCanonicalFlavourRanking,
+  type LogFlavoursResolvedRankingRow,
+} from "@/src/lib/profile-flavour-ranking";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -54,17 +60,6 @@ type FlavourStats = {
   intensityCount: number;
   presentationSum: number;
   presentationCount: number;
-};
-
-type RankedFlavour = {
-  rank: number;
-  name: string;
-  timesTried: number;
-  averageRating: number;
-  avgTexture: number | null;
-  avgOriginality: number | null;
-  avgIntensity: number | null;
-  avgPresentation: number | null;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -163,42 +158,6 @@ function deriveStats(logs: IceCreamLog[]) {
     });
   });
 
-  const allFlavourStats = Array.from(flavourMap.values()).map((stat) => ({
-    ...stat,
-    averageRating:
-      stat.ratingCount > 0 ? stat.ratingSum / stat.ratingCount : null,
-  }));
-
-  const rankedFlavours: RankedFlavour[] = allFlavourStats
-    .filter((stat) => stat.timesTried >= 2 && stat.averageRating != null)
-    .sort((a, b) => {
-      const aAvg = a.averageRating ?? 0;
-      const bAvg = b.averageRating ?? 0;
-      if (bAvg !== aAvg) return bAvg - aAvg;
-      if (b.timesTried !== a.timesTried) return b.timesTried - a.timesTried;
-      return a.name.localeCompare(b.name);
-    })
-    .map((stat, index) => ({
-      rank: index + 1,
-      name: stat.name,
-      timesTried: stat.timesTried,
-      averageRating: stat.averageRating ?? 0,
-      avgTexture:
-        stat.textureCount > 0 ? stat.textureSum / stat.textureCount : null,
-      avgOriginality:
-        stat.originalityCount > 0
-          ? stat.originalitySum / stat.originalityCount
-          : null,
-      avgIntensity:
-        stat.intensityCount > 0
-          ? stat.intensitySum / stat.intensityCount
-          : null,
-      avgPresentation:
-        stat.presentationCount > 0
-          ? stat.presentationSum / stat.presentationCount
-          : null,
-    }));
-
   const salonMap = new Map<
     string,
     { name: string; count: number; lastVisited: Date }
@@ -272,7 +231,6 @@ function deriveStats(logs: IceCreamLog[]) {
     totalAllTime,
     totalThisYear,
     averageOverallRating,
-    rankedFlavours,
     mostVisitedSalon,
     bestWeather,
     totalSpent,
@@ -353,7 +311,6 @@ export default async function IceCreamProfilePage() {
     totalAllTime,
     totalThisYear,
     averageOverallRating,
-    rankedFlavours,
     mostVisitedSalon,
     bestWeather,
     totalSpent,
@@ -363,6 +320,45 @@ export default async function IceCreamProfilePage() {
     flavoursRollup,
     salonsRollup,
   } = deriveStats(logs);
+
+  const logIds = logs.map((l) => l.id);
+  let rankedFlavours: ProfileSheetRankedFlavour[] = [];
+  let uncategorisedLogCount = 0;
+  let uncategorisedInputNames: string[] = [];
+
+  if (logIds.length > 0) {
+    const { data: lfRows } = await supabase
+      .from("log_flavours")
+      .select("log_id, flavour_name, rating")
+      .in("log_id", logIds);
+
+    const resolvedLike: LogFlavoursResolvedRankingRow[] = (lfRows ?? []).map((r) => ({
+      log_id: r.log_id as string,
+      flavour_id: null,
+      flavour_slug: null,
+      canonical_name_nl: null,
+      canonical_name_en: null,
+      base_token: null,
+      drizzle_token: null,
+      crumble_token: null,
+      rating: r.rating != null ? Number(r.rating) : null,
+      input_name: typeof r.flavour_name === "string" ? r.flavour_name : null,
+    }));
+
+    const { ranking, uncategorisedLogCount: uncLogs, uncategorisedInputNames: uncNames } =
+      buildCanonicalFlavourRanking(resolvedLike);
+
+    rankedFlavours = ranking.map((r) => ({
+      rank: r.rank,
+      flavourId: r.flavourId,
+      displayName: r.displayName,
+      logCount: r.logCount,
+      avgRating: r.avgRating,
+      tokens: gelatoTokensFromNullableTokens(r.baseToken, r.drizzleToken, r.crumbleToken),
+    }));
+    uncategorisedLogCount = uncLogs;
+    uncategorisedInputNames = uncNames;
+  }
 
   const hasIceCreamPlus = profile?.subscription_tier === "premium";
 
@@ -429,6 +425,8 @@ export default async function IceCreamProfilePage() {
             averagePerVisit,
           }}
           rankedFlavours={rankedFlavours}
+          uncategorisedLogCount={uncategorisedLogCount}
+          uncategorisedInputNames={uncategorisedInputNames}
           heatmapData={heatmapData}
         />
 

@@ -68,7 +68,7 @@ function NavIconLink({ item }: { item: NavItem }) {
 export function BottomNav() {
   return (
     <nav
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-30"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-30 lg:hidden"
       style={{
         paddingBottom: "env(safe-area-inset-bottom, 0px)",
       }}

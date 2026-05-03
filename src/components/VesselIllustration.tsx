@@ -15,6 +15,11 @@ type VesselIllustrationProps = {
   selected?: boolean;
   size?: "small" | "medium" | "large";
   onClick?: () => void;
+  hideBuiltInScoops?: boolean;
+  dynamicScoopSrc?: string;
+  dynamicScoopAlt?: string;
+  dynamicScoopLoading?: boolean;
+  onDynamicScoopError?: () => void;
 };
 
 // Default scoop colors when no flavours are provided
@@ -74,7 +79,7 @@ const SIZE_MAP = {
 // Cone bottom half: warm tan trapezoid with crosshatch lines
 // Scoops: 1–3 circles stacked above the cone
 
-function ConeIllustration({ scoopColors }: { scoopColors: string[] }) {
+function ConeIllustration({ scoopColors, showScoops = true }: { scoopColors: string[]; showScoops?: boolean }) {
   const numScoops = Math.min(scoopColors.length || 1, 3);
   const colors = scoopColors.length > 0 ? scoopColors.slice(0, 3) : DEFAULT_SCOOP_COLORS.slice(0, numScoops);
 
@@ -134,30 +139,31 @@ function ConeIllustration({ scoopColors }: { scoopColors: string[] }) {
       <line x1={coneTopLeft} y1={coneTopY} x2={coneTopRight} y2={coneTopY} stroke={darkTan} strokeWidth="1.2" />
 
       {/* ── Scoops (bottom to top, so last index renders on top) ── */}
-      {[...scoopData].reverse().map((scoop, revIdx) => {
-        const idx = numScoops - 1 - revIdx;
-        const color = colors[idx] ?? DEFAULT_SCOOP_COLORS[idx] ?? "#F5E6C8";
-        return (
-          <g key={idx}>
-            <circle
-              cx={scoop.cx}
-              cy={scoop.cy}
-              r={scoop.r}
-              fill={`url(#scoop-grad-${idx})`}
-            />
-            {/* Shine highlight */}
-            <ellipse
-              cx={scoop.cx - scoop.r * 0.28}
-              cy={scoop.cy - scoop.r * 0.3}
-              rx={scoop.r * 0.32}
-              ry={scoop.r * 0.18}
-              fill="white"
-              opacity="0.3"
-              transform={`rotate(-30, ${scoop.cx - scoop.r * 0.28}, ${scoop.cy - scoop.r * 0.3})`}
-            />
-          </g>
-        );
-      })}
+      {showScoops
+        ? [...scoopData].reverse().map((scoop, revIdx) => {
+            const idx = numScoops - 1 - revIdx;
+            return (
+              <g key={idx}>
+                <circle
+                  cx={scoop.cx}
+                  cy={scoop.cy}
+                  r={scoop.r}
+                  fill={`url(#scoop-grad-${idx})`}
+                />
+                {/* Shine highlight */}
+                <ellipse
+                  cx={scoop.cx - scoop.r * 0.28}
+                  cy={scoop.cy - scoop.r * 0.3}
+                  rx={scoop.r * 0.32}
+                  ry={scoop.r * 0.18}
+                  fill="white"
+                  opacity="0.3"
+                  transform={`rotate(-30, ${scoop.cx - scoop.r * 0.28}, ${scoop.cy - scoop.r * 0.3})`}
+                />
+              </g>
+            );
+          })
+        : null}
     </svg>
   );
 }
@@ -168,7 +174,7 @@ function ConeIllustration({ scoopColors }: { scoopColors: string[] }) {
 // Scoops peek out above the cup rim
 // A small spoon leans to one side
 
-function CupIllustration({ scoopColors }: { scoopColors: string[] }) {
+function CupIllustration({ scoopColors, showScoops = true }: { scoopColors: string[]; showScoops?: boolean }) {
   const numScoops = Math.min(scoopColors.length || 1, 3);
   const colors = scoopColors.length > 0 ? scoopColors.slice(0, 3) : DEFAULT_SCOOP_COLORS.slice(0, numScoops);
 
@@ -202,30 +208,31 @@ function CupIllustration({ scoopColors }: { scoopColors: string[] }) {
       </defs>
 
       {/* ── Scoops (behind cup rim) ── */}
-      {[...scoopData].reverse().map((scoop, revIdx) => {
-        const idx = numScoops - 1 - revIdx;
-        const color = colors[idx] ?? DEFAULT_SCOOP_COLORS[idx] ?? "#F5E6C8";
-        return (
-          <g key={idx}>
-            <circle
-              cx={scoop.cx}
-              cy={scoop.cy}
-              r={scoop.r}
-              fill={`url(#cup-scoop-grad-${idx})`}
-            />
-            {/* Shine */}
-            <ellipse
-              cx={scoop.cx - scoop.r * 0.28}
-              cy={scoop.cy - scoop.r * 0.3}
-              rx={scoop.r * 0.32}
-              ry={scoop.r * 0.18}
-              fill="white"
-              opacity="0.3"
-              transform={`rotate(-30, ${scoop.cx - scoop.r * 0.28}, ${scoop.cy - scoop.r * 0.3})`}
-            />
-          </g>
-        );
-      })}
+      {showScoops
+        ? [...scoopData].reverse().map((scoop, revIdx) => {
+            const idx = numScoops - 1 - revIdx;
+            return (
+              <g key={idx}>
+                <circle
+                  cx={scoop.cx}
+                  cy={scoop.cy}
+                  r={scoop.r}
+                  fill={`url(#cup-scoop-grad-${idx})`}
+                />
+                {/* Shine */}
+                <ellipse
+                  cx={scoop.cx - scoop.r * 0.28}
+                  cy={scoop.cy - scoop.r * 0.3}
+                  rx={scoop.r * 0.32}
+                  ry={scoop.r * 0.18}
+                  fill="white"
+                  opacity="0.3"
+                  transform={`rotate(-30, ${scoop.cx - scoop.r * 0.28}, ${scoop.cy - scoop.r * 0.3})`}
+                />
+              </g>
+            );
+          })
+        : null}
 
       {/* ── Cup body ── */}
       <path
@@ -270,9 +277,20 @@ export function VesselIllustration({
   selected = false,
   size = "medium",
   onClick,
+  hideBuiltInScoops = false,
+  dynamicScoopSrc,
+  dynamicScoopAlt = "Flavour scoop",
+  dynamicScoopLoading = false,
+  onDynamicScoopError,
 }: VesselIllustrationProps) {
   const { width, height } = SIZE_MAP[size];
   const scoopColors = flavours.map((f) => f.colorHex);
+  const vesselInnerW = width - 8;
+  const vesselInnerH = height - 8;
+  const vesselAssetSrc =
+    vessel === "cone"
+      ? "/assets/vessels/Cone-waffle.svg"
+      : "/assets/vessels/Cup-logo.svg";
 
   return (
     <div
@@ -295,12 +313,71 @@ export function VesselIllustration({
         flexShrink: 0,
       }}
     >
-      <div style={{ width: width - 8, height: height - 8 }}>
-        {vessel === "cone" ? (
-          <ConeIllustration scoopColors={scoopColors} />
+      <div style={{ width: vesselInnerW, height: vesselInnerH, position: "relative" }}>
+        {hideBuiltInScoops ? (
+          <span
+            style={{
+              position: "absolute",
+              left: "50%",
+              bottom: 0,
+              transform: "translateX(-50%)",
+              width: vessel === "cone" ? "54px" : "56px",
+              height: vessel === "cone" ? "76px" : "76px",
+              overflow: "hidden",
+              borderRadius: vessel === "cone" ? 0 : 8,
+              pointerEvents: "none",
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={vesselAssetSrc}
+              alt={vessel === "cone" ? "Cone vessel" : "Cup vessel"}
+              style={{
+                width: vessel === "cone" ? "54px" : "72px",
+                height: vessel === "cone" ? "76px" : "88px",
+                objectFit: vessel === "cone" ? "contain" : "cover",
+                objectPosition: vessel === "cone" ? "50% 100%" : "50% 70%",
+                transform: vessel === "cone" ? "none" : "translate(-8px, 2px)",
+              }}
+            />
+          </span>
+        ) : vessel === "cone" ? (
+          <ConeIllustration scoopColors={scoopColors} showScoops={!hideBuiltInScoops} />
         ) : (
-          <CupIllustration scoopColors={scoopColors} />
+          <CupIllustration scoopColors={scoopColors} showScoops={!hideBuiltInScoops} />
         )}
+        {dynamicScoopLoading ? (
+          <div
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "8px",
+              transform: "translateX(-50%)",
+              width: "34px",
+              height: "34px",
+              borderRadius: "999px",
+              background: "rgba(161, 161, 170, 0.65)",
+            }}
+          />
+        ) : dynamicScoopSrc ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={dynamicScoopSrc}
+            alt={dynamicScoopAlt}
+            onError={onDynamicScoopError}
+            style={{
+              position: "absolute",
+              left: "50%",
+              top: "8px",
+              transform: "translateX(-50%)",
+              width: "36px",
+              height: "36px",
+              objectFit: "contain",
+              pointerEvents: "none",
+              filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12))",
+            }}
+          />
+        ) : null}
       </div>
     </div>
   );

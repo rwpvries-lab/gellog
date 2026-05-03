@@ -1,29 +1,44 @@
 'use client';
 
 import { RatingStarsDisplay } from "@/app/components/RatingStars";
-import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
+import { Gelato } from "@/src/components/Gelato/Gelato";
 import { Toast, useToast, copyToClipboard } from "@/src/components/Toast";
+import { mapFlavourToSlug } from "@/src/lib/flavour-scoop";
+import type { LogFlavour } from "@/src/lib/log-flavours-resolved";
+import type { BaseToken, CrumbleToken, DrizzleToken, GelatoTokens } from "@/src/lib/gelato-tokens";
 import { createClient } from "@/src/lib/supabase/client";
 import { formatVisitDate } from "@/src/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
+export type { LogFlavour };
 
 const DIETARY_TAG_SET = new Set(["Sugar-free", "Dairy-free", "Vegan", "Nut-free", "Gluten-free"]);
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
-export type LogFlavour = {
-  id: string;
-  flavour_name: string;
-  rating: number | null;
-  tags: string[] | null;
-  rating_texture: number | null;
-  rating_originality: number | null;
-  rating_intensity: number | null;
-  rating_presentation: number | null;
-};
+export function getFlavourDisplayLabel(flavour: LogFlavour): string {
+  const nl = flavour.canonical_name_nl?.trim();
+  if (nl) return nl;
+  const en = flavour.canonical_name_en?.trim();
+  if (en) return en;
+  const input = flavour.input_name?.trim();
+  if (input) return input;
+  return flavour.flavour_name?.trim() || "Flavour";
+}
+
+function gelatoTokensFromLogFlavour(flavour: LogFlavour): GelatoTokens {
+  if (flavour.base_token == null) {
+    return { base: "cream", drizzle: "none", crumble: "none" };
+  }
+  return {
+    base: flavour.base_token as BaseToken,
+    drizzle: (flavour.drizzle_token ?? "none") as DrizzleToken,
+    crumble: (flavour.crumble_token ?? "none") as CrumbleToken,
+  };
+}
 
 export type LogProfile = {
   username: string | null;
@@ -139,6 +154,7 @@ function formatFeedWeatherLine(log: IceCreamLog): string | null {
 }
 
 const FEED_COLLAPSED_FLAVOUR_CAP = 3;
+const STRAWBERRY_SCOOP_URL = "/assets/scoops/strawberry.svg";
 
 type AdvancedRating = { label: string; value: number };
 
@@ -152,6 +168,164 @@ function getAdvancedRatings(flavour: LogFlavour): AdvancedRating[] {
   return pairs
     .filter((p): p is [string, number] => p[1] != null)
     .map(([label, value]) => ({ label, value }));
+}
+
+function getPrimaryScoopUrl(log: IceCreamLog): string {
+  const first = log.log_flavours[0];
+  const firstFlavourName =
+    first?.flavour_name?.trim() || first?.input_name?.trim() || "strawberry";
+  const slug = mapFlavourToSlug(firstFlavourName);
+  return `/assets/scoops/${slug}.svg`;
+}
+
+function ScoopThumbnail({
+  src,
+  flavourName,
+  onError,
+}: {
+  src: string;
+  flavourName: string;
+  onError: () => void;
+}) {
+  return (
+    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={`${flavourName} scoop`}
+        className="h-8 w-8 object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.18)]"
+        onError={onError}
+      />
+    </span>
+  );
+}
+
+function FeedFlavourGelatosRow({ log }: { log: IceCreamLog }) {
+  const flavours = log.log_flavours;
+  if (flavours.length === 0) return null;
+
+  if (flavours.length === 1) {
+    const f = flavours[0];
+    return (
+      <span className="relative inline-flex shrink-0">
+        <Gelato
+          variant="scoop"
+          tokens={gelatoTokensFromLogFlavour(f)}
+          size={56}
+          seed={f.id}
+          className="flex shrink-0"
+        />
+      </span>
+    );
+  }
+
+  const visible = flavours.slice(0, 3);
+  const extra = flavours.length - 3;
+
+  return (
+    <div className="flex shrink-0 items-center">
+      {visible.map((f, idx) => (
+        <span
+          key={f.id}
+          className="relative inline-flex shrink-0"
+          style={{
+            marginLeft: idx === 0 ? 0 : -8,
+            zIndex: idx + 1,
+          }}
+        >
+          <Gelato
+            variant="scoop"
+            tokens={gelatoTokensFromLogFlavour(f)}
+            size={48}
+            seed={f.id}
+            className="flex shrink-0"
+          />
+        </span>
+      ))}
+      {extra > 0 ? (
+        <span className="z-[4] ml-1 shrink-0 text-[11px] font-semibold tabular-nums text-[color:var(--color-text-secondary)]">
+          +{extra}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+function LogDetailGelatoHero({ log }: { log: IceCreamLog }) {
+  const flavours = log.log_flavours;
+  if (flavours.length === 0) return null;
+
+  const vessel = log.vessel;
+  const labelClass =
+    "max-w-[220px] text-center text-xs font-medium text-[color:var(--color-text-secondary)]";
+
+  if (flavours.length === 1) {
+    const f = flavours[0];
+    const variant = vessel ?? "scoop";
+    return (
+      <div className="mb-4 flex flex-col items-center gap-2">
+        <Gelato
+          variant={variant}
+          tokens={gelatoTokensFromLogFlavour(f)}
+          size={240}
+          seed={log.id}
+          className="flex justify-center"
+        />
+        <p className={labelClass}>{getFlavourDisplayLabel(f)}</p>
+      </div>
+    );
+  }
+
+  if (vessel === "cup") {
+    const [first, ...rest] = flavours;
+    return (
+      <div className="mb-4 flex flex-col items-center gap-5">
+        <div className="flex flex-col items-center gap-2">
+          <Gelato
+            variant="cup"
+            tokens={gelatoTokensFromLogFlavour(first)}
+            size={240}
+            seed={log.id}
+            className="flex justify-center"
+          />
+          <p className={labelClass}>{getFlavourDisplayLabel(first)}</p>
+        </div>
+        {rest.length > 0 ? (
+          <div className="flex w-full flex-wrap justify-center gap-x-5 gap-y-4">
+            {rest.map((f) => (
+              <div key={f.id} className="flex flex-col items-center gap-1.5">
+                <Gelato
+                  variant="scoop"
+                  tokens={gelatoTokensFromLogFlavour(f)}
+                  size={120}
+                  seed={`${log.id}-${f.id}`}
+                  className="flex justify-center"
+                />
+                <p className={`${labelClass} max-w-[140px]`}>{getFlavourDisplayLabel(f)}</p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-4 flex w-full flex-wrap justify-center gap-x-5 gap-y-4">
+      {flavours.map((f) => (
+        <div key={f.id} className="flex flex-col items-center gap-1.5">
+          <Gelato
+            variant="scoop"
+            tokens={gelatoTokensFromLogFlavour(f)}
+            size={120}
+            seed={`${log.id}-${f.id}`}
+            className="flex justify-center"
+          />
+          <p className={`${labelClass} max-w-[140px]`}>{getFlavourDisplayLabel(f)}</p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 type DirectionsSheetProps = {
@@ -259,15 +433,11 @@ export function FeedCard({
   const [likeCount, setLikeCount] = useState(log.like_count ?? 0);
   const [liked, setLiked] = useState(log.user_has_liked ?? false);
   const [likeLoading, setLikeLoading] = useState(false);
-  const [avatarImgError, setAvatarImgError] = useState(false);
-  const [photoImgError, setPhotoImgError] = useState(false);
+  const [avatarErrorLogId, setAvatarErrorLogId] = useState<string | null>(null);
+  const [photoErrorLogId, setPhotoErrorLogId] = useState<string | null>(null);
+  const [scoopErrorLogId, setScoopErrorLogId] = useState<string | null>(null);
 
   const { toast, showToast, dismissToast } = useToast();
-
-  useEffect(() => {
-    setAvatarImgError(false);
-    setPhotoImgError(false);
-  }, [log.id]);
 
   const isOwnLog = currentUserId != null && log.user_id === currentUserId;
 
@@ -340,6 +510,14 @@ export function FeedCard({
   const weather = formatWeather(log);
   const feedWeatherLine = formatFeedWeatherLine(log);
   const fullDate = formatFullDate(log.visited_at);
+  const firstFlavour = log.log_flavours[0];
+  const primaryFlavourName = firstFlavour ? getFlavourDisplayLabel(firstFlavour) : "Strawberry";
+  const avatarImgError = avatarErrorLogId === log.id;
+  const photoImgError = photoErrorLogId === log.id;
+  const scoopThumbSrc =
+    scoopErrorLogId === log.id
+      ? STRAWBERRY_SCOOP_URL
+      : getPrimaryScoopUrl(log);
 
   const isFeedLayout = layout === "feed" && !isDetailPage;
 
@@ -392,7 +570,7 @@ export function FeedCard({
                     height={600}
                     className="h-full w-full object-cover"
                     loading="lazy"
-                    onError={() => setPhotoImgError(true)}
+                    onError={() => setPhotoErrorLogId(log.id)}
                   />
                 ) : (
                   <div className="flex h-full w-full flex-col items-center justify-center bg-[color:var(--color-teal)]">
@@ -454,7 +632,7 @@ export function FeedCard({
                               : "bg-[color:var(--color-teal)]"
                           }`}
                         >
-                          {flavour.flavour_name}
+                          {getFlavourDisplayLabel(flavour)}
                         </span>
                       ))}
                       {!expanded && log.log_flavours.length > FEED_COLLAPSED_FLAVOUR_CAP ? (
@@ -471,22 +649,7 @@ export function FeedCard({
 
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
-                  {log.vessel ? (
-                    <span className="inline-flex shrink-0 align-middle">
-                      <VesselIllustration
-                        vessel={log.vessel}
-                        flavours={log.log_flavours.slice(0, 3).map((f, i) => ({
-                          name: f.flavour_name,
-                          colorHex: getFlavourColor(f.flavour_name, i),
-                        }))}
-                        size="small"
-                      />
-                    </span>
-                  ) : (
-                    <span className="text-lg leading-none" aria-hidden>
-                      🍦
-                    </span>
-                  )}
+                  {log.log_flavours.length > 0 ? <FeedFlavourGelatosRow log={log} /> : null}
                   <RatingStarsDisplay value={log.overall_rating} size="lg" />
                 </div>
                 {canSeePrice && pricePaid != null ? (
@@ -531,6 +694,7 @@ export function FeedCard({
           </>
         ) : (
         <div className="p-4 pb-3">
+          {isDetailPage && log.log_flavours.length > 0 ? <LogDetailGelatoHero log={log} /> : null}
           {/* Header: avatar · username · time ago [· edit/delete] */}
           <div className="mb-3 flex items-center gap-2 text-xs text-[color:var(--color-text-secondary)]">
             {profile?.username ? (
@@ -547,7 +711,7 @@ export function FeedCard({
                     height={40}
                     className="h-10 w-10 shrink-0 rounded-full object-cover"
                     loading="lazy"
-                    onError={() => setAvatarImgError(true)}
+                    onError={() => setAvatarErrorLogId(log.id)}
                   />
                 ) : (
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
@@ -568,7 +732,7 @@ export function FeedCard({
                     height={40}
                     className="h-10 w-10 shrink-0 rounded-full object-cover"
                     loading="lazy"
-                    onError={() => setAvatarImgError(true)}
+                    onError={() => setAvatarErrorLogId(log.id)}
                   />
                 ) : (
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
@@ -641,15 +805,12 @@ export function FeedCard({
               ) : (
                 log.salon_name
               )}
-              {log.vessel ? (
+              {log.vessel && !isDetailPage ? (
                 <span className="ml-1.5 inline-flex align-middle">
-                  <VesselIllustration
-                    vessel={log.vessel}
-                    flavours={log.log_flavours.slice(0, 3).map((f, i) => ({
-                      name: f.flavour_name,
-                      colorHex: getFlavourColor(f.flavour_name, i),
-                    }))}
-                    size="small"
+                  <ScoopThumbnail
+                    src={scoopThumbSrc}
+                    flavourName={primaryFlavourName}
+                    onError={() => setScoopErrorLogId(log.id)}
                   />
                 </span>
               ) : null}
@@ -672,7 +833,7 @@ export function FeedCard({
                 height={300}
                 className="h-full w-full object-cover"
                 loading="lazy"
-                onError={() => setPhotoImgError(true)}
+                onError={() => setPhotoErrorLogId(log.id)}
               />
             </div>
           ) : canSeePhoto && photoUrl && photoImgError ? (
@@ -708,7 +869,7 @@ export function FeedCard({
                       key={flavour.id}
                       className="inline-flex items-center rounded-full bg-[color:var(--color-surface-alt)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)]"
                     >
-                      {flavour.flavour_name}
+                      {getFlavourDisplayLabel(flavour)}
                     </span>
                   ))}
                 </div>
@@ -748,7 +909,7 @@ export function FeedCard({
                         <div
                           className={`inline-flex flex-wrap items-center gap-1 self-start rounded-full px-3 py-1 text-xs font-medium shadow-sm ring-1 ${flavourClass}`}
                         >
-                          <span>{flavour.flavour_name}</span>
+                          <span>{getFlavourDisplayLabel(flavour)}</span>
                           {flavour.rating != null ? (
                             <span className="flex items-center text-[10px] opacity-80">
                               <span className="mr-0.5">★</span>
@@ -903,7 +1064,7 @@ export function FeedCard({
                       height={36}
                       className="h-9 w-9 shrink-0 rounded-full object-cover"
                       loading="lazy"
-                      onError={() => setAvatarImgError(true)}
+                      onError={() => setAvatarErrorLogId(log.id)}
                     />
                   ) : (
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
@@ -924,7 +1085,7 @@ export function FeedCard({
                       height={36}
                       className="h-9 w-9 shrink-0 rounded-full object-cover"
                       loading="lazy"
-                      onError={() => setAvatarImgError(true)}
+                      onError={() => setAvatarErrorLogId(log.id)}
                     />
                   ) : (
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">

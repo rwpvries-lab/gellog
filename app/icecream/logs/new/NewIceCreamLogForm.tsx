@@ -9,17 +9,24 @@ import {
 import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
 import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
+import {
+  getFlavourScoopUrl,
+  mapFlavourToSlug,
+  useFlavourScoop,
+} from "@/src/lib/flavour-scoop";
 import { createClient } from "@/src/lib/supabase/client";
 import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
 import { userFacingSaveError } from "@/src/lib/userFacingError";
 import { useRouter } from "next/navigation";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 type NewIceCreamLogFormProps = {
   userId: string;
   defaultVisibility?: Visibility;
   initialSalonData?: SalonData | null;
+  /** Pre-fills the first flavour line (e.g. from salon vitrine tub → new log). */
+  initialPrefillFlavour?: string | null;
 };
 
 type Flavour = {
@@ -354,7 +361,27 @@ function LogSectionHeading({
   );
 }
 
-export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initialSalonData }: NewIceCreamLogFormProps) {
+function withAlpha(hex: string, alpha: number): string {
+  const clean = hex.replace("#", "");
+  const normalized =
+    clean.length === 3
+      ? clean
+          .split("")
+          .map((char) => `${char}${char}`)
+          .join("")
+      : clean;
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+export function NewIceCreamLogForm({
+  userId,
+  defaultVisibility = "public",
+  initialSalonData,
+  initialPrefillFlavour = null,
+}: NewIceCreamLogFormProps) {
   const router = useRouter();
   const [salonName, setSalonName] = useState(initialSalonData?.salon_name ?? "");
   const [salonPlaceId, setSalonPlaceId] = useState<string | null>(initialSalonData?.salon_place_id ?? null);
@@ -394,7 +421,49 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
   const [vitrineLoading, setVitrineLoading] = useState(false);
   const [pendingNamedFlavour, setPendingNamedFlavour] = useState<string | null>(null);
 
+  useEffect(() => {
+    const name = initialPrefillFlavour?.trim();
+    if (!name) return;
+    setFlavours((prev) => {
+      if (prev.length === 1 && prev[0].name.trim() === "") {
+        return [{ ...prev[0], name }];
+      }
+      return prev;
+    });
+  }, [initialPrefillFlavour]);
+
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
+  const strawberryScoopUrl = getFlavourScoopUrl("strawberry");
+  const selectedFlavours = useMemo(
+    () =>
+      flavours
+        .map((flavour) => flavour.name.trim())
+        .filter((name) => name.length > 0)
+        .slice(0, 3),
+    [flavours]
+  );
+  const primaryFlavour = selectedFlavours[0] ?? "Strawberry";
+  const { scoopUrl, loading: scoopLoading } = useFlavourScoop(primaryFlavour);
+  const [previewScoopUrl, setPreviewScoopUrl] = useState(strawberryScoopUrl);
+
+  useEffect(() => {
+    setPreviewScoopUrl(scoopUrl || strawberryScoopUrl);
+  }, [scoopUrl, strawberryScoopUrl]);
+
+  const flavourGlowColors = useMemo(() => {
+    if (selectedFlavours.length === 0) return ["#F9A8D4"];
+    return selectedFlavours.map((name, i) => getFlavourColor(mapFlavourToSlug(name), i));
+  }, [selectedFlavours]);
+
+  const vesselGlowBackground = useMemo(() => {
+    const glowLayers = flavourGlowColors
+      .map(
+        (color, i) =>
+          `radial-gradient(circle at ${25 + i * 25}% 0%, ${withAlpha(color, 0.24)} 0%, transparent 55%)`
+      )
+      .join(", ");
+    return glowLayers ? `${glowLayers}, var(--color-surface, white)` : "var(--color-surface, white)";
+  }, [flavourGlowColors]);
 
   useEffect(() => {
     if (!salonPlaceId) {
@@ -1156,18 +1225,31 @@ export function NewIceCreamLogForm({ userId, defaultVisibility = "public", initi
               ] as const
             ).map(({ value, label }) => {
               const isSelected = vessel === value;
-              const activeFlavours = flavours
-                .filter((f) => f.name.trim().length > 0)
-                .slice(0, 3)
-                .map((f, i) => ({ name: f.name, colorHex: getFlavourColor(f.name, i) }));
+              const activeFlavours = selectedFlavours.map((name, i) => ({
+                name,
+                colorHex: getFlavourColor(mapFlavourToSlug(name), i),
+              }));
               return (
-                <div key={value} className="flex flex-1 flex-col items-center gap-3">
+                <div
+                  key={value}
+                  className="flex flex-1 flex-col items-center gap-3 rounded-2xl px-2 py-2"
+                  style={{ background: vesselGlowBackground }}
+                >
                   <VesselIllustration
                     vessel={value}
                     flavours={activeFlavours}
                     selected={isSelected}
                     size="medium"
                     onClick={() => setVessel(isSelected ? null : value)}
+                    hideBuiltInScoops
+                    dynamicScoopSrc={previewScoopUrl}
+                    dynamicScoopAlt={`${primaryFlavour} scoop`}
+                    dynamicScoopLoading={scoopLoading}
+                    onDynamicScoopError={() =>
+                      setPreviewScoopUrl((current) =>
+                        current === strawberryScoopUrl ? current : strawberryScoopUrl
+                      )
+                    }
                   />
                   <span
                     style={{

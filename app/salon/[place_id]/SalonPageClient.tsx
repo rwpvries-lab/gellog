@@ -2,11 +2,13 @@
 
 import { createClient } from "@/src/lib/supabase/client";
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
+import { Vitrine, type VitrineFlavour } from "@/src/components/Gelato/variants/Vitrine";
+import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
 import { SalonShareButton } from "./SalonShareButton";
 import Image from "next/image";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { useEffect, useState } from "react";
+import { notFound, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 type SalonProfile = {
   id: string;
@@ -20,9 +22,37 @@ type SalonProfile = {
   bio: string | null;
   phone: string | null;
   website: string | null;
+  vitrine_enabled?: boolean | null;
 };
 
-type VitrinePublicRow = { id: string; name: string; colour: string | null };
+type SalonVitrineResolvedRow = {
+  vitrine_flavour_id: string;
+  salon_place_id: string;
+  is_visible: boolean;
+  input_name: string;
+  canonical_name_nl: string | null;
+  canonical_name_en: string | null;
+  base_token: string | null;
+  drizzle_token: string | null;
+  crumble_token: string | null;
+};
+
+function mapVitrineResolvedToFlavour(row: SalonVitrineResolvedRow): VitrineFlavour {
+  const displayName =
+    row.canonical_name_nl?.trim() ||
+    row.canonical_name_en?.trim() ||
+    row.input_name?.trim() ||
+    "Flavour";
+  return {
+    id: row.vitrine_flavour_id,
+    displayName,
+    tokens: gelatoTokensFromNullableTokens(
+      row.base_token,
+      row.drizzle_token,
+      row.crumble_token,
+    ),
+  };
+}
 
 const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -31,33 +61,6 @@ function publicSalonLogoUrl(path: string | null): string | null {
   if (path.startsWith("http://") || path.startsWith("https://")) return path;
   if (!supabaseBase) return path;
   return `${supabaseBase}/storage/v1/object/public/salon-logos/${path}`;
-}
-
-function VitrineDisplaySection({ rows }: { rows: VitrinePublicRow[] }) {
-  return (
-    <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-      <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-        On display today
-      </h2>
-      {rows.length === 0 ? (
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
-          No flavours on display today
-        </p>
-      ) : (
-        <div className="flex flex-wrap gap-2">
-          {rows.map((r) => (
-            <span
-              key={r.id}
-              className="rounded-full px-3 py-1.5 text-xs font-semibold text-white shadow-sm ring-1 ring-black/10 dark:ring-white/10"
-              style={{ backgroundColor: r.colour ?? "#F9A8D4" }}
-            >
-              {r.name}
-            </span>
-          ))}
-        </div>
-      )}
-    </div>
-  );
 }
 
 const FEED_FIELDS = `
@@ -151,6 +154,7 @@ function SalonPageSkeleton() {
 type Props = { placeId: string };
 
 export function SalonPageClient({ placeId }: Props) {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [salonNotFound, setSalonNotFound] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
@@ -160,7 +164,7 @@ export function SalonPageClient({ placeId }: Props) {
   const [followingAuthorIds, setFollowingAuthorIds] = useState<Set<string>>(
     new Set(),
   );
-  const [vitrineOnDisplay, setVitrineOnDisplay] = useState<VitrinePublicRow[]>([]);
+  const [vitrineResolvedRows, setVitrineResolvedRows] = useState<SalonVitrineResolvedRow[]>([]);
   const [salonLogoImgError, setSalonLogoImgError] = useState(false);
 
   useEffect(() => {
@@ -181,11 +185,11 @@ export function SalonPageClient({ placeId }: Props) {
       setUserId(user?.id ?? null);
 
       const vitrineSelect = supabase
-        .from("vitrine_flavours")
-        .select("id,name,colour")
+        .from("vitrine_flavours_resolved")
+        .select("*")
         .eq("salon_place_id", placeId)
         .eq("is_visible", true)
-        .order("created_at", { ascending: true });
+        .order("input_name", { ascending: true });
 
       const [{ data: logsData }, { data: profileRow }, { data: vitrineData }] =
         await Promise.all([
@@ -222,7 +226,7 @@ export function SalonPageClient({ placeId }: Props) {
         setAllLogs([]);
         setSalonProfile(profile);
         setFollowingAuthorIds(new Set());
-        setVitrineOnDisplay((vitrineData ?? []) as VitrinePublicRow[]);
+        setVitrineResolvedRows((vitrineData ?? []) as SalonVitrineResolvedRow[]);
         setLoading(false);
         return;
       }
@@ -265,7 +269,7 @@ export function SalonPageClient({ placeId }: Props) {
       setSalonProfile(profile);
       setFollowingAuthorIds(following);
       setEmptyPlaceName(null);
-      setVitrineOnDisplay((vitrineData ?? []) as VitrinePublicRow[]);
+      setVitrineResolvedRows((vitrineData ?? []) as SalonVitrineResolvedRow[]);
       setLoading(false);
     }
 
@@ -274,6 +278,28 @@ export function SalonPageClient({ placeId }: Props) {
       cancelled = true;
     };
   }, [placeId]);
+
+  const handleVitrineTubClick = useCallback(
+    (vitrineFlavourId: string) => {
+      const vf = vitrineResolvedRows.find((v) => v.vitrine_flavour_id === vitrineFlavourId);
+      if (!vf) return;
+      const salonNameForUrl =
+        emptyPlaceName?.trim() ||
+        salonProfile?.salon_name?.trim() ||
+        allLogs[0]?.salon_name?.trim() ||
+        "Salon";
+      const q = new URLSearchParams({
+        place_id: placeId,
+        salon_name: salonNameForUrl,
+        flavour: vf.input_name,
+      });
+      router.push(`/log/new?${q.toString()}`);
+    },
+    [placeId, router, vitrineResolvedRows, emptyPlaceName, salonProfile, allLogs],
+  );
+
+  const vitrineFlavours = vitrineResolvedRows.map(mapVitrineResolvedToFlavour);
+  const vitrineSectionEnabled = salonProfile?.vitrine_enabled !== false;
 
   if (loading) {
     return <SalonPageSkeleton />;
@@ -325,7 +351,18 @@ export function SalonPageClient({ placeId }: Props) {
           </h1>
         </div>
 
-        <VitrineDisplaySection rows={vitrineOnDisplay} />
+        {vitrineSectionEnabled ? (
+          <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+            <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+              On display today
+            </h2>
+            <Vitrine
+              flavours={vitrineFlavours}
+              onTabClick={handleVitrineTubClick}
+              seed={placeId}
+            />
+          </div>
+        ) : null}
 
         <div className="rounded-3xl bg-white px-6 py-8 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
           <p className="mb-1 text-3xl">🍦</p>
@@ -458,7 +495,18 @@ export function SalonPageClient({ placeId }: Props) {
         )}
       </div>
 
-      <VitrineDisplaySection rows={vitrineOnDisplay} />
+      {vitrineSectionEnabled ? (
+        <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+            On display today
+          </h2>
+          <Vitrine
+            flavours={vitrineFlavours}
+            onTabClick={handleVitrineTubClick}
+            seed={placeId}
+          />
+        </div>
+      ) : null}
 
       <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">

@@ -3,6 +3,10 @@
 import { AppShell } from "@/app/components/AppShell";
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
 import { createClient } from "@/src/lib/supabase/client";
+import {
+  applyResolvedFlavoursToLogRow,
+  LOG_FLAVOURS_RESOLVED_SELECT,
+} from "@/src/lib/log-flavours-resolved";
 import { notFound, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
@@ -18,10 +22,7 @@ const LOG_SELECT = `
   weather_temp, weather_condition, weather_uv_index, visibility,
   photo_visibility, price_hidden_from_others,
   profiles ( id, username, avatar_url ),
-  log_flavours (
-    id, flavour_name, rating, tags,
-    rating_texture, rating_originality, rating_intensity, rating_presentation
-  )
+${LOG_FLAVOURS_RESOLVED_SELECT}
 `;
 
 function LogDetailSkeleton() {
@@ -119,7 +120,9 @@ export function LogDetailClient({ logId }: Props) {
         return;
       }
 
-      const raw = logData as unknown as IceCreamLog;
+      const raw = applyResolvedFlavoursToLogRow(
+        logData as unknown as Record<string, unknown>,
+      ) as unknown as IceCreamLog;
 
       if (raw.visibility === "private" && raw.user_id !== user?.id) {
         setPhase("notfound");

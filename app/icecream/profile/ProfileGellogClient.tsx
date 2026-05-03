@@ -112,6 +112,8 @@ type ProfileGellogClientProps = {
   hasIceCreamPlus: boolean;
   stats: ProfileSheetStats;
   rankedFlavours: ProfileSheetRankedFlavour[];
+  uncategorisedLogCount: number;
+  uncategorisedInputNames: string[];
   heatmapData: Record<string, HeatmapDayData>;
 };
 
@@ -122,6 +124,8 @@ export function ProfileGellogClient({
   hasIceCreamPlus,
   stats,
   rankedFlavours,
+  uncategorisedLogCount,
+  uncategorisedInputNames,
   heatmapData,
 }: ProfileGellogClientProps) {
   const [sheetView, setSheetView] = useState<ProfileSheetView | null>(null);
@@ -194,6 +198,8 @@ export function ProfileGellogClient({
         onClose={() => setSheetView(null)}
         stats={stats}
         rankedFlavours={rankedFlavours}
+        uncategorisedLogCount={uncategorisedLogCount}
+        uncategorisedInputNames={uncategorisedInputNames}
         heatmapData={heatmapData}
       />
     </>

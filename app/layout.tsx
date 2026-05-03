@@ -51,7 +51,7 @@ export default async function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider>
           {user ? <SplashWrapper /> : null}
-          <div className={user ? "min-h-screen pb-28" : "min-h-screen"}>
+          <div className={user ? "min-h-screen pb-28 lg:pb-0" : "min-h-screen"}>
             {children}
           </div>
           {user ? <BottomNav /> : null}
