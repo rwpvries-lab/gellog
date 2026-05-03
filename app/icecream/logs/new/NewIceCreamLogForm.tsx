@@ -10,9 +10,11 @@ import { LocationPermissionBanner } from "@/src/components/LocationPermissionBan
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
 import { Gelato } from "@/src/components/Gelato/Gelato";
 import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
+import { Vitrine } from "@/src/components/Gelato/variants/Vitrine";
 import { getFlavourColor } from "@/src/components/VesselIllustration";
 import { mapFlavourToSlug } from "@/src/lib/flavour-scoop";
 import { useFlavourTokens } from "@/src/lib/use-flavour-tokens";
+import { useSalonVitrine } from "@/src/lib/use-salon-vitrine";
 import { createClient } from "@/src/lib/supabase/client";
 import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
@@ -316,29 +318,6 @@ function LogCard({
   );
 }
 
-const VITRINE_FALLBACK_COLOUR = "#0D9488";
-
-type VitrineSuggestionRow = { id: string; name: string; colour: string | null };
-
-function vitrinePillColour(colour: string | null | undefined): string {
-  const c = colour?.trim();
-  return c ? c : VITRINE_FALLBACK_COLOUR;
-}
-
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <path
-        d="M20 6L9 17l-5-5"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function LogSectionHeading({
   children,
   hint,
@@ -416,8 +395,6 @@ export function NewIceCreamLogForm({
   const [visibility, setVisibility] = useState<Visibility>(defaultVisibility);
   const [photoVisibility, setPhotoVisibility] = useState<PhotoVisibility>("public");
   const [hidePriceFromOthers, setHidePriceFromOthers] = useState(false);
-  const [vitrineRows, setVitrineRows] = useState<VitrineSuggestionRow[]>([]);
-  const [vitrineLoading, setVitrineLoading] = useState(false);
   const [pendingNamedFlavour, setPendingNamedFlavour] = useState<string | null>(null);
 
   useEffect(() => {
@@ -442,6 +419,7 @@ export function NewIceCreamLogForm({
   );
   const primaryFlavour = selectedFlavours[0] ?? "";
   const { tokens: primaryTokens } = useFlavourTokens(primaryFlavour);
+  const { flavours: vitrineFlavours, enabled: vitrineEnabled } = useSalonVitrine(salonPlaceId);
 
   const flavourGlowColors = useMemo(() => {
     if (selectedFlavours.length === 0) return ["#F9A8D4"];
@@ -457,38 +435,6 @@ export function NewIceCreamLogForm({
       .join(", ");
     return glowLayers ? `${glowLayers}, var(--color-surface, white)` : "var(--color-surface, white)";
   }, [flavourGlowColors]);
-
-  useEffect(() => {
-    if (!salonPlaceId) {
-      setVitrineRows([]);
-      setVitrineLoading(false);
-      return;
-    }
-
-    let cancelled = false;
-    setVitrineLoading(true);
-    const supabase = createClient();
-
-    void supabase
-      .from("vitrine_flavours")
-      .select("id,name,colour")
-      .eq("salon_place_id", salonPlaceId)
-      .eq("is_visible", true)
-      .order("name", { ascending: true })
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        setVitrineLoading(false);
-        if (error) {
-          setVitrineRows([]);
-          return;
-        }
-        setVitrineRows((data ?? []) as VitrineSuggestionRow[]);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [salonPlaceId]);
 
   function openSalonMapPicker() {
     router.push(`/map?returnTo=${encodeURIComponent("/log")}`);
@@ -683,7 +629,7 @@ export function NewIceCreamLogForm({
     return flavours.some((f) => f.name.trim().toLowerCase() === trimmedLower);
   }
 
-  function applyFlavourNameToForm(rawName: string) {
+  function handleAddFlavourFromVitrine(rawName: string) {
     const trimmed = rawName.trim();
     if (!trimmed) return;
 
@@ -916,33 +862,30 @@ export function NewIceCreamLogForm({
         </p>
       </LogCard>
 
-      {!vitrineLoading && vitrineRows.length > 0 ? (
-        <LogCard>
-          <h2 className="text-base font-semibold tracking-tight text-[color:var(--color-text-primary)]">
+      {salonPlaceId && vitrineEnabled && vitrineFlavours.length > 0 ? (
+        <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+          <h3 className="mb-3 text-base font-semibold text-[color:var(--color-text-primary)]">
             Today&apos;s flavours at this salon
-          </h2>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {vitrineRows.map((row) => {
-              const bg = vitrinePillColour(row.colour);
-              const added = flavourNameInForm(row.name.trim().toLowerCase());
-              return (
-                <button
-                  key={row.id}
-                  type="button"
-                  onClick={() => applyFlavourNameToForm(row.name)}
-                  aria-pressed={added}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-white shadow-sm ring-1 ring-black/10 transition dark:ring-white/10 ${
-                    added ? "opacity-60" : "hover:brightness-110"
-                  }`}
-                  style={{ backgroundColor: bg }}
-                >
-                  {added ? <CheckIcon className="shrink-0 opacity-90" /> : null}
-                  {row.name}
-                </button>
-              );
-            })}
+          </h3>
+          <p className="mb-3 text-xs text-[color:var(--color-text-secondary)]">Tap a tub to add it to your log</p>
+          <div className="-mx-4 overflow-x-auto px-4 pb-2">
+            <Vitrine
+              flavours={vitrineFlavours.map((f) => ({
+                id: f.id,
+                displayName: f.displayName,
+                inputName: f.inputName,
+                tokens: f.tokens,
+              }))}
+              onTabClick={(tubId) => {
+                const tapped = vitrineFlavours.find((f) => f.id === tubId);
+                if (!tapped) return;
+                handleAddFlavourFromVitrine(tapped.inputName);
+              }}
+              selectedFlavourNames={selectedFlavours}
+              seed={salonPlaceId}
+            />
           </div>
-        </LogCard>
+        </div>
       ) : null}
 
       {sheetOpen ? (

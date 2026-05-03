@@ -6,6 +6,10 @@ import { FollowButton } from "./FollowButton";
 import { Icon } from "@/src/components/icons";
 import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { ProfileAvatar } from "./ProfileAvatar";
+import {
+  applyResolvedFlavoursToLogRow,
+  LOG_FLAVOURS_RESOLVED_SELECT,
+} from "@/src/lib/log-flavours-resolved";
 
 type Profile = {
   id: string;
@@ -37,16 +41,7 @@ const FEED_FIELDS = `
     username,
     avatar_url
   ),
-  log_flavours (
-    id,
-    flavour_name,
-    rating,
-    tags,
-    rating_texture,
-    rating_originality,
-    rating_intensity,
-    rating_presentation
-  )
+${LOG_FLAVOURS_RESOLVED_SELECT}
 `;
 
 export default async function UserProfilePage({
@@ -101,7 +96,9 @@ export default async function UserProfilePage({
       : Promise.resolve({ count: 0, data: null, error: null }),
   ]);
 
-  const logs = (logsData ?? []) as unknown as IceCreamLog[];
+  const logs = ((logsData ?? []) as unknown as Record<string, unknown>[]).map((row) =>
+    applyResolvedFlavoursToLogRow(row),
+  ) as unknown as IceCreamLog[];
   const isFollowing = (isFollowingCount ?? 0) > 0;
 
   const displayName =

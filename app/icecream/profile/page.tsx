@@ -12,6 +12,10 @@ import { ProfilePassportStrip } from "./ProfilePassportStrip";
 import type { ProfileSheetRankedFlavour } from "./ProfileSheet";
 import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
 import {
+  applyResolvedFlavoursToLogRow,
+  LOG_FLAVOURS_RESOLVED_SELECT,
+} from "@/src/lib/log-flavours-resolved";
+import {
   buildCanonicalFlavourRanking,
   type LogFlavoursResolvedRankingRow,
 } from "@/src/lib/profile-flavour-ranking";
@@ -30,6 +34,7 @@ type LogFlavour = {
   id: string;
   flavour_name: string;
   rating: number | null;
+  tags?: string[] | null;
   rating_texture: number | null;
   rating_originality: number | null;
   rating_intensity: number | null;
@@ -272,7 +277,7 @@ export default async function IceCreamProfilePage() {
       .from("ice_cream_logs")
       .select(
         `id, salon_name, salon_place_id, overall_rating, visited_at, price_paid, weather_condition,
-         log_flavours (id, flavour_name, rating, rating_texture, rating_originality, rating_intensity, rating_presentation)`,
+${LOG_FLAVOURS_RESOLVED_SELECT}`,
       )
       .eq("user_id", user.id),
     supabase
@@ -283,7 +288,7 @@ export default async function IceCreamProfilePage() {
          weather_temp, weather_condition, visibility, photo_visibility,
          price_hidden_from_others,
          profiles (id, username, avatar_url),
-         log_flavours (id, flavour_name, rating, tags, rating_texture, rating_originality, rating_intensity, rating_presentation)`,
+${LOG_FLAVOURS_RESOLVED_SELECT}`,
       )
       .eq("user_id", user.id)
       .order("visited_at", { ascending: false })
@@ -298,14 +303,18 @@ export default async function IceCreamProfilePage() {
       .eq("follower_id", user.id),
   ]);
 
-  const logs = (logsData ?? []) as IceCreamLog[];
+  const logs = ((logsData ?? []) as unknown as Record<string, unknown>[]).map((row) =>
+    applyResolvedFlavoursToLogRow(row),
+  ) as unknown as IceCreamLog[];
 
   if (logsError) {
     // eslint-disable-next-line no-console
     console.error("Failed to load user ice cream logs:", logsError);
   }
 
-  const feedLogs = (feedLogsData ?? []) as unknown as FeedIceCreamLog[];
+  const feedLogs = ((feedLogsData ?? []) as unknown as Record<string, unknown>[]).map((row) =>
+    applyResolvedFlavoursToLogRow(row),
+  ) as unknown as FeedIceCreamLog[];
 
   const {
     totalAllTime,
@@ -329,21 +338,38 @@ export default async function IceCreamProfilePage() {
   if (logIds.length > 0) {
     const { data: lfRows } = await supabase
       .from("log_flavours")
-      .select("log_id, flavour_name, rating")
+      .select(
+        "log_id, flavour_name, rating, base_token, drizzle_token, crumble_token, canonical_name_en, canonical_name_nl, canonical_name_it",
+      )
       .in("log_id", logIds);
 
-    const resolvedLike: LogFlavoursResolvedRankingRow[] = (lfRows ?? []).map((r) => ({
-      log_id: r.log_id as string,
-      flavour_id: null,
-      flavour_slug: null,
-      canonical_name_nl: null,
-      canonical_name_en: null,
-      base_token: null,
-      drizzle_token: null,
-      crumble_token: null,
-      rating: r.rating != null ? Number(r.rating) : null,
-      input_name: typeof r.flavour_name === "string" ? r.flavour_name : null,
-    }));
+    type LfRow = {
+      log_id: string;
+      flavour_name: string;
+      rating: number | null;
+      base_token?: string | null;
+      drizzle_token?: string | null;
+      crumble_token?: string | null;
+      canonical_name_en?: string | null;
+      canonical_name_nl?: string | null;
+      canonical_name_it?: string | null;
+    };
+
+    const resolvedLike: LogFlavoursResolvedRankingRow[] = (lfRows ?? []).map((r) => {
+      const row = r as LfRow;
+      return {
+        log_id: row.log_id,
+        flavour_id: null,
+        flavour_slug: null,
+        canonical_name_nl: row.canonical_name_nl ?? null,
+        canonical_name_en: row.canonical_name_en ?? null,
+        base_token: row.base_token ?? null,
+        drizzle_token: row.drizzle_token ?? null,
+        crumble_token: row.crumble_token ?? null,
+        rating: row.rating != null ? Number(row.rating) : null,
+        input_name: typeof row.flavour_name === "string" ? row.flavour_name : null,
+      };
+    });
 
     const { ranking, uncategorisedLogCount: uncLogs, uncategorisedInputNames: uncNames } =
       buildCanonicalFlavourRanking(resolvedLike);

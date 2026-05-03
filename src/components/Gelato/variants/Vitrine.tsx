@@ -8,6 +8,8 @@ import { getCrumbleFill, makeCrumbleDots } from "./shared";
 export type VitrineFlavour = {
   id: string;
   displayName: string;
+  /** Optional; used with `selectedFlavourNames` for case-insensitive match against form values. */
+  inputName?: string;
   tokens: GelatoTokens;
 };
 
@@ -16,6 +18,8 @@ export type VitrineProps = {
   /** @deprecated Ignored; layout uses column-flow grid. Kept for backwards compatibility. */
   columns?: number;
   onTabClick?: (id: string) => void;
+  /** When set, tubs matching these names (vs `displayName` / `inputName`, case-insensitive) show selected styling. */
+  selectedFlavourNames?: string[];
   seed?: string;
   className?: string;
 };
@@ -56,6 +60,14 @@ function resolveFlavours(props: VitrineProps | LegacyVitrineProps): VitrineFlavo
       tokens: props.tokens,
     },
   ];
+}
+
+function isTubSelected(flavour: VitrineFlavour, selectedFlavourNames: string[] | undefined): boolean {
+  if (!selectedFlavourNames?.length) return false;
+  const lowered = selectedFlavourNames.map((n) => n.trim().toLowerCase()).filter(Boolean);
+  const dn = flavour.displayName.trim().toLowerCase();
+  const inn = flavour.inputName?.trim().toLowerCase();
+  return lowered.some((n) => n === dn || (inn != null && inn.length > 0 && n === inn));
 }
 
 function VitrineTubSvg({
@@ -163,6 +175,7 @@ const emptyCaptionStyle: CSSProperties = {
 export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
   const flavours = resolveFlavours(props);
   const onTabClick = isLegacyProps(props) ? undefined : props.onTabClick;
+  const selectedFlavourNames = isLegacyProps(props) ? undefined : props.selectedFlavourNames;
   const seed = props.seed;
   const className = props.className;
   const legacyMaxWidth = isLegacyProps(props) ? props.size : undefined;
@@ -212,8 +225,10 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
           ...(legacyMaxWidth !== undefined ? { maxWidth: legacyMaxWidth, width: "100%" } : null),
         };
 
-        const body = (
-          <>
+        const isSelected = isTubSelected(flavour, selectedFlavourNames);
+
+        const tubVisual = (
+          <div style={{ position: "relative", width: "100%" }}>
             <VitrineTubSvg
               baseHex={baseHex}
               drizzleStroke={drizzleMeta.stroke}
@@ -222,13 +237,56 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
               crumbleDots={crumbleDots}
               crumbleToken={flavour.tokens.crumble}
             />
+            {isSelected ? (
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  right: 6,
+                  top: 6,
+                  display: "flex",
+                  height: 22,
+                  width: 22,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  borderRadius: 9999,
+                  background: "var(--color-orange, #F97316)",
+                  color: "var(--color-on-brand, #fff)",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                  pointerEvents: "none",
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M20 6L9 17l-5-5"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+            ) : null}
+          </div>
+        );
+
+        const body = (
+          <>
+            {tubVisual}
             <div style={labelStyle}>{flavour.displayName}</div>
           </>
         );
 
+        const selectedRing: CSSProperties = isSelected
+          ? {
+              boxShadow: "0 0 0 2px var(--color-orange, #F97316)",
+              borderRadius: 12,
+            }
+          : {};
+
         if (!onTabClick) {
           return (
-            <div key={flavour.id} style={cellStyle}>
+            <div key={flavour.id} style={{ ...cellStyle, ...selectedRing }}>
               {body}
             </div>
           );
@@ -239,6 +297,7 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
             key={flavour.id}
             type="button"
             aria-label={flavour.displayName}
+            aria-pressed={isSelected}
             onClick={() => onTabClick(flavour.id)}
             onMouseEnter={(event) => {
               event.currentTarget.style.transform = "scale(1.02)";
@@ -256,7 +315,8 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
               all: "unset",
               cursor: "pointer",
               ...cellStyle,
-              transition: "transform 150ms",
+              ...selectedRing,
+              transition: "transform 150ms, box-shadow 150ms",
             }}
           >
             {body}

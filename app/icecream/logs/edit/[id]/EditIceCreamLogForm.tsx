@@ -10,9 +10,11 @@ import { LocationPermissionBanner } from "@/src/components/LocationPermissionBan
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
 import { Gelato } from "@/src/components/Gelato/Gelato";
 import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
+import { Vitrine } from "@/src/components/Gelato/variants/Vitrine";
 import { getFlavourColor } from "@/src/components/VesselIllustration";
 import { mapFlavourToSlug } from "@/src/lib/flavour-scoop";
 import { useFlavourTokens } from "@/src/lib/use-flavour-tokens";
+import { useSalonVitrine } from "@/src/lib/use-salon-vitrine";
 import { createClient } from "@/src/lib/supabase/client";
 import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
 import { userFacingSaveError } from "@/src/lib/userFacingError";
@@ -256,6 +258,10 @@ function ScrollDrum({
   );
 }
 
+function nextFlavourId(existing: { id: number }[]): number {
+  return Math.max(0, ...existing.map((f) => f.id)) + 1;
+}
+
 export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   const router = useRouter();
 
@@ -306,6 +312,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   const [weatherLocationBanner, setWeatherLocationBanner] = useState<string | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [showFlavourPrompt, setShowFlavourPrompt] = useState(false);
+  const [pendingNamedFlavour, setPendingNamedFlavour] = useState<string | null>(null);
   const [priceWarning, setPriceWarning] = useState<number | null>(null);
   const [visibility, setVisibility] = useState<Visibility>(log.visibility ?? "public");
   const [photoVisibility, setPhotoVisibility] = useState<PhotoVisibility>(
@@ -326,6 +333,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   );
   const primaryFlavour = selectedFlavours[0] ?? "";
   const { tokens: primaryTokens } = useFlavourTokens(primaryFlavour);
+  const { flavours: vitrineFlavours, enabled: vitrineEnabled } = useSalonVitrine(salonPlaceId);
 
   const flavourGlowColors = useMemo(() => {
     if (selectedFlavours.length === 0) return ["#F9A8D4"];
@@ -368,12 +376,62 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   function addFlavour() {
     setFlavours((prev) => [
       ...prev,
-      { id: prev.length + 1, name: "", rating: null, tags: [], ratingTexture: null, ratingOriginality: null, ratingIntensity: null, ratingPresentation: null },
+      {
+        id: nextFlavourId(prev),
+        name: "",
+        rating: null,
+        tags: [],
+        ratingTexture: null,
+        ratingOriginality: null,
+        ratingIntensity: null,
+        ratingPresentation: null,
+      },
+    ]);
+  }
+
+  function flavourNameInForm(trimmedLower: string): boolean {
+    return flavours.some((f) => f.name.trim().toLowerCase() === trimmedLower);
+  }
+
+  function handleAddFlavourFromVitrine(rawName: string) {
+    const trimmed = rawName.trim();
+    if (!trimmed) return;
+
+    const lower = trimmed.toLowerCase();
+    if (flavourNameInForm(lower)) return;
+
+    const emptyIdx = flavours.findIndex((f) => !f.name.trim());
+    if (emptyIdx >= 0) {
+      setFlavours((prev) =>
+        prev.map((item, i) => (i === emptyIdx ? { ...item, name: trimmed } : item)),
+      );
+      return;
+    }
+
+    if (flavours.length >= 3) {
+      setPendingNamedFlavour(trimmed);
+      setShowFlavourPrompt(true);
+      return;
+    }
+
+    setFlavours((prev) => [
+      ...prev,
+      {
+        id: nextFlavourId(prev),
+        name: trimmed,
+        rating: null,
+        tags: [],
+        ratingTexture: null,
+        ratingOriginality: null,
+        ratingIntensity: null,
+        ratingPresentation: null,
+      },
     ]);
   }
 
   function handleAddFlavour() {
     if (flavours.length >= 3) {
+      setPendingNamedFlavour(null);
       setShowFlavourPrompt(true);
       return;
     }
@@ -548,6 +606,32 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           <SalonInput value={salonName} onPlaceSelect={handlePlaceSelect} userId={userId} />
         </div>
 
+        {salonPlaceId && vitrineEnabled && vitrineFlavours.length > 0 ? (
+          <div className="rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface)] p-4">
+            <h3 className="mb-3 text-base font-semibold text-[color:var(--color-text-primary)]">
+              Today&apos;s flavours at this salon
+            </h3>
+            <p className="mb-3 text-xs text-[color:var(--color-text-secondary)]">Tap a tub to add it to your log</p>
+            <div className="-mx-4 overflow-x-auto px-4 pb-2">
+              <Vitrine
+                flavours={vitrineFlavours.map((f) => ({
+                  id: f.id,
+                  displayName: f.displayName,
+                  inputName: f.inputName,
+                  tokens: f.tokens,
+                }))}
+                onTabClick={(tubId) => {
+                  const tapped = vitrineFlavours.find((fl) => fl.id === tubId);
+                  if (!tapped) return;
+                  handleAddFlavourFromVitrine(tapped.inputName);
+                }}
+                selectedFlavourNames={selectedFlavours}
+                seed={salonPlaceId}
+              />
+            </div>
+          </div>
+        ) : null}
+
         {/* Date/time */}
         <button
           type="button"
@@ -662,14 +746,38 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
-                  onClick={() => { addFlavour(); setShowFlavourPrompt(false); }}
+                  onClick={() => {
+                    if (pendingNamedFlavour !== null) {
+                      const name = pendingNamedFlavour;
+                      setPendingNamedFlavour(null);
+                      setFlavours((prev) => [
+                        ...prev,
+                        {
+                          id: nextFlavourId(prev),
+                          name,
+                          rating: null,
+                          tags: [],
+                          ratingTexture: null,
+                          ratingOriginality: null,
+                          ratingIntensity: null,
+                          ratingPresentation: null,
+                        },
+                      ]);
+                    } else {
+                      addFlavour();
+                    }
+                    setShowFlavourPrompt(false);
+                  }}
                   className="rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-orange-700"
                 >
                   Yes, add it
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowFlavourPrompt(false)}
+                  onClick={() => {
+                    setPendingNamedFlavour(null);
+                    setShowFlavourPrompt(false);
+                  }}
                   className="rounded-full bg-zinc-200 px-3 py-1 text-xs font-medium text-zinc-700 transition hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-600"
                 >
                   Cancel

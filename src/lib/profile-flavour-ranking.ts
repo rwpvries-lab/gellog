@@ -60,6 +60,10 @@ function rankingFromResolvedGroups(rows: LogFlavoursResolvedRankingRow[]): {
 
   for (const r of rows) {
     if (r.flavour_id == null) continue;
+    if (r.base_token == null) {
+      uncategorisedLogIds.add(r.log_id);
+      continue;
+    }
     const id = r.flavour_id;
     let g = groups.get(id);
     if (!g) {
@@ -76,6 +80,16 @@ function rankingFromResolvedGroups(rows: LogFlavoursResolvedRankingRow[]): {
         count: 0,
       };
       groups.set(id, g);
+    } else if (!g.base_token && r.base_token) {
+      g.base_token = r.base_token;
+      g.drizzle_token = r.drizzle_token ?? g.drizzle_token;
+      g.crumble_token = r.crumble_token ?? g.crumble_token;
+      if (!g.canonical_name_nl?.trim() && r.canonical_name_nl?.trim()) {
+        g.canonical_name_nl = r.canonical_name_nl;
+      }
+      if (!g.canonical_name_en?.trim() && r.canonical_name_en?.trim()) {
+        g.canonical_name_en = r.canonical_name_en;
+      }
     }
     g.count += 1;
     if (r.rating != null && Number.isFinite(r.rating)) {
@@ -91,7 +105,8 @@ function rankingFromResolvedGroups(rows: LogFlavoursResolvedRankingRow[]): {
     return nameA.localeCompare(nameB);
   });
 
-  const top = sorted.slice(0, 10);
+  const withTokens = sorted.filter((g) => g.base_token != null);
+  const top = withTokens.slice(0, 10);
 
   const ranking: CanonicalFlavourRankingRow[] = top.map((g, i) => ({
     rank: i + 1,
@@ -126,22 +141,38 @@ function rankingFromLegacyNameGroups(rows: LogFlavoursResolvedRankingRow[]): {
       uncategorisedLogIds.add(r.log_id);
       continue;
     }
+    if (r.base_token == null) {
+      uncategorisedLogIds.add(r.log_id);
+      continue;
+    }
     const key = name.toLowerCase();
     let g = groups.get(key);
     if (!g) {
       g = {
         flavour_id: `legacy:${key}`,
         flavour_slug: null,
-        canonical_name_nl: name,
-        canonical_name_en: null,
-        base_token: null,
-        drizzle_token: null,
-        crumble_token: null,
+        canonical_name_nl: r.canonical_name_nl?.trim() || name,
+        canonical_name_en: r.canonical_name_en?.trim() || null,
+        base_token: r.base_token,
+        drizzle_token: r.drizzle_token,
+        crumble_token: r.crumble_token,
         ratingSum: 0,
         ratingCount: 0,
         count: 0,
       };
       groups.set(key, g);
+    } else {
+      if (!g.base_token && r.base_token) {
+        g.base_token = r.base_token;
+        g.drizzle_token = r.drizzle_token ?? g.drizzle_token;
+        g.crumble_token = r.crumble_token ?? g.crumble_token;
+      }
+      if (!g.canonical_name_nl?.trim() && r.canonical_name_nl?.trim()) {
+        g.canonical_name_nl = r.canonical_name_nl;
+      }
+      if (!g.canonical_name_en?.trim() && r.canonical_name_en?.trim()) {
+        g.canonical_name_en = r.canonical_name_en;
+      }
     }
     g.count += 1;
     if (r.rating != null && Number.isFinite(r.rating)) {
@@ -157,12 +188,13 @@ function rankingFromLegacyNameGroups(rows: LogFlavoursResolvedRankingRow[]): {
     return nameA.localeCompare(nameB);
   });
 
-  const top = sorted.slice(0, 10);
+  const withTokens = sorted.filter((g) => g.base_token != null);
+  const top = withTokens.slice(0, 10);
 
   const ranking: CanonicalFlavourRankingRow[] = top.map((g, i) => ({
     rank: i + 1,
     flavourId: g.flavour_id,
-    displayName: g.canonical_name_nl?.trim() || "Flavour",
+    displayName: g.canonical_name_nl?.trim() || g.canonical_name_en?.trim() || "Flavour",
     logCount: g.count,
     avgRating: g.ratingCount > 0 ? g.ratingSum / g.ratingCount : null,
     baseToken: g.base_token,

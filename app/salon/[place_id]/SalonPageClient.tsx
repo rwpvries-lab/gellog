@@ -5,6 +5,10 @@ import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
 import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { Vitrine, type VitrineFlavour } from "@/src/components/Gelato/variants/Vitrine";
 import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
+import {
+  applyResolvedFlavoursToLogRow,
+  LOG_FLAVOURS_RESOLVED_SELECT,
+} from "@/src/lib/log-flavours-resolved";
 import { SalonShareButton } from "./SalonShareButton";
 import Image from "next/image";
 import Link from "next/link";
@@ -95,16 +99,7 @@ const FEED_FIELDS = `
     username,
     avatar_url
   ),
-  log_flavours (
-    id,
-    flavour_name,
-    rating,
-    tags,
-    rating_texture,
-    rating_originality,
-    rating_intensity,
-    rating_presentation
-  )
+${LOG_FLAVOURS_RESOLVED_SELECT}
 `;
 
 function SalonPageSkeleton() {
@@ -218,7 +213,9 @@ export function SalonPageClient({ placeId }: Props) {
 
       if (cancelled) return;
 
-      const logs = (logsData ?? []) as unknown as IceCreamLog[];
+      const logs = ((logsData ?? []) as unknown as Record<string, unknown>[]).map((row) =>
+        applyResolvedFlavoursToLogRow(row),
+      ) as unknown as IceCreamLog[];
       let profile = profileRow ?? null;
 
       if (logs.length === 0) {
