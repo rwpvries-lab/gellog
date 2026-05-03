@@ -1,0 +1,10 @@
+When working with Supabase in this project (Gellog, project_id: dsnfqdpwvaxeghliytyi):
+
+PREFER the Supabase MCP server tools over the supabase CLI.
+- For schema changes: use the MCP's apply_migration tool, NOT `npx supabase db push`
+- For data queries: use the MCP's execute_sql tool, NOT psql or local SQL files
+- For schema inspection: use the MCP's list_tables tool with verbose=true
+
+The CLI is not configured in this environment and will fail with "access token not provided" errors. The MCP works without any local credentials and applies migrations directly to the hosted project.
+
+If you need to know the actual schema before writing code, ALWAYS call list_tables first — do not assume column names from documentation or memory.

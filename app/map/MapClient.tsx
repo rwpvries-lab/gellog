@@ -48,7 +48,7 @@ function makePinSvg(
       : `fill="${color}"`;
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${h}" viewBox="0 0 36 44">
     <path ${pathAttrs} d="M18 0C8.06 0 0 8.06 0 18c0 13.97 18 26 18 26S36 31.97 36 18 27.94 0 18 0z"/>
-       <text x="18" y="25" text-anchor="middle" font-size="18" font-family="Arial,sans-serif">🍦</text>
+    <circle cx="18" cy="18" r="7" fill="#FEFBDF" stroke="rgba(255,255,255,0.85)" stroke-width="1.2"/>
   </svg>`;
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }

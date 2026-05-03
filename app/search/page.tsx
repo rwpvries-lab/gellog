@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { FollowButton } from "@/app/profile/[username]/FollowButton";
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { autocompletePassesSalonFilter } from "@/src/lib/looksLikeIceCreamSalon";
 
 const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -51,7 +52,9 @@ function SalonSearchLogo({ logoUrl, salonName }: { logoUrl: string; salonName: s
       onError={() => setImgError(true)}
     />
   ) : (
-    <span className="flex h-full w-full items-center justify-center text-lg">🍦</span>
+    <span className="flex h-full w-full items-center justify-center">
+      <PlaceholderScoop size={28} seed={`salon-logo-${salonName}`} />
+    </span>
   );
 }
 
@@ -387,8 +390,8 @@ export default function SearchPage() {
                     {salon.logo_url && salon.is_claimed ? (
                       <SalonSearchLogo logoUrl={salon.logo_url} salonName={salon.salon_name} />
                     ) : (
-                      <span className="flex h-full w-full items-center justify-center text-lg">
-                        🍦
+                      <span className="flex h-full w-full items-center justify-center">
+                        <PlaceholderScoop size={28} seed={`search-salon-${salon.place_id}`} />
                       </span>
                     )}
                   </div>
@@ -419,7 +422,7 @@ export default function SearchPage() {
                   className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface)] p-3 shadow-sm ring-1 ring-[color:var(--color-border)]"
                 >
                   <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-[color:var(--color-surface-alt)]">
-                    <span className="text-lg">🍦</span>
+                    <PlaceholderScoop size={28} seed={`search-place-${place.place_id}`} />
                   </div>
 
                   <div className="flex min-w-0 flex-1 flex-col">

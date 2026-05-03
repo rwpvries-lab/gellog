@@ -1,6 +1,7 @@
 'use client';
 
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { createClient } from "@/src/lib/supabase/client";
 import Link from "next/link";
 import { useState } from "react";
@@ -90,7 +91,9 @@ export function ProfileFeedClient({
   if (logs.length === 0) {
     return (
       <div className="mt-2 flex flex-col items-center justify-center rounded-3xl bg-[color:var(--color-surface)] px-8 py-12 text-center shadow-sm ring-1 ring-[color:var(--color-border)]">
-        <span className="mb-4 text-5xl">🍦</span>
+        <div className="mb-4 flex justify-center" aria-hidden>
+          <PlaceholderScoop size={56} seed="profile-feed-empty" />
+        </div>
         <p className="text-sm font-semibold text-[color:var(--color-text-primary)]">
           No logs yet
         </p>

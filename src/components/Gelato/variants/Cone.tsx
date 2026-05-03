@@ -90,10 +90,20 @@ export function Cone({ tokens, size, seed, className }: ConeProps) {
               rx={CONE_DRIP_RX}
               ry={CONE_DRIP_RY}
               fill={base.hex}
+              stroke="var(--gelato-edge, transparent)"
+              strokeWidth={6}
             />
           ))}
 
-          <ellipse cx={0} cy={0} rx={CONE_SCOOP_RX} ry={CONE_SCOOP_RY} fill={base.hex} />
+          <ellipse
+            cx={0}
+            cy={0}
+            rx={CONE_SCOOP_RX}
+            ry={CONE_SCOOP_RY}
+            fill={base.hex}
+            stroke="var(--gelato-edge, transparent)"
+            strokeWidth={8}
+          />
 
           {tokens.drizzle !== "none"
             ? DRIZZLE_PATHS_RELATIVE.map((d) => (

@@ -8,6 +8,7 @@ import {
 } from "@/src/components/PhotoVisibilityPicker";
 import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
 import {
   getFlavourScoopUrl,
@@ -661,8 +662,10 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
 
           {showFlavourPrompt ? (
             <div className="rounded-2xl bg-zinc-50 px-3 py-2.5 ring-1 ring-zinc-200 dark:bg-zinc-800/60 dark:ring-zinc-700">
-              <p className="text-sm italic text-zinc-500 dark:text-zinc-400">
-                That&apos;s already quite a lot of gelato 🍦 — are you sure you want to add another flavour?
+              <p className="flex flex-wrap items-center gap-1 text-sm italic text-zinc-500 dark:text-zinc-400">
+                <span>That&apos;s already quite a lot of gelato</span>
+                <PlaceholderScoop size={20} seed="edit-log-flavour-cap" className="shrink-0" />
+                <span>— are you sure you want to add another flavour?</span>
               </p>
               <div className="mt-2 flex gap-2">
                 <button

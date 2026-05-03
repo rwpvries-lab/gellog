@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop"
 import { GellogLogo } from "./GellogLogo"
 
 export interface SplashScreenProps {
@@ -78,13 +79,13 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
         <span className="text-[#0D9488]">Logger</span>
       </div>
 
-      {/* Ice Cream Emoji */}
       <div
-        className={`mt-4 text-3xl transition-opacity duration-300 ${
+        className={`mt-4 flex justify-center transition-opacity duration-300 ${
           stage >= 4 ? "opacity-100" : "opacity-0"
         }`}
+        aria-hidden
       >
-        🍦
+        <PlaceholderScoop size={48} seed="splash" />
       </div>
     </div>
   )

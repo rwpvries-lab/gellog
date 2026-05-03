@@ -3,7 +3,6 @@
 import { RatingStarsDisplay } from "@/app/components/RatingStars";
 import { Gelato } from "@/src/components/Gelato/Gelato";
 import { Toast, useToast, copyToClipboard } from "@/src/components/Toast";
-import { mapFlavourToSlug } from "@/src/lib/flavour-scoop";
 import type { LogFlavour } from "@/src/lib/log-flavours-resolved";
 import type { BaseToken, CrumbleToken, DrizzleToken, GelatoTokens } from "@/src/lib/gelato-tokens";
 import { createClient } from "@/src/lib/supabase/client";
@@ -154,7 +153,6 @@ function formatFeedWeatherLine(log: IceCreamLog): string | null {
 }
 
 const FEED_COLLAPSED_FLAVOUR_CAP = 3;
-const STRAWBERRY_SCOOP_URL = "/assets/scoops/strawberry.svg";
 
 type AdvancedRating = { label: string; value: number };
 
@@ -170,48 +168,24 @@ function getAdvancedRatings(flavour: LogFlavour): AdvancedRating[] {
     .map(([label, value]) => ({ label, value }));
 }
 
-function getPrimaryScoopUrl(log: IceCreamLog): string {
-  const first = log.log_flavours[0];
-  const firstFlavourName =
-    first?.flavour_name?.trim() || first?.input_name?.trim() || "strawberry";
-  const slug = mapFlavourToSlug(firstFlavourName);
-  return `/assets/scoops/${slug}.svg`;
-}
-
-function ScoopThumbnail({
-  src,
-  flavourName,
-  onError,
+/** Compact scoops beside salon title (feed + default card); hidden on log detail (hero handles visuals). */
+function SalonInlineFlavourScoops({
+  flavours,
+  isDetailPage,
 }: {
-  src: string;
-  flavourName: string;
-  onError: () => void;
+  flavours: LogFlavour[];
+  isDetailPage: boolean;
 }) {
-  return (
-    <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={`${flavourName} scoop`}
-        className="h-8 w-8 object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.18)]"
-        onError={onError}
-      />
-    </span>
-  );
-}
-
-function FeedFlavourGelatosRow({ log }: { log: IceCreamLog }) {
-  const flavours = log.log_flavours;
-  if (flavours.length === 0) return null;
+  if (isDetailPage || flavours.length === 0) return null;
 
   if (flavours.length === 1) {
     const f = flavours[0];
     return (
-      <span className="relative inline-flex shrink-0">
+      <span className="ml-1.5 inline-flex shrink-0 align-middle">
         <Gelato
           variant="scoop"
           tokens={gelatoTokensFromLogFlavour(f)}
-          size={56}
+          size={48}
           seed={f.id}
           className="flex shrink-0"
         />
@@ -223,31 +197,33 @@ function FeedFlavourGelatosRow({ log }: { log: IceCreamLog }) {
   const extra = flavours.length - 3;
 
   return (
-    <div className="flex shrink-0 items-center">
-      {visible.map((f, idx) => (
-        <span
-          key={f.id}
-          className="relative inline-flex shrink-0"
-          style={{
-            marginLeft: idx === 0 ? 0 : -8,
-            zIndex: idx + 1,
-          }}
-        >
-          <Gelato
-            variant="scoop"
-            tokens={gelatoTokensFromLogFlavour(f)}
-            size={48}
-            seed={f.id}
-            className="flex shrink-0"
-          />
-        </span>
-      ))}
+    <span className="ml-1.5 inline-flex shrink-0 items-center align-middle">
+      <span className="flex shrink-0 items-center">
+        {visible.map((f, idx) => (
+          <span
+            key={f.id}
+            className="relative inline-flex shrink-0"
+            style={{
+              marginLeft: idx === 0 ? 0 : -10,
+              zIndex: idx + 1,
+            }}
+          >
+            <Gelato
+              variant="scoop"
+              tokens={gelatoTokensFromLogFlavour(f)}
+              size={32}
+              seed={f.id}
+              className="flex shrink-0"
+            />
+          </span>
+        ))}
+      </span>
       {extra > 0 ? (
         <span className="z-[4] ml-1 shrink-0 text-[11px] font-semibold tabular-nums text-[color:var(--color-text-secondary)]">
           +{extra}
         </span>
       ) : null}
-    </div>
+    </span>
   );
 }
 
@@ -435,7 +411,6 @@ export function FeedCard({
   const [likeLoading, setLikeLoading] = useState(false);
   const [avatarErrorLogId, setAvatarErrorLogId] = useState<string | null>(null);
   const [photoErrorLogId, setPhotoErrorLogId] = useState<string | null>(null);
-  const [scoopErrorLogId, setScoopErrorLogId] = useState<string | null>(null);
 
   const { toast, showToast, dismissToast } = useToast();
 
@@ -510,14 +485,8 @@ export function FeedCard({
   const weather = formatWeather(log);
   const feedWeatherLine = formatFeedWeatherLine(log);
   const fullDate = formatFullDate(log.visited_at);
-  const firstFlavour = log.log_flavours[0];
-  const primaryFlavourName = firstFlavour ? getFlavourDisplayLabel(firstFlavour) : "Strawberry";
   const avatarImgError = avatarErrorLogId === log.id;
   const photoImgError = photoErrorLogId === log.id;
-  const scoopThumbSrc =
-    scoopErrorLogId === log.id
-      ? STRAWBERRY_SCOOP_URL
-      : getPrimaryScoopUrl(log);
 
   const isFeedLayout = layout === "feed" && !isDetailPage;
 
@@ -593,18 +562,19 @@ export function FeedCard({
             ) : null}
             <div className="space-y-3 px-4 pb-3 pt-4">
               <div>
-                <h2 className="text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--color-text-primary)]">
+                <h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--color-text-primary)]">
                   {log.salon_place_id ? (
                     <Link
                       href={`/salon/${log.salon_place_id}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="text-[color:var(--color-text-primary)] decoration-[color:color-mix(in_srgb,var(--color-teal)_55%,var(--color-border))] decoration-2 underline-offset-4 transition-colors hover:text-[color:var(--color-teal)]"
+                      className="min-w-0 text-[color:var(--color-text-primary)] decoration-[color:color-mix(in_srgb,var(--color-teal)_55%,var(--color-border))] decoration-2 underline-offset-4 transition-colors hover:text-[color:var(--color-teal)]"
                     >
                       {log.salon_name}
                     </Link>
                   ) : (
-                    log.salon_name
+                    <span className="min-w-0">{log.salon_name}</span>
                   )}
+                  <SalonInlineFlavourScoops flavours={log.log_flavours} isDetailPage={isDetailPage} />
                 </h2>
                 {log.salon_city?.trim() ? (
                   <p className="mt-0.5 text-sm text-[color:var(--color-text-secondary)]">
@@ -649,7 +619,6 @@ export function FeedCard({
 
               <div className="flex items-center justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
-                  {log.log_flavours.length > 0 ? <FeedFlavourGelatosRow log={log} /> : null}
                   <RatingStarsDisplay value={log.overall_rating} size="lg" />
                 </div>
                 {canSeePrice && pricePaid != null ? (
@@ -791,29 +760,21 @@ export function FeedCard({
             ) : null}
           </div>
 
-          {/* Salon name + vessel + overall rating */}
+          {/* Salon name + inline flavour scoops + overall rating */}
           <div className="flex items-start justify-between gap-4">
-            <h2 className="text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--color-text-primary)]">
+            <h2 className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--color-text-primary)]">
               {log.salon_place_id ? (
                 <Link
                   href={`/salon/${log.salon_place_id}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex max-w-full items-center gap-1 rounded-full bg-[color:var(--color-teal-bg)] px-3 py-1 text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_40%,var(--color-border))] transition hover:brightness-95 dark:hover:brightness-110"
+                  className="inline-flex max-w-full shrink-0 items-center gap-1 rounded-full bg-[color:var(--color-teal-bg)] px-3 py-1 text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_40%,var(--color-border))] transition hover:brightness-95 dark:hover:brightness-110"
                 >
                   {log.salon_name}
                 </Link>
               ) : (
-                log.salon_name
+                <span className="min-w-0 shrink-0">{log.salon_name}</span>
               )}
-              {log.vessel && !isDetailPage ? (
-                <span className="ml-1.5 inline-flex align-middle">
-                  <ScoopThumbnail
-                    src={scoopThumbSrc}
-                    flavourName={primaryFlavourName}
-                    onError={() => setScoopErrorLogId(log.id)}
-                  />
-                </span>
-              ) : null}
+              <SalonInlineFlavourScoops flavours={log.log_flavours} isDetailPage={isDetailPage} />
             </h2>
             <div className="flex shrink-0 flex-col items-end gap-0.5">
               <RatingStarsDisplay value={log.overall_rating} size="lg" />
@@ -867,8 +828,15 @@ export function FeedCard({
                   {log.log_flavours.map((flavour) => (
                     <span
                       key={flavour.id}
-                      className="inline-flex items-center rounded-full bg-[color:var(--color-surface-alt)] px-3 py-1.5 text-xs font-semibold text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)]"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-xs font-semibold text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)]"
                     >
+                      <Gelato
+                        variant="scoop"
+                        tokens={gelatoTokensFromLogFlavour(flavour)}
+                        size={22}
+                        seed={flavour.id}
+                        className="flex shrink-0"
+                      />
                       {getFlavourDisplayLabel(flavour)}
                     </span>
                   ))}
@@ -907,8 +875,15 @@ export function FeedCard({
                     return (
                       <div key={flavour.id} className="flex flex-col gap-1">
                         <div
-                          className={`inline-flex flex-wrap items-center gap-1 self-start rounded-full px-3 py-1 text-xs font-medium shadow-sm ring-1 ${flavourClass}`}
+                          className={`inline-flex flex-wrap items-center gap-1.5 self-start rounded-full px-2.5 py-1 text-xs font-medium shadow-sm ring-1 ${flavourClass}`}
                         >
+                          <Gelato
+                            variant="scoop"
+                            tokens={gelatoTokensFromLogFlavour(flavour)}
+                            size={24}
+                            seed={flavour.id}
+                            className="flex shrink-0"
+                          />
                           <span>{getFlavourDisplayLabel(flavour)}</span>
                           {flavour.rating != null ? (
                             <span className="flex items-center text-[10px] opacity-80">

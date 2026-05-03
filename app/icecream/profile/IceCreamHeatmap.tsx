@@ -1,5 +1,6 @@
 'use client';
 
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { useEffect, useRef, useState } from 'react';
 
 export type HeatmapDayData = {
@@ -136,7 +137,7 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
       {/* Summary pill */}
       <div className="flex items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60">
-          <span>🍦</span>
+          <PlaceholderScoop size={20} seed="heatmap-summary" className="shrink-0" />
           {totalInRange} scoop{totalInRange !== 1 ? 's' : ''} in the last 12 months
         </span>
       </div>
@@ -233,8 +234,11 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
               <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                 {formatDateLabel(selected)}
               </p>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">
-                🍦 {selectedCount} scoop{selectedCount !== 1 ? 's' : ''}
+              <p className="flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+                <PlaceholderScoop size={20} seed="heatmap-selected" className="shrink-0" />
+                <span>
+                  {selectedCount} scoop{selectedCount !== 1 ? 's' : ''}
+                </span>
               </p>
               {selectedData?.salons.map((salon, i) => (
                 <p key={i} className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -287,8 +291,11 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
               <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                 {formatDateLabel(hoverTooltip.dateStr)}
               </p>
-              <p className="mt-0.5 text-sm text-zinc-600 dark:text-zinc-400">
-                🍦 {count} scoop{count !== 1 ? 's' : ''}
+              <p className="mt-0.5 flex items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
+                <PlaceholderScoop size={20} seed={`heatmap-tip-${hoverTooltip.dateStr}`} className="shrink-0" />
+                <span>
+                  {count} scoop{count !== 1 ? 's' : ''}
+                </span>
               </p>
               {tooltipData?.salons.slice(0, 3).map((salon, i) => (
                 <p key={i} className="max-w-[180px] truncate text-xs text-zinc-400 dark:text-zinc-500">

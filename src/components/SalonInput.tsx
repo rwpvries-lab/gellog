@@ -1,5 +1,6 @@
 "use client";
 
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { createClient } from "@/src/lib/supabase/client";
 import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { ICE_CREAM_AUTOCOMPLETE_DESCRIPTION_TERMS } from "@/src/lib/looksLikeIceCreamSalon";
@@ -387,7 +388,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                 }`}
               >
                 <span className="flex items-center gap-1.5 font-semibold text-[color:var(--color-text-primary)]">
-                  <span>🍦</span>
+                  <PlaceholderScoop size={20} seed={`salon-ac-${item.prediction.place_id}`} className="shrink-0" />
                   {main}
                 </span>
                 <span className="text-xs text-[color:var(--color-text-tertiary)]">{secondary}</span>

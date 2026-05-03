@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FollowButton } from "./FollowButton";
 import { Icon } from "@/src/components/icons";
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { ProfileAvatar } from "./ProfileAvatar";
 
 type Profile = {
@@ -180,7 +181,7 @@ export default async function UserProfilePage({
         {/* Stats pill */}
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60">
-            <span>🍦</span>
+            <PlaceholderScoop size={20} seed={`profile-stats-${profile.id}`} className="shrink-0" />
             {logs.length === 5 ? "5+ recent public scoops" : `${logs.length} public scoop${logs.length !== 1 ? "s" : ""}`}
           </span>
         </div>

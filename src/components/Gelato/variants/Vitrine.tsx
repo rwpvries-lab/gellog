@@ -77,7 +77,16 @@ function VitrineTubSvg({
     <svg viewBox={SVG_VIEWBOX} width="100%" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
       <rect x="0" y="0" width="365" height="690" rx="57" fill="#B5B5B5" />
       <rect x="18" y="17" width="330" height="655" rx="57" fill="#D9D9D9" />
-      <rect x="24" y="24" width="317" height="642" rx="57" fill={baseHex} />
+      <rect
+        x="24"
+        y="24"
+        width="317"
+        height="642"
+        rx="57"
+        fill={baseHex}
+        stroke="var(--gelato-edge, transparent)"
+        strokeWidth={4}
+      />
       {showDrizzle
         ? DRIZZLE_PATHS.map((d, i) => (
             <path
@@ -113,7 +122,16 @@ function PlaceholderTub() {
     <svg viewBox={SVG_VIEWBOX} width="100%" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
       <rect x="0" y="0" width="365" height="690" rx="57" fill="#B5B5B5" />
       <rect x="18" y="17" width="330" height="655" rx="57" fill="#D9D9D9" />
-      <rect x="24" y="24" width="317" height="642" rx="57" fill={PLACEHOLDER_GELATO} />
+      <rect
+        x="24"
+        y="24"
+        width="317"
+        height="642"
+        rx="57"
+        fill={PLACEHOLDER_GELATO}
+        stroke="var(--gelato-edge, transparent)"
+        strokeWidth={4}
+      />
     </svg>
   );
 }

@@ -57,16 +57,58 @@ export function Scoop({
         aria-hidden="true"
       >
         {/* Main body */}
-        <circle cx={306.719} cy={303.461} r={303.461} fill={base.hex} />
+        <circle
+          cx={306.719}
+          cy={303.461}
+          r={303.461}
+          fill={base.hex}
+          stroke="var(--gelato-edge, transparent)"
+          strokeWidth={8}
+        />
 
         {/* Bottom circles */}
         {!hideDrips ? (
           <>
-            <circle cx={99.5731} cy={552.393} r={99.5731} fill={base.hex} />
-            <circle cx={199.146} cy={552.393} r={99.5731} fill={base.hex} />
-            <circle cx={298.719} cy={552.393} r={99.5731} fill={base.hex} />
-            <circle cx={429.112} cy={552.393} r={99.5731} fill={base.hex} />
-            <circle cx={528.685} cy={552.393} r={99.5731} fill={base.hex} />
+            <circle
+              cx={99.5731}
+              cy={552.393}
+              r={99.5731}
+              fill={base.hex}
+              stroke="var(--gelato-edge, transparent)"
+              strokeWidth={6}
+            />
+            <circle
+              cx={199.146}
+              cy={552.393}
+              r={99.5731}
+              fill={base.hex}
+              stroke="var(--gelato-edge, transparent)"
+              strokeWidth={6}
+            />
+            <circle
+              cx={298.719}
+              cy={552.393}
+              r={99.5731}
+              fill={base.hex}
+              stroke="var(--gelato-edge, transparent)"
+              strokeWidth={6}
+            />
+            <circle
+              cx={429.112}
+              cy={552.393}
+              r={99.5731}
+              fill={base.hex}
+              stroke="var(--gelato-edge, transparent)"
+              strokeWidth={6}
+            />
+            <circle
+              cx={528.685}
+              cy={552.393}
+              r={99.5731}
+              fill={base.hex}
+              stroke="var(--gelato-edge, transparent)"
+              strokeWidth={6}
+            />
           </>
         ) : null}
 

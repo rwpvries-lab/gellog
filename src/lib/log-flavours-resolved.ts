@@ -51,6 +51,12 @@ type LegacyLogFlavourEmbedRow = {
   rating_originality?: unknown;
   rating_intensity?: unknown;
   rating_presentation?: unknown;
+  base_token?: unknown;
+  drizzle_token?: unknown;
+  crumble_token?: unknown;
+  canonical_name_en?: unknown;
+  canonical_name_nl?: unknown;
+  canonical_name_it?: unknown;
 };
 
 function toNumOrNull(v: unknown): number | null {
@@ -69,7 +75,13 @@ export const LOG_FLAVOURS_RESOLVED_SELECT = `
     rating_texture,
     rating_originality,
     rating_intensity,
-    rating_presentation
+    rating_presentation,
+    base_token,
+    drizzle_token,
+    crumble_token,
+    canonical_name_en,
+    canonical_name_nl,
+    canonical_name_it
   )
 `;
 
@@ -105,12 +117,12 @@ export function mapLegacyEmbedRowsToLogFlavours(
       id,
       flavour_name: name,
       input_name: name || null,
-      canonical_name_en: null,
-      canonical_name_nl: null,
-      canonical_name_it: null,
-      base_token: null,
-      drizzle_token: null,
-      crumble_token: null,
+      canonical_name_en: lf.canonical_name_en != null ? String(lf.canonical_name_en) : null,
+      canonical_name_nl: lf.canonical_name_nl != null ? String(lf.canonical_name_nl) : null,
+      canonical_name_it: lf.canonical_name_it != null ? String(lf.canonical_name_it) : null,
+      base_token: lf.base_token != null ? String(lf.base_token) : null,
+      drizzle_token: lf.drizzle_token != null ? String(lf.drizzle_token) : null,
+      crumble_token: lf.crumble_token != null ? String(lf.crumble_token) : null,
       rating: toNumOrNull(lf.rating),
       tags: Array.isArray(lf.tags) ? (lf.tags as string[]) : null,
       rating_texture: toNumOrNull(lf.rating_texture),

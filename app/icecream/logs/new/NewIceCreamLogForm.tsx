@@ -8,6 +8,7 @@ import {
 } from "@/src/components/PhotoVisibilityPicker";
 import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
 import {
   getFlavourScoopUrl,
@@ -1024,8 +1025,10 @@ export function NewIceCreamLogForm({
 
         {showFlavourPrompt ? (
           <div className="mb-4 rounded-xl bg-[color:var(--color-surface-alt)] px-3 py-3 ring-1 ring-[color:var(--color-border)]">
-            <p className="text-sm italic text-[color:var(--color-text-secondary)]">
-              That&apos;s already quite a lot of gelato 🍦 — are you sure you want to add another flavour?
+            <p className="flex flex-wrap items-center gap-1 text-sm italic text-[color:var(--color-text-secondary)]">
+              <span>That&apos;s already quite a lot of gelato</span>
+              <PlaceholderScoop size={20} seed="new-log-flavour-cap" className="shrink-0" />
+              <span>— are you sure you want to add another flavour?</span>
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               <button

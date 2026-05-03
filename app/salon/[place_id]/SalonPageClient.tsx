@@ -2,6 +2,7 @@
 
 import { createClient } from "@/src/lib/supabase/client";
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { Vitrine, type VitrineFlavour } from "@/src/components/Gelato/variants/Vitrine";
 import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
 import { SalonShareButton } from "./SalonShareButton";
@@ -366,7 +367,9 @@ export function SalonPageClient({ placeId }: Props) {
         ) : null}
 
         <div className="rounded-3xl bg-white px-6 py-8 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-          <p className="mb-1 text-3xl">🍦</p>
+          <div className="mb-2 flex justify-center" aria-hidden>
+            <PlaceholderScoop size={56} seed={`salon-empty-${placeId}`} />
+          </div>
           <p className="mb-1 text-base font-semibold text-zinc-900 dark:text-zinc-50">
             No visits logged yet
           </p>

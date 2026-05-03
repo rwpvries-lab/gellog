@@ -1,6 +1,7 @@
 'use client';
 
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { createClient } from "@/src/lib/supabase/client";
 import { applyResolvedFlavoursToLogRow, LOG_FLAVOURS_RESOLVED_SELECT } from "@/src/lib/log-flavours-resolved";
 import Link from "next/link";
@@ -303,10 +304,10 @@ export function IceCreamFeedClient({
             aria-hidden
           />
           <div className="relative flex flex-col items-center">
-            <div className="mb-6 flex items-end justify-center gap-0.5" aria-hidden>
-              <span className="translate-y-1 text-4xl">🍨</span>
-              <span className="text-6xl leading-none">🍦</span>
-              <span className="translate-y-2 text-3xl">🧁</span>
+            <div className="mb-6 flex items-end justify-center gap-1" aria-hidden>
+              <PlaceholderScoop size={44} seed="feed-empty-a" className="translate-y-1 opacity-90" />
+              <PlaceholderScoop size={56} seed="feed-empty-b" />
+              <PlaceholderScoop size={36} seed="feed-empty-c" className="translate-y-2 opacity-90" />
             </div>
             <p className="text-base font-semibold text-[color:var(--color-text-primary)]">
               No scoops yet
@@ -332,7 +333,7 @@ export function IceCreamFeedClient({
             <div className="mb-6 flex items-center justify-center gap-2 text-5xl" aria-hidden>
               <span>👋</span>
               <span className="text-6xl leading-none">👥</span>
-              <span className="text-4xl">🍦</span>
+              <PlaceholderScoop size={48} seed="feed-friends-empty" className="inline-flex" />
             </div>
             <p className="text-base font-semibold text-[color:var(--color-text-primary)]">
               No friend activity yet
