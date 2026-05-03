@@ -8,13 +8,11 @@ import {
 } from "@/src/components/PhotoVisibilityPicker";
 import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { VisibilityPicker, type Visibility } from "@/src/components/VisibilityPicker";
+import { Gelato } from "@/src/components/Gelato/Gelato";
 import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
-import { VesselIllustration, getFlavourColor } from "@/src/components/VesselIllustration";
-import {
-  getFlavourScoopUrl,
-  mapFlavourToSlug,
-  useFlavourScoop,
-} from "@/src/lib/flavour-scoop";
+import { getFlavourColor } from "@/src/components/VesselIllustration";
+import { mapFlavourToSlug } from "@/src/lib/flavour-scoop";
+import { useFlavourTokens } from "@/src/lib/use-flavour-tokens";
 import { createClient } from "@/src/lib/supabase/client";
 import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
@@ -434,7 +432,6 @@ export function NewIceCreamLogForm({
   }, [initialPrefillFlavour]);
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
-  const strawberryScoopUrl = getFlavourScoopUrl("strawberry");
   const selectedFlavours = useMemo(
     () =>
       flavours
@@ -443,13 +440,8 @@ export function NewIceCreamLogForm({
         .slice(0, 3),
     [flavours]
   );
-  const primaryFlavour = selectedFlavours[0] ?? "Strawberry";
-  const { scoopUrl, loading: scoopLoading } = useFlavourScoop(primaryFlavour);
-  const [previewScoopUrl, setPreviewScoopUrl] = useState(strawberryScoopUrl);
-
-  useEffect(() => {
-    setPreviewScoopUrl(scoopUrl || strawberryScoopUrl);
-  }, [scoopUrl, strawberryScoopUrl]);
+  const primaryFlavour = selectedFlavours[0] ?? "";
+  const { tokens: primaryTokens } = useFlavourTokens(primaryFlavour);
 
   const flavourGlowColors = useMemo(() => {
     if (selectedFlavours.length === 0) return ["#F9A8D4"];
@@ -1228,31 +1220,24 @@ export function NewIceCreamLogForm({
               ] as const
             ).map(({ value, label }) => {
               const isSelected = vessel === value;
-              const activeFlavours = selectedFlavours.map((name, i) => ({
-                name,
-                colorHex: getFlavourColor(mapFlavourToSlug(name), i),
-              }));
               return (
-                <div
+                <button
                   key={value}
-                  className="flex flex-1 flex-col items-center gap-3 rounded-2xl px-2 py-2"
-                  style={{ background: vesselGlowBackground }}
+                  type="button"
+                  onClick={() => setVessel(isSelected ? null : value)}
+                  className="flex flex-1 flex-col items-center gap-3 rounded-2xl px-2 py-3 transition"
+                  style={{
+                    background: isSelected ? vesselGlowBackground : "transparent",
+                    outline: isSelected ? "2px solid var(--color-orange)" : "none",
+                    outlineOffset: 2,
+                  }}
+                  aria-pressed={isSelected}
                 >
-                  <VesselIllustration
-                    vessel={value}
-                    flavours={activeFlavours}
-                    selected={isSelected}
-                    size="medium"
-                    onClick={() => setVessel(isSelected ? null : value)}
-                    hideBuiltInScoops
-                    dynamicScoopSrc={previewScoopUrl}
-                    dynamicScoopAlt={`${primaryFlavour} scoop`}
-                    dynamicScoopLoading={scoopLoading}
-                    onDynamicScoopError={() =>
-                      setPreviewScoopUrl((current) =>
-                        current === strawberryScoopUrl ? current : strawberryScoopUrl
-                      )
-                    }
+                  <Gelato
+                    variant={value}
+                    tokens={primaryTokens}
+                    size={120}
+                    seed={`vessel-preview-${value}-${primaryFlavour || "empty"}`}
                   />
                   <span
                     style={{
@@ -1265,7 +1250,7 @@ export function NewIceCreamLogForm({
                   >
                     {label}
                   </span>
-                </div>
+                </button>
               );
             })}
           </div>
