@@ -216,7 +216,7 @@ export function DashboardClient({
       DASHBOARD_SECTION_IDS.map((id) => [id, 0]),
     );
     const updateActiveSection = () => {
-      let next = DASHBOARD_SECTION_IDS[0];
+      let next: DashboardSectionId = DASHBOARD_SECTION_IDS[0];
       let bestRatio = -1;
 
       for (const id of DASHBOARD_SECTION_IDS) {
@@ -233,7 +233,7 @@ export function DashboardClient({
           const el = document.getElementById(id);
           return el ? el.getBoundingClientRect().top <= 150 : false;
         });
-        next = crossed[crossed.length - 1] ?? DASHBOARD_SECTION_IDS[0];
+        next = crossed.at(-1) ?? DASHBOARD_SECTION_IDS[0];
       }
 
       setActiveSection((prev) => (prev === next ? prev : next));

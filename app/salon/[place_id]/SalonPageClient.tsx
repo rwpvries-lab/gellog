@@ -25,16 +25,24 @@ type SalonProfile = {
   vitrine_enabled?: boolean | null;
 };
 
+/** Row from `vitrine_flavours_resolved` (matches view column names). */
 type SalonVitrineResolvedRow = {
   vitrine_flavour_id: string;
   salon_place_id: string;
-  is_visible: boolean;
   input_name: string;
+  legacy_colour: string | null;
+  is_visible: boolean;
+  display_started_at: string | null;
+  total_display_seconds: number | null;
+  flavour_id: string | null;
+  flavour_slug: string | null;
   canonical_name_nl: string | null;
   canonical_name_en: string | null;
+  canonical_name_it: string | null;
   base_token: string | null;
   drizzle_token: string | null;
   crumble_token: string | null;
+  category: string | null;
 };
 
 function mapVitrineResolvedToFlavour(row: SalonVitrineResolvedRow): VitrineFlavour {
@@ -283,19 +291,12 @@ export function SalonPageClient({ placeId }: Props) {
     (vitrineFlavourId: string) => {
       const vf = vitrineResolvedRows.find((v) => v.vitrine_flavour_id === vitrineFlavourId);
       if (!vf) return;
-      const salonNameForUrl =
-        emptyPlaceName?.trim() ||
-        salonProfile?.salon_name?.trim() ||
-        allLogs[0]?.salon_name?.trim() ||
-        "Salon";
-      const q = new URLSearchParams({
-        place_id: placeId,
-        salon_name: salonNameForUrl,
-        flavour: vf.input_name,
-      });
-      router.push(`/log/new?${q.toString()}`);
+      // input_name is what the salon uses on the board; log form pre-fills from `flavour`.
+      router.push(
+        `/log/new?salon_place_id=${encodeURIComponent(placeId)}&flavour=${encodeURIComponent(vf.input_name)}`,
+      );
     },
-    [placeId, router, vitrineResolvedRows, emptyPlaceName, salonProfile, allLogs],
+    [placeId, router, vitrineResolvedRows],
   );
 
   const vitrineFlavours = vitrineResolvedRows.map(mapVitrineResolvedToFlavour);

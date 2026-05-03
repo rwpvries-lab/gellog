@@ -5,10 +5,41 @@ import { redirect } from "next/navigation";
 import { NewIceCreamLogForm } from "./NewIceCreamLogForm";
 import type { SalonData } from "@/src/components/SalonInput";
 
+async function googlePlaceDisplayName(placeId: string): Promise<string | null> {
+  const key =
+    process.env.GOOGLE_PLACES_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
+  if (!key) return null;
+  try {
+    const url = new URL(
+      "https://maps.googleapis.com/maps/api/place/details/json",
+    );
+    url.searchParams.set("place_id", placeId);
+    url.searchParams.set("fields", "name");
+    url.searchParams.set("key", key);
+    const res = await fetch(url.toString());
+    const data = (await res.json()) as {
+      result?: { name?: string };
+      status?: string;
+    };
+    const name = data.result?.name?.trim();
+    if (!name || data.status === "NOT_FOUND" || data.status === "INVALID_REQUEST") {
+      return null;
+    }
+    return name;
+  } catch {
+    return null;
+  }
+}
+
 export default async function NewIceCreamLogPage({
   searchParams,
 }: {
-  searchParams: Promise<{ place_id?: string; salon_name?: string; flavour?: string }>;
+  searchParams: Promise<{
+    place_id?: string;
+    salon_place_id?: string;
+    salon_name?: string;
+    flavour?: string;
+  }>;
 }) {
   const supabase = await createClient();
   const {
@@ -29,8 +60,19 @@ export default async function NewIceCreamLogPage({
     (profile?.default_visibility as "public" | "friends" | "private") ??
     "public";
 
-  // Pre-fill salon from query params (e.g. coming from undiscovered salon page)
-  const { place_id, salon_name, flavour } = await searchParams;
+  // Pre-fill salon from query params (e.g. vitrine tub → /log/new?salon_place_id=…&flavour=…)
+  const raw = await searchParams;
+  const place_id = raw.place_id ?? raw.salon_place_id;
+  let salon_name = raw.salon_name;
+  const flavour = raw.flavour;
+
+  if (place_id && !salon_name) {
+    const resolved = await googlePlaceDisplayName(place_id);
+    if (resolved) {
+      salon_name = resolved;
+    }
+  }
+
   let initialSalonData: SalonData | null = null;
 
   if (place_id && salon_name) {
