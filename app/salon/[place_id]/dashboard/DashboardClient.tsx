@@ -5,6 +5,7 @@ import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Icon } from "@/src/components/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FlavourBoard,
@@ -272,8 +273,8 @@ export function DashboardClient({
     const target = document.getElementById(sectionId);
     if (!target) return;
 
-    // Keep section headings visible below sticky top UI on desktop.
-    const stickyOffset = 104;
+    // Keep section headings visible below sticky top UI on desktop (nav ~56px + top-6 + margin).
+    const stickyOffset = 112;
     const top = target.getBoundingClientRect().top + window.scrollY - stickyOffset;
     window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
     window.history.replaceState(null, "", `#${sectionId}`);
@@ -371,6 +372,19 @@ export function DashboardClient({
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 lg:px-6">
+      {/* Mobile: back to public salon; desktop uses section tabs below */}
+      <div className="-mx-4 mb-5 flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 lg:hidden">
+        <Link
+          href={`/salon/${salonProfile.place_id}`}
+          className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-zinc-700 transition hover:text-teal-700 dark:text-zinc-200 dark:hover:text-teal-400"
+        >
+          <Icon name="GellogBack" size={18} strokeWidth={2} />
+          <span>Salon page</span>
+        </Link>
+        <span className="min-w-0 truncate text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+          {salonName}
+        </span>
+      </div>
       {/* Success banner after claiming */}
       {showClaimed && (
         <div className="mb-5 flex items-start justify-between gap-3 rounded-2xl bg-teal-50 px-4 py-3 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:ring-teal-800">
@@ -443,7 +457,7 @@ export function DashboardClient({
       ) : null}
 
       <nav
-        className="sticky top-4 z-20 mb-6 hidden rounded-2xl border border-zinc-200/70 bg-white/85 p-1.5 backdrop-blur supports-[backdrop-filter]:bg-white/70 lg:block dark:border-zinc-700/70 dark:bg-zinc-900/80 dark:supports-[backdrop-filter]:bg-zinc-900/70"
+        className="sticky top-6 z-20 mb-6 hidden rounded-2xl border border-zinc-200/70 bg-white/85 p-1.5 backdrop-blur supports-[backdrop-filter]:bg-white/70 lg:block dark:border-zinc-700/70 dark:bg-zinc-900/80 dark:supports-[backdrop-filter]:bg-zinc-900/70"
         aria-label="Dashboard sections"
       >
         <div className="relative grid min-w-[22rem] grid-cols-3 items-center gap-1">
@@ -494,8 +508,11 @@ export function DashboardClient({
         </div>
       </nav>
 
-      <div className="grid gap-6 lg:grid-cols-3 lg:items-start">
-        <section id="dashboard-overview" className="space-y-5 lg:col-span-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-x-0 lg:gap-y-6">
+        <section
+          id="dashboard-overview"
+          className="min-w-0 space-y-5 scroll-mt-28 lg:pr-8"
+        >
           {/* Sales summary card */}
           <div className="rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
             <div className="flex items-start gap-4">
@@ -622,7 +639,7 @@ export function DashboardClient({
           </div>
 
           {/* Analytics + flavour insights */}
-          <div id="analytics" className="scroll-mt-24 space-y-5">
+          <div id="analytics" className="scroll-mt-28 space-y-5">
             <AnalyticsSection
               tier={tier}
               placeId={salonProfile.place_id}
@@ -716,8 +733,11 @@ export function DashboardClient({
           </div>
         </section>
 
-        <aside id="settings" className="scroll-mt-24 lg:sticky lg:top-6">
-          <div className="rounded-3xl bg-zinc-50/80 p-3 shadow-[0_14px_28px_-22px_rgba(15,23,42,0.7)] ring-1 ring-zinc-200/70 dark:bg-zinc-900/60 dark:ring-zinc-700/70">
+        <aside
+          id="settings"
+          className="min-w-0 scroll-mt-28 lg:sticky lg:top-6 lg:self-start lg:border-l lg:border-zinc-200/80 lg:pl-8 dark:lg:border-zinc-800"
+        >
+          <div className="space-y-4 rounded-3xl bg-zinc-50/80 p-3 shadow-[0_14px_28px_-22px_rgba(15,23,42,0.7)] ring-1 ring-zinc-200/70 dark:bg-zinc-900/60 dark:ring-zinc-700/70 lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none lg:ring-0">
             <div className="space-y-4 [&>*]:mb-0">
               <SalonDashboardWeatherCard weather={dashboardWeather} hasCoordinates={salonHasCoordinates} />
 
@@ -815,7 +835,7 @@ export function DashboardClient({
               {/* Billing */}
               <div
                 id="billing"
-                className="scroll-mt-24 rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
+                className="scroll-mt-28 rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800"
               >
                 <h2 className="mb-4 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
                   Billing

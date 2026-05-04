@@ -168,20 +168,35 @@ function getAdvancedRatings(flavour: LogFlavour): AdvancedRating[] {
     .map(([label, value]) => ({ label, value }));
 }
 
-/** Compact scoops beside salon title (feed + default card); hidden on log detail (hero handles visuals). */
+/** Compact scoops / vessel beside salon title (feed + default card); hidden on log detail (hero handles visuals). */
 function SalonInlineFlavourScoops({
   flavours,
+  vessel,
   isDetailPage,
 }: {
   flavours: LogFlavour[];
+  vessel: "cup" | "cone" | null;
   isDetailPage: boolean;
 }) {
   if (isDetailPage || flavours.length === 0) return null;
 
   if (flavours.length === 1) {
     const f = flavours[0];
+    if (vessel === "cup" || vessel === "cone") {
+      return (
+        <span className="ml-1.5 inline-flex shrink-0 items-end align-middle">
+          <Gelato
+            variant={vessel}
+            tokens={gelatoTokensFromLogFlavour(f)}
+            size={64}
+            seed={f.id}
+            className="flex shrink-0"
+          />
+        </span>
+      );
+    }
     return (
-      <span className="ml-1.5 inline-flex shrink-0 align-middle">
+      <span className="ml-1.5 inline-flex shrink-0 items-end align-middle">
         <Gelato
           variant="scoop"
           tokens={gelatoTokensFromLogFlavour(f)}
@@ -196,8 +211,50 @@ function SalonInlineFlavourScoops({
   const visible = flavours.slice(0, 3);
   const extra = flavours.length - 3;
 
+  if (vessel === "cup" || vessel === "cone") {
+    const [first, ...restVisible] = visible;
+    return (
+      <span className="ml-1.5 inline-flex shrink-0 items-end align-middle">
+        <span className="flex shrink-0 items-end">
+          <span className="relative z-[1] inline-flex shrink-0">
+            <Gelato
+              variant={vessel}
+              tokens={gelatoTokensFromLogFlavour(first)}
+              size={56}
+              seed={first.id}
+              className="flex shrink-0"
+            />
+          </span>
+          {restVisible.map((f, idx) => (
+            <span
+              key={f.id}
+              className="relative inline-flex shrink-0"
+              style={{
+                marginLeft: -10,
+                zIndex: idx + 2,
+              }}
+            >
+              <Gelato
+                variant="scoop"
+                tokens={gelatoTokensFromLogFlavour(f)}
+                size={32}
+                seed={f.id}
+                className="flex shrink-0"
+              />
+            </span>
+          ))}
+        </span>
+        {extra > 0 ? (
+          <span className="z-[4] ml-1 shrink-0 self-end text-[11px] font-semibold tabular-nums text-[color:var(--color-text-secondary)]">
+            +{extra}
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+
   return (
-    <span className="ml-1.5 inline-flex shrink-0 items-center align-middle">
+    <span className="ml-1.5 inline-flex shrink-0 items-end align-middle">
       <span className="flex shrink-0 items-center">
         {visible.map((f, idx) => (
           <span
@@ -219,7 +276,7 @@ function SalonInlineFlavourScoops({
         ))}
       </span>
       {extra > 0 ? (
-        <span className="z-[4] ml-1 shrink-0 text-[11px] font-semibold tabular-nums text-[color:var(--color-text-secondary)]">
+        <span className="z-[4] ml-1 shrink-0 self-end text-[11px] font-semibold tabular-nums text-[color:var(--color-text-secondary)]">
           +{extra}
         </span>
       ) : null}
@@ -574,7 +631,11 @@ export function FeedCard({
                   ) : (
                     <span className="min-w-0">{log.salon_name}</span>
                   )}
-                  <SalonInlineFlavourScoops flavours={log.log_flavours} isDetailPage={isDetailPage} />
+                  <SalonInlineFlavourScoops
+                    flavours={log.log_flavours}
+                    vessel={log.vessel}
+                    isDetailPage={isDetailPage}
+                  />
                 </h2>
                 {log.salon_city?.trim() ? (
                   <p className="mt-0.5 text-sm text-[color:var(--color-text-secondary)]">
@@ -774,7 +835,11 @@ export function FeedCard({
               ) : (
                 <span className="min-w-0 shrink-0">{log.salon_name}</span>
               )}
-              <SalonInlineFlavourScoops flavours={log.log_flavours} isDetailPage={isDetailPage} />
+              <SalonInlineFlavourScoops
+                flavours={log.log_flavours}
+                vessel={log.vessel}
+                isDetailPage={isDetailPage}
+              />
             </h2>
             <div className="flex shrink-0 flex-col items-end gap-0.5">
               <RatingStarsDisplay value={log.overall_rating} size="lg" />

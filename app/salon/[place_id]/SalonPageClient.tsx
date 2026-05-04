@@ -2,6 +2,7 @@
 
 import { createClient } from "@/src/lib/supabase/client";
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
+import { PublicBanner, PUBLIC_BANNER_LAYOUT_PX } from "@/src/components/PublicBanner";
 import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { Vitrine, type VitrineFlavour } from "@/src/components/Gelato/variants/Vitrine";
 import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
@@ -59,6 +60,7 @@ function mapVitrineResolvedToFlavour(row: SalonVitrineResolvedRow): VitrineFlavo
   return {
     id: row.vitrine_flavour_id,
     displayName,
+    inputName: row.input_name,
     tokens: gelatoTokensFromNullableTokens(
       row.base_token,
       row.drizzle_token,
@@ -289,12 +291,16 @@ export function SalonPageClient({ placeId }: Props) {
     (vitrineFlavourId: string) => {
       const vf = vitrineResolvedRows.find((v) => v.vitrine_flavour_id === vitrineFlavourId);
       if (!vf) return;
+      if (!userId) {
+        router.push("/signup");
+        return;
+      }
       // input_name is what the salon uses on the board; log form pre-fills from `flavour`.
       router.push(
-        `/log/new?salon_place_id=${encodeURIComponent(placeId)}&flavour=${encodeURIComponent(vf.input_name)}`,
+        `/icecream/logs/new?salon_place_id=${encodeURIComponent(placeId)}&flavour=${encodeURIComponent(vf.input_name)}`,
       );
     },
-    [placeId, router, vitrineResolvedRows],
+    [placeId, router, userId, vitrineResolvedRows],
   );
 
   const vitrineFlavours = vitrineResolvedRows.map(mapVitrineResolvedToFlavour);
@@ -315,7 +321,10 @@ export function SalonPageClient({ placeId }: Props) {
   if (allLogs.length === 0 && emptyPlaceName) {
     const placeName = emptyPlaceName;
     return (
-      <main className="mx-auto max-w-lg px-4 py-8">
+      <main
+        className="mx-auto max-w-lg px-4 py-8"
+        style={userId == null ? { paddingBottom: PUBLIC_BANNER_LAYOUT_PX + 32 } : undefined}
+      >
         {isOwner && (
           <div className="mb-5 flex items-center justify-between rounded-2xl bg-teal-50 px-4 py-3 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:ring-teal-800">
             <span className="text-sm text-teal-800 dark:text-teal-300">
@@ -374,12 +383,17 @@ export function SalonPageClient({ placeId }: Props) {
             Be the first to log a scoop here!
           </p>
           <Link
-            href={`/icecream/logs/new?place_id=${encodeURIComponent(placeId)}&salon_name=${encodeURIComponent(placeName)}`}
+            href={
+              userId
+                ? `/icecream/logs/new?place_id=${encodeURIComponent(placeId)}&salon_name=${encodeURIComponent(placeName)}`
+                : "/signup"
+            }
             className="inline-block rounded-2xl bg-teal-500 px-6 py-3 text-sm font-semibold text-white hover:bg-teal-600"
           >
             Log a visit →
           </Link>
         </div>
+        {userId == null ? <PublicBanner variant="salon" salonName={placeName} /> : null}
       </main>
     );
   }
@@ -402,7 +416,10 @@ export function SalonPageClient({ placeId }: Props) {
   const recentLogs = allLogs.slice(0, 10);
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
+    <main
+      className="mx-auto max-w-lg px-4 py-8"
+      style={userId == null ? { paddingBottom: PUBLIC_BANNER_LAYOUT_PX + 32 } : undefined}
+    >
       {isOwner && (
         <div className="mb-5 flex items-center justify-between rounded-2xl bg-teal-50 px-4 py-3 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:ring-teal-800">
           <span className="text-sm text-teal-800 dark:text-teal-300">
@@ -567,6 +584,7 @@ export function SalonPageClient({ placeId }: Props) {
           />
         ))}
       </div>
+      {userId == null ? <PublicBanner variant="salon" salonName={displayName} /> : null}
     </main>
   );
 }

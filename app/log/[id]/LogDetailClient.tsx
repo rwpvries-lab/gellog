@@ -10,6 +10,7 @@ import {
 import { notFound, useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState } from "react";
+import { PublicBanner, PUBLIC_BANNER_LAYOUT_PX } from "@/src/components/PublicBanner";
 import { Avatar, CommentsSection, type LogComment } from "./CommentsSection";
 
 type Props = {
@@ -208,7 +209,10 @@ export function LogDetailClient({ logId }: Props) {
   useEffect(() => {
     setMounted(true);
     const nav = document.querySelector("nav");
-    if (!nav) return;
+    if (!nav) {
+      setNavHeight(0);
+      return;
+    }
     const update = () => setNavHeight(nav.getBoundingClientRect().height);
     update();
     const ro = new ResizeObserver(update);
@@ -292,12 +296,19 @@ export function LogDetailClient({ logId }: Props) {
 
   const inputBarHeight = 64;
   const remaining = 500 - inputValue.length;
+  const commentBarBottomOffset = currentUserId ? navHeight : PUBLIC_BANNER_LAYOUT_PX;
 
   const inputBar =
     phase === "ready" && log ? (
       <div
         className="border-t border-[color:var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_92%,transparent)] px-4 py-3 backdrop-blur-md supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--color-surface)_88%,transparent)]"
-        style={{ position: "fixed", bottom: navHeight, left: 0, right: 0, zIndex: 40 }}
+        style={{
+          position: "fixed",
+          bottom: commentBarBottomOffset,
+          left: 0,
+          right: 0,
+          zIndex: 40,
+        }}
       >
         <div className="mx-auto flex max-w-xl items-end gap-2">
           {currentUserId ? (
@@ -364,7 +375,9 @@ export function LogDetailClient({ logId }: Props) {
   return (
     <>
       <AppShell
-        mainStyle={{ paddingBottom: navHeight + inputBarHeight + 16 }}
+        mainStyle={{
+          paddingBottom: commentBarBottomOffset + inputBarHeight + 16,
+        }}
       >
           <div className="flex items-center gap-3">
             <button
@@ -408,6 +421,7 @@ export function LogDetailClient({ logId }: Props) {
       </AppShell>
 
       {mounted && inputBar ? createPortal(inputBar, document.body) : null}
+      {mounted && !currentUserId && log ? createPortal(<PublicBanner variant="log" />, document.body) : null}
     </>
   );
 }

@@ -902,7 +902,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
         {/* Vessel */}
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium text-zinc-800 dark:text-zinc-100">Vessel</span>
-          <div className="flex gap-3">
+          <div className="flex items-end gap-3">
             {(
               [
                 { value: "cone" as const, label: "Cone" },

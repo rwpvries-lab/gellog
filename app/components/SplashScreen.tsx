@@ -1,92 +1,90 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop"
 import { GellogLogo } from "./GellogLogo"
 
 export interface SplashScreenProps {
+  /** Called when the splash overlay begins fading out (t = 800ms); use to fade in app content in parallel. */
+  onRevealContent: () => void
   onComplete: () => void
 }
 
-const FADE_OUT_DURATION_MS = 500
-const STAGE_SCHEDULE = [
-  { stage: 1, delay: 100 },
-  { stage: 2, delay: 600 },
-  { stage: 3, delay: 1100 },
-  { stage: 4, delay: 1900 },
-  { stage: 5, delay: 2500 },
-]
+const LOGO_FADE_MS = 400
+const HOLD_UNTIL_FADE_MS = 800
+const OVERLAY_FADE_MS = 400
 
-export function SplashScreen({ onComplete }: SplashScreenProps) {
-  const [stage, setStage] = useState(0)
+export function SplashScreen({ onRevealContent, onComplete }: SplashScreenProps) {
+  const [logoVisible, setLogoVisible] = useState(false)
+  const [overlayExiting, setOverlayExiting] = useState(false)
+  const hasRevealedRef = useRef(false)
   const hasCompletedRef = useRef(false)
 
-  const completeSplash = useCallback(() => {
-    if (hasCompletedRef.current) {
-      return
-    }
+  const revealOnce = useCallback(() => {
+    if (hasRevealedRef.current) return
+    hasRevealedRef.current = true
+    onRevealContent()
+  }, [onRevealContent])
 
+  const completeOnce = useCallback(() => {
+    if (hasCompletedRef.current) return
     hasCompletedRef.current = true
     onComplete()
   }, [onComplete])
 
   useEffect(() => {
+    hasRevealedRef.current = false
     hasCompletedRef.current = false
 
-    const timers: Array<ReturnType<typeof setTimeout>> = STAGE_SCHEDULE.map(
-      ({ stage: nextStage, delay }) => setTimeout(() => setStage(nextStage), delay),
-    )
+    const logoTimer = setTimeout(() => setLogoVisible(true), 0)
 
-    // Fallback in case the opacity transition end event is skipped.
-    timers.push(setTimeout(completeSplash, 2500 + FADE_OUT_DURATION_MS + 100))
+    const exitTimer = setTimeout(() => {
+      revealOnce()
+      setOverlayExiting(true)
+    }, HOLD_UNTIL_FADE_MS)
+
+    const fallbackComplete = setTimeout(() => {
+      completeOnce()
+    }, HOLD_UNTIL_FADE_MS + OVERLAY_FADE_MS + 80)
 
     return () => {
-      timers.forEach((timer) => clearTimeout(timer))
+      clearTimeout(logoTimer)
+      clearTimeout(exitTimer)
+      clearTimeout(fallbackComplete)
     }
-  }, [completeSplash])
+  }, [revealOnce, completeOnce])
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col items-center justify-center bg-white px-6 text-center transition-opacity duration-500 ${
-        stage === 5 ? "opacity-0" : "opacity-100"
+      className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-[#0F172A] px-6 transition-opacity ease-out ${
+        overlayExiting ? "opacity-0" : "opacity-100"
       }`}
+      style={{ transitionDuration: `${OVERLAY_FADE_MS}ms` }}
       onTransitionEnd={(event) => {
         if (
-          stage === 5 &&
+          overlayExiting &&
           event.target === event.currentTarget &&
           event.propertyName === "opacity"
         ) {
-          completeSplash()
+          completeOnce()
         }
       }}
     >
-      {/* Main Logo */}
       <div
-        className={`flex justify-center transition-opacity duration-300 ${
-          stage >= 1 ? "opacity-100" : "opacity-0"
+        className={`flex justify-center transition-opacity ease-out ${
+          logoVisible ? "opacity-100" : "opacity-0"
         }`}
+        style={{ transitionDuration: `${LOGO_FADE_MS}ms` }}
       >
         <GellogLogo size={120} priority />
       </div>
-
-      {/* Tagline */}
-      <div
-        className={`mt-2 flex gap-2 text-lg italic transition-opacity duration-300 ${
-          stage >= 3 ? "opacity-100" : "opacity-0"
+      <p
+        className={`mt-3 text-center text-sm italic text-teal-400 transition-opacity ease-out dark:text-teal-300 ${
+          logoVisible ? "opacity-100" : "opacity-0"
         }`}
+        style={{ transitionDuration: `${LOGO_FADE_MS}ms` }}
       >
-        <span className="text-[#D97706]">Gelato</span>
-        <span className="text-[#0D9488]">Logger</span>
-      </div>
-
-      <div
-        className={`mt-4 flex justify-center transition-opacity duration-300 ${
-          stage >= 4 ? "opacity-100" : "opacity-0"
-        }`}
-        aria-hidden
-      >
-        <PlaceholderScoop size={48} seed="splash" />
-      </div>
+        Gelato Logger
+      </p>
     </div>
   )
 }

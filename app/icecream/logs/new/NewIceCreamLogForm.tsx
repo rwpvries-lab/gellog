@@ -1155,7 +1155,7 @@ export function NewIceCreamLogForm({
           <p className="mb-4 text-center text-sm font-semibold text-[color:var(--color-text-primary)]">
             Cup or cone?
           </p>
-          <div className="flex gap-6">
+          <div className="flex items-end gap-6">
             {(
               [
                 { value: "cone" as const, label: "Cone" },

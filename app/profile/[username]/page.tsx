@@ -1,5 +1,6 @@
 import { createClient } from "@/src/lib/supabase/server";
 import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
+import { PublicBanner, PUBLIC_BANNER_LAYOUT_PX } from "@/src/components/PublicBanner";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FollowButton } from "./FollowButton";
@@ -106,7 +107,12 @@ export default async function UserProfilePage({
   const initial = displayName.charAt(0).toUpperCase();
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-teal-50 px-4 pb-24 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40">
+    <main
+      className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-teal-50 px-4 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40"
+      style={{
+        paddingBottom: user ? "6rem" : `calc(6rem + ${PUBLIC_BANNER_LAYOUT_PX}px)`,
+      }}
+    >
       <div className="mx-auto flex w-full max-w-xl flex-col gap-6">
         <header className="flex items-center gap-3">
           <Link
@@ -207,6 +213,8 @@ export default async function UserProfilePage({
           </div>
         )}
       </div>
+
+      {!user ? <PublicBanner variant="profile" profileHandle={profile.username ?? username} /> : null}
     </main>
   );
 }

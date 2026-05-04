@@ -273,7 +273,15 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
         const body = (
           <>
             {tubVisual}
-            <div style={labelStyle}>{flavour.displayName}</div>
+            <div style={labelStyle}>
+              <div>{flavour.displayName}</div>
+              {flavour.inputName &&
+                flavour.inputName.toLowerCase() !== flavour.displayName.toLowerCase() && (
+                  <div className="text-[11px] text-[color:var(--color-text-secondary)] opacity-70">
+                    ({flavour.inputName})
+                  </div>
+                )}
+            </div>
           </>
         );
 

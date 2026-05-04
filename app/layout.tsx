@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { BottomNav } from "./components/BottomNav";
 import { SplashWrapper } from "./components/SplashWrapper";
 import { ThemeProvider } from "@/src/app/ThemeProvider";
 import { createClient } from "@/src/lib/supabase/server";
@@ -50,11 +49,7 @@ export default async function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ThemeProvider>
-          {user ? <SplashWrapper /> : null}
-          <div className={user ? "min-h-screen pb-28 lg:pb-0" : "min-h-screen"}>
-            {children}
-          </div>
-          {user ? <BottomNav /> : null}
+          <SplashWrapper user={!!user}>{children}</SplashWrapper>
         </ThemeProvider>
       </body>
     </html>
