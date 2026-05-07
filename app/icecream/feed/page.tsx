@@ -79,9 +79,9 @@ export default async function IceCreamFeedPage() {
 
   // Fetch like counts + user's own likes for the fetched log ids
   const logIds = rawLogs.map((l) => l.id);
-  let likeCounts: Record<string, number> = {};
+  const likeCounts: Record<string, number> = {};
   let likedIds = new Set<string>();
-  let commentCounts: Record<string, number> = {};
+  const commentCounts: Record<string, number> = {};
 
   if (logIds.length > 0) {
     const [{ data: likesData }, { data: userLikesData }, { data: commentsData }] = await Promise.all([
@@ -118,7 +118,7 @@ export default async function IceCreamFeedPage() {
   }));
 
   if (error) {
-    // eslint-disable-next-line no-console
+     
     console.error("Failed to load ice cream logs:", {
       message: error.message,
       code: error.code,

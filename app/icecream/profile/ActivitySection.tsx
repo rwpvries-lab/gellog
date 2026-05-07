@@ -120,18 +120,18 @@ export function ActivitySection({ weeklyData }: { weeklyData: WeekData[] }) {
                 />
                 <Tooltip
                   contentStyle={{
-                    background: theme.surface,
+                    background: theme.surfaceElevated,
                     border: `1px solid ${theme.borderDefault}`,
                     borderRadius: 12,
                     fontSize: 12,
                     color: theme.textPrimary,
                     boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                   }}
-                  cursor={{ fill: theme.surfaceAlt }}
+                  cursor={{ fill: theme.backgroundSecondary }}
                 />
                 <Bar
                   dataKey={metric}
-                  fill={theme.primaryOrange}
+                  fill={theme.brandPrimary}
                   radius={[4, 4, 0, 0]}
                 />
               </BarChart>

@@ -8,7 +8,7 @@ export async function resizeImageBeforeUpload(
 ): Promise<Blob> {
   const bitmap = await createImageBitmap(file);
   try {
-    let { width, height } = bitmap;
+    const { width, height } = bitmap;
     const maxSide = Math.max(width, height);
     const scale = maxSide > maxDimension ? maxDimension / maxSide : 1;
     const w = Math.max(1, Math.round(width * scale));

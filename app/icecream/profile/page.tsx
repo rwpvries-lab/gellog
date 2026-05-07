@@ -308,7 +308,7 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
   ) as unknown as IceCreamLog[];
 
   if (logsError) {
-    // eslint-disable-next-line no-console
+     
     console.error("Failed to load user ice cream logs:", logsError);
   }
 
