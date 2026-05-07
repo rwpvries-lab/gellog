@@ -1,13 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SplashWrapper } from "./components/SplashWrapper";
 import { ThemeProvider } from "@/src/app/ThemeProvider";
 import { createClient } from "@/src/lib/supabase/server";
 
-const inter = Inter({
-  variable: "--font-inter",
+const fraunces = Fraunces({
   subsets: ["latin"],
+  variable: "--font-fraunces",
+  display: "swap",
+  axes: ["opsz", "SOFT", "WONK"],
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -38,7 +46,11 @@ export default async function RootLayout({
   } = await supabase.auth.getUser();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${fraunces.variable} ${jakarta.variable}`}
+    >
       <head>
         {/* Blocking script: sets .dark/.light before React hydrates to prevent flash */}
         <script
@@ -47,7 +59,7 @@ export default async function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <ThemeProvider>
           <SplashWrapper user={!!user}>{children}</SplashWrapper>
         </ThemeProvider>

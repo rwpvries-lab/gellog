@@ -338,22 +338,22 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
         onKeyDown={handleKeyDown}
         placeholder="e.g. Gelateria Roma"
         autoComplete="off"
-        className={`w-full rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] px-3 py-2.5 text-sm text-[color:var(--color-text-primary)] placeholder-[color:var(--color-text-tertiary)] shadow-sm focus:border-[color:var(--color-teal)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)]${onOpenMap ? " pr-10" : ""}`}
+        className={`w-full rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--surface-elevated-alt)] px-3 py-2.5 text-sm text-[color:var(--text-primary)] placeholder-[color:var(--text-tertiary)] shadow-sm focus:border-[color:var(--brand-secondary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-secondary)]${onOpenMap ? " pr-10" : ""}`}
       />
       {onOpenMap && (
         <button
           type="button"
           onClick={onOpenMap}
           title="Choose on map"
-          className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-xl text-base transition hover:bg-[color:var(--color-surface-alt)]"
+          className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-xl text-base transition hover:bg-[color:var(--surface-elevated-alt)]"
         >
           🗺
         </button>
       )}
       {open && (items.length > 0 || showAddRow) && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-2xl bg-[color:var(--color-surface)] shadow-lg ring-1 ring-[color:var(--color-border)]">
+        <div className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-2xl bg-[color:var(--surface-elevated)] shadow-lg ring-1 ring-[color:var(--border-default)]">
           {showRecentHeader && (
-            <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[color:var(--color-text-tertiary)]">
+            <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-[color:var(--text-tertiary)]">
               Recent visits
             </div>
           )}
@@ -366,11 +366,11 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                   type="button"
                   onMouseDown={() => selectRecent(item.name)}
                   className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition ${
-                    isActive ? "bg-[color:var(--color-teal-bg)]" : "hover:bg-[color:var(--color-teal-bg)]"
+                    isActive ? "bg-[color:var(--brand-secondary-bg)]" : "hover:bg-[color:var(--brand-secondary-bg)]"
                   }`}
                 >
-                  <span className="text-[color:var(--color-text-tertiary)]">🕐</span>
-                  <span className="font-medium text-[color:var(--color-text-primary)]">{item.name}</span>
+                  <span className="text-[color:var(--text-tertiary)]">🕐</span>
+                  <span className="font-medium text-[color:var(--text-primary)]">{item.name}</span>
                 </button>
               );
             }
@@ -384,14 +384,14 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                   selectPlace(item.prediction.place_id, main)
                 }
                 className={`flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition ${
-                  isActive ? "bg-[color:var(--color-teal-bg)]" : "hover:bg-[color:var(--color-teal-bg)]"
+                  isActive ? "bg-[color:var(--brand-secondary-bg)]" : "hover:bg-[color:var(--brand-secondary-bg)]"
                 }`}
               >
-                <span className="flex items-center gap-1.5 font-semibold text-[color:var(--color-text-primary)]">
+                <span className="flex items-center gap-1.5 font-semibold text-[color:var(--text-primary)]">
                   <PlaceholderScoop size={20} seed={`salon-ac-${item.prediction.place_id}`} className="shrink-0" />
                   {main}
                 </span>
-                <span className="text-xs text-[color:var(--color-text-tertiary)]">{secondary}</span>
+                <span className="text-xs text-[color:var(--text-tertiary)]">{secondary}</span>
               </button>
             );
           })}
@@ -399,13 +399,13 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
             <button
               type="button"
               onMouseDown={handleOpenAddForm}
-              className="flex w-full items-center gap-2 border-t border-[color:var(--color-border)] px-3 py-2.5 text-left text-sm transition hover:bg-[color:var(--color-teal-bg)]"
+              className="flex w-full items-center gap-2 border-t border-[color:var(--border-default)] px-3 py-2.5 text-left text-sm transition hover:bg-[color:var(--brand-secondary-bg)]"
             >
-              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal-bg)] text-xs font-bold text-[color:var(--color-teal)]">
+              <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-[color:var(--brand-secondary-bg)] text-xs font-bold text-[color:var(--brand-secondary)]">
                 +
               </span>
-              <span className="text-[color:var(--color-text-secondary)]">
-                Add <span className="font-semibold text-[color:var(--color-text-primary)]">"{value}"</span> as a new salon
+              <span className="text-[color:var(--text-secondary)]">
+                Add <span className="font-semibold text-[color:var(--text-primary)]">"{value}"</span> as a new salon
               </span>
             </button>
           )}
@@ -419,23 +419,23 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
             className="absolute inset-0 bg-[color:var(--color-backdrop)]"
             onClick={() => setShowAddForm(false)}
           />
-          <div className="relative flex max-h-[60vh] flex-col rounded-t-[20px] bg-[color:var(--color-surface)] shadow-2xl ring-1 ring-[color:var(--color-border)]">
+          <div className="relative flex max-h-[60vh] flex-col rounded-t-[20px] bg-[color:var(--surface-elevated)] shadow-2xl ring-1 ring-[color:var(--border-default)]">
             {/* Handle */}
             <div className="flex flex-shrink-0 items-center justify-between px-5 py-4">
               <button
                 type="button"
                 onClick={() => setShowAddForm(false)}
-                className="text-sm text-[color:var(--color-text-secondary)]"
+                className="text-sm text-[color:var(--text-secondary)]"
               >
                 Cancel
               </button>
-              <span className="text-sm font-semibold text-[color:var(--color-text-primary)]">Add a new salon</span>
+              <span className="text-sm font-semibold text-[color:var(--text-primary)]">Add a new salon</span>
               <div className="w-14" />
             </div>
             <div className="overflow-y-auto px-5 pb-8">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-[color:var(--color-text-primary)]">
+                  <label className="text-sm font-medium text-[color:var(--text-primary)]">
                     Salon name
                   </label>
                   <input
@@ -443,14 +443,14 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                     value={addFormName}
                     onChange={(e) => setAddFormName(e.target.value)}
                     autoFocus
-                    className="w-full rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] px-3 py-2.5 text-sm text-[color:var(--color-text-primary)] focus:border-[color:var(--color-teal)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)]"
+                    className="w-full rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--surface-elevated-alt)] px-3 py-2.5 text-sm text-[color:var(--text-primary)] focus:border-[color:var(--brand-secondary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-secondary)]"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-[color:var(--color-text-primary)]">
+                    <label className="text-sm font-medium text-[color:var(--text-primary)]">
                       Address{" "}
-                      <span className="font-normal text-[color:var(--color-text-tertiary)]">
+                      <span className="font-normal text-[color:var(--text-tertiary)]">
                         (optional but encouraged)
                       </span>
                     </label>
@@ -458,10 +458,10 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                       type="button"
                       onClick={handleLocateMe}
                       disabled={locatingMe}
-                      className="flex items-center gap-1 rounded-full bg-[color:var(--color-teal-bg)] px-2.5 py-1 text-xs font-medium text-[color:var(--color-teal)] transition hover:brightness-95 disabled:opacity-60 dark:hover:brightness-110"
+                      className="flex items-center gap-1 rounded-full bg-[color:var(--brand-secondary-bg)] px-2.5 py-1 text-xs font-medium text-[color:var(--brand-secondary)] transition hover:brightness-95 disabled:opacity-60 dark:hover:brightness-110"
                     >
                       {locatingMe ? (
-                        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[color:var(--color-border)] border-t-[color:var(--color-teal)]" />
+                        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-[color:var(--border-default)] border-t-[color:var(--brand-secondary)]" />
                       ) : (
                         <span>📍</span>
                       )}
@@ -477,11 +477,11 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                     value={addFormAddress}
                     onChange={(e) => setAddFormAddress(e.target.value)}
                     placeholder="e.g. Via Roma 12"
-                    className="w-full rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] px-3 py-2.5 text-sm text-[color:var(--color-text-primary)] focus:border-[color:var(--color-teal)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)]"
+                    className="w-full rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--surface-elevated-alt)] px-3 py-2.5 text-sm text-[color:var(--text-primary)] focus:border-[color:var(--brand-secondary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-secondary)]"
                   />
                 </div>
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-[color:var(--color-text-primary)]">
+                  <label className="text-sm font-medium text-[color:var(--text-primary)]">
                     City
                   </label>
                   <input
@@ -489,17 +489,17 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                     value={addFormCity}
                     onChange={(e) => setAddFormCity(e.target.value)}
                     placeholder="e.g. Amsterdam"
-                    className="w-full rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] px-3 py-2.5 text-sm text-[color:var(--color-text-primary)] focus:border-[color:var(--color-teal)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)]"
+                    className="w-full rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--surface-elevated-alt)] px-3 py-2.5 text-sm text-[color:var(--text-primary)] focus:border-[color:var(--brand-secondary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-secondary)]"
                   />
                 </div>
-                <p className="rounded-2xl bg-[color:var(--color-surface-alt)] px-4 py-3 text-xs text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
+                <p className="rounded-2xl bg-[color:var(--surface-elevated-alt)] px-4 py-3 text-xs text-[color:var(--text-secondary)] ring-1 ring-[color:var(--border-default)]">
                   We'll review and verify this salon. It'll appear on the map after approval.
                 </p>
                 <button
                   type="button"
                   onClick={handleAddSalonSubmit}
                   disabled={!addFormName.trim() || addFormSubmitting}
-                  className="w-full rounded-2xl bg-[color:var(--color-teal)] px-4 py-3 text-sm font-semibold text-[color:var(--color-on-brand)] transition hover:brightness-110 disabled:opacity-50"
+                  className="w-full rounded-2xl bg-[color:var(--brand-secondary)] px-4 py-3 text-sm font-semibold text-[color:var(--text-inverse)] transition hover:brightness-110 disabled:opacity-50"
                 >
                   {addFormSubmitting ? "Adding…" : "Add this salon"}
                 </button>
@@ -512,7 +512,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
       {/* Success toast */}
       {addToast && (
         <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[70] flex justify-center">
-          <div className="rounded-full bg-[color:var(--color-teal)] px-5 py-2.5 text-sm font-medium text-[color:var(--color-on-brand)] shadow-lg">
+          <div className="rounded-full bg-[color:var(--brand-secondary)] px-5 py-2.5 text-sm font-medium text-[color:var(--text-inverse)] shadow-lg">
             Salon added! It will appear on the map after review.
           </div>
         </div>

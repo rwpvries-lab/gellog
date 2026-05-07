@@ -24,15 +24,15 @@ export function PublicBanner({ variant, profileHandle, salonName }: PublicBanner
     <div
       role="region"
       aria-label="Join Gellog"
-      className="fixed bottom-0 left-0 right-0 z-[35] border-t border-[color:var(--color-border)] bg-[color-mix(in_srgb,var(--color-surface)_96%,transparent)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--color-surface)_90%,transparent)]"
+      className="fixed bottom-0 left-0 right-0 z-[35] border-t border-[color:var(--border-default)] bg-[color-mix(in_srgb,var(--surface-elevated)_96%,transparent)] px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--surface-elevated)_90%,transparent)]"
     >
       <div className="mx-auto flex max-w-xl flex-col items-stretch gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-        <p className="text-center text-sm font-medium leading-snug text-[color:var(--color-text-primary)] sm:text-left">
+        <p className="text-center text-sm font-medium leading-snug text-[color:var(--text-primary)] sm:text-left">
           {copy}
         </p>
         <Link
           href="/signup"
-          className="inline-flex shrink-0 items-center justify-center rounded-full bg-[color:var(--color-orange)] px-5 py-2.5 text-sm font-semibold text-[color:var(--color-on-brand)] shadow-sm transition hover:brightness-110"
+          className="inline-flex shrink-0 items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-[color:var(--text-inverse)] shadow-sm transition hover:brightness-110"
         >
           Sign up
         </Link>

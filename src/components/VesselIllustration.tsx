@@ -238,7 +238,7 @@ function CupIllustration({ scoopColors, showScoops = true }: { scoopColors: stri
       <path
         d={`M${cupTopLeft},${cupTopY} L${cupTopRight},${cupTopY} L${cupBottomRight},${cupBottomY} Q30,${cupBottomY + 6} ${cupBottomLeft},${cupBottomY} Z`}
         fill="white"
-        stroke="var(--color-border, #E4E4E7)"
+        stroke="var(--border-default, #E4E4E7)"
         strokeWidth="1"
       />
 
@@ -246,7 +246,7 @@ function CupIllustration({ scoopColors, showScoops = true }: { scoopColors: stri
       <g clipPath="url(#cup-clip)" opacity="0.18">
         {[54, 61, 68, 75].map((y) =>
           [16, 23, 30, 37, 44].map((x) => (
-            <circle key={`${x}-${y}`} cx={x} cy={y} r="1.2" fill="var(--color-orange, #F97316)" />
+            <circle key={`${x}-${y}`} cx={x} cy={y} r="1.2" fill="var(--brand-primary, #F97316)" />
           ))
         )}
       </g>
@@ -257,14 +257,14 @@ function CupIllustration({ scoopColors, showScoops = true }: { scoopColors: stri
         y1={cupTopY}
         x2={cupTopRight - 1}
         y2={cupTopY}
-        stroke="var(--color-border, #E4E4E7)"
+        stroke="var(--border-default, #E4E4E7)"
         strokeWidth="2"
         strokeLinecap="round"
       />
 
       {/* Spoon leaning to the right */}
-      <line x1="44" y1="48" x2="48" y2="72" stroke="var(--color-border, #A1A1AA)" strokeWidth="1.5" strokeLinecap="round" />
-      <ellipse cx="45.5" cy="46" rx="3" ry="2" fill="none" stroke="var(--color-border, #A1A1AA)" strokeWidth="1.2" />
+      <line x1="44" y1="48" x2="48" y2="72" stroke="var(--border-default, #A1A1AA)" strokeWidth="1.5" strokeLinecap="round" />
+      <ellipse cx="45.5" cy="46" rx="3" ry="2" fill="none" stroke="var(--border-default, #A1A1AA)" strokeWidth="1.2" />
     </svg>
   );
 }
@@ -303,12 +303,12 @@ export function VesselIllustration({
         justifyContent: "center",
         borderRadius: 16,
         border: selected
-          ? "2px solid var(--color-orange, #F97316)"
-          : "2px solid var(--color-border, #E4E4E7)",
+          ? "2px solid var(--brand-primary, #F97316)"
+          : "2px solid var(--border-default, #E4E4E7)",
         transform: selected ? "scale(1.02)" : "scale(1)",
         transition: "transform 0.2s ease, border-color 0.2s ease",
         cursor: onClick ? "pointer" : "default",
-        background: "var(--color-surface, white)",
+        background: "var(--surface-elevated, white)",
         overflow: "hidden",
         flexShrink: 0,
       }}

@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
       otherDocHref="/terms"
       otherDocLabel="Terms & Conditions"
     >
-      <p className="mb-8 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+      <p className="mb-8 text-sm leading-[1.7] text-[color:var(--text-primary)]">
         <strong>DISCLAIMER:</strong> This Privacy Policy was drafted with AI
         assistance and reviewed by the operator of Gellog. It is not a substitute
         for legal advice. If you have questions about your rights under GDPR,
@@ -21,21 +21,21 @@ export default function PrivacyPolicyPage() {
       </p>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           1. Who We Are
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           Gellog is a gelato logging and discovery application developed and
           operated by:
         </p>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           Sidus Studio
           <br />
           Zoetermeer, Netherlands
           <br />
           Email:{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="mailto:support@gellog.app"
           >
             support@gellog.app
@@ -43,7 +43,7 @@ export default function PrivacyPolicyPage() {
           <br />
           Website:{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="https://gellog.app"
             rel="noopener noreferrer"
             target="_blank"
@@ -51,7 +51,7 @@ export default function PrivacyPolicyPage() {
             https://gellog.app
           </a>
         </p>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           Sidus Studio is registered with the Dutch Chamber of Commerce as a sole
           proprietorship. We are the data controller responsible for your personal
           data.
@@ -59,17 +59,17 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           2. What Data We Collect
         </h2>
 
-        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--color-text-primary)]">
+        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--text-primary)]">
           2.1 Account Data
         </h3>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           When you create an account, we collect:
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <li>Email address</li>
           <li>Username (chosen by you)</li>
           <li>Display name (optional)</li>
@@ -80,13 +80,13 @@ export default function PrivacyPolicyPage() {
           </li>
         </ul>
 
-        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--color-text-primary)]">
+        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--text-primary)]">
           2.2 Gelato Log Data
         </h3>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           When you log a gelato visit, we collect:
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <li>Salon name and location (via Google Places API)</li>
           <li>Flavours tried and ratings given</li>
           <li>Overall visit rating</li>
@@ -97,10 +97,10 @@ export default function PrivacyPolicyPage() {
           <li>Price paid (optional)</li>
         </ul>
 
-        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--color-text-primary)]">
+        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--text-primary)]">
           2.3 Weather Data
         </h3>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           When you log a visit, we automatically capture weather conditions at
           your location using the Open-Meteo API. This includes temperature,
           apparent temperature, and weather condition. Open-Meteo does not
@@ -108,10 +108,10 @@ export default function PrivacyPolicyPage() {
           coordinates at the time of logging.
         </p>
 
-        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--color-text-primary)]">
+        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--text-primary)]">
           2.4 Location Data
         </h3>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           We request your device location only when you actively log a gelato
           visit, in order to capture weather data and pre-fill the salon
           location. We do not continuously track your location. Location data is
@@ -119,29 +119,29 @@ export default function PrivacyPolicyPage() {
           logging.
         </p>
 
-        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--color-text-primary)]">
+        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--text-primary)]">
           2.5 Social Data
         </h3>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           If you use Gellog&apos;s social features, we store:
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <li>Follow/following relationships between users</li>
           <li>Likes and comments you make on logs</li>
           <li>Your visibility settings (public / friends / private)</li>
         </ul>
 
-        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--color-text-primary)]">
+        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--text-primary)]">
           2.6 Payment Data
         </h3>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           If you subscribe to a paid tier, payment is handled by Stripe. Gellog
           never sees, stores, or processes your card details. Stripe stores your
           payment information securely. We receive only a customer ID and
           subscription status from Stripe. For more information, see
           Stripe&apos;s Privacy Policy at{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="https://stripe.com/privacy"
             rel="noopener noreferrer"
             target="_blank"
@@ -151,32 +151,32 @@ export default function PrivacyPolicyPage() {
           .
         </p>
 
-        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--color-text-primary)]">
+        <h3 className="mt-5 text-[15px] font-bold text-[color:var(--text-primary)]">
           2.7 Technical Data
         </h3>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           We automatically collect basic technical information when you use the
           app:
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <li>Browser type and version</li>
           <li>Device type (mobile / desktop)</li>
           <li>Pages visited and time spent</li>
           <li>Error logs</li>
         </ul>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           This data is used solely to maintain and improve the service.
         </p>
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           3. How We Use Your Data
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           We use your personal data for the following purposes:
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <li>To create and manage your Gellog account</li>
           <li>To provide the gelato logging and discovery features</li>
           <li>To show your logs in your feed and on your profile</li>
@@ -189,21 +189,21 @@ export default function PrivacyPolicyPage() {
           <li>To improve the app based on usage patterns</li>
           <li>To respond to your support requests</li>
         </ul>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           We do not use your data for advertising. We do not sell your data to
           third parties.
         </p>
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           4. Legal Basis for Processing (GDPR)
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           Under the General Data Protection Regulation (GDPR), we process your
           data under the following legal bases:
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <li>
             Contract performance: processing necessary to provide the Gellog
             service you signed up for
@@ -221,22 +221,22 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           5. Third-Party Services
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           Gellog uses the following third-party services that may process your
           data:
         </p>
 
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <strong>Supabase (database and file storage)</strong>
           <br />
           Your account data, logs, photos, and app data are stored on Supabase
           servers. Supabase stores data in EU-based infrastructure. Privacy
           policy:{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="https://supabase.com/privacy"
             rel="noopener noreferrer"
             target="_blank"
@@ -245,14 +245,14 @@ export default function PrivacyPolicyPage() {
           </a>
         </p>
 
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <strong>Vercel (hosting)</strong>
           <br />
           The Gellog web application is hosted on Vercel. Vercel may process
           request data (IP addresses, headers) as part of serving the
           application. Privacy policy:{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="https://vercel.com/legal/privacy-policy"
             rel="noopener noreferrer"
             target="_blank"
@@ -261,14 +261,14 @@ export default function PrivacyPolicyPage() {
           </a>
         </p>
 
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <strong>Google Maps &amp; Places API (location search)</strong>
           <br />
           We use Google&apos;s Places API to help you find and identify gelato
           salons. Search queries are sent to Google&apos;s servers. Privacy
           policy:{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="https://policies.google.com/privacy"
             rel="noopener noreferrer"
             target="_blank"
@@ -277,14 +277,14 @@ export default function PrivacyPolicyPage() {
           </a>
         </p>
 
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <strong>Stripe (payments)</strong>
           <br />
           Subscription payments are processed by Stripe, Inc. Your payment
           details are handled entirely by Stripe and never stored by Gellog.
           Privacy policy:{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="https://stripe.com/privacy"
             rel="noopener noreferrer"
             target="_blank"
@@ -293,14 +293,14 @@ export default function PrivacyPolicyPage() {
           </a>
         </p>
 
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <strong>Open-Meteo (weather data)</strong>
           <br />
           We use the Open-Meteo API to fetch weather conditions at the time you
           log a visit. Only your approximate coordinates are sent — no personal
           data. Open-Meteo does not store requests. Privacy policy:{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="https://open-meteo.com/en/terms"
             rel="noopener noreferrer"
             target="_blank"
@@ -311,15 +311,15 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           6. Data Retention
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           We retain your data for as long as your account is active. You can
           delete your account at any time from the Settings page. When you delete
           your account:
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <li>
             Your profile, logs, flavour ratings, and photos are permanently
             deleted
@@ -330,20 +330,20 @@ export default function PrivacyPolicyPage() {
             retained
           </li>
         </ul>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           Payment records may be retained for up to 7 years as required by Dutch
           tax law (Belastingdienst).
         </p>
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           7. Your Rights Under GDPR
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           As a resident of the EU/EEA, you have the following rights:
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <li>Right of access: request a copy of the data we hold about you</li>
           <li>Right to rectification: ask us to correct inaccurate data</li>
           <li>
@@ -361,21 +361,21 @@ export default function PrivacyPolicyPage() {
             Right to object: object to processing based on legitimate interests
           </li>
         </ul>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           To exercise any of these rights, email us at{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="mailto:support@gellog.app"
           >
             support@gellog.app
           </a>
           . We will respond within 30 days.
         </p>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           You also have the right to lodge a complaint with the Dutch Data
           Protection Authority (
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="https://autoriteitpersoonsgegevens.nl"
             rel="noopener noreferrer"
             target="_blank"
@@ -387,13 +387,13 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           8. Data Security
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           We take reasonable measures to protect your personal data, including:
         </p>
-        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <ul className="list-disc space-y-1 pl-5 text-sm leading-[1.7] text-[color:var(--text-primary)]">
           <li>
             All data transmitted to/from Gellog is encrypted using HTTPS/TLS
           </li>
@@ -407,22 +407,22 @@ export default function PrivacyPolicyPage() {
           </li>
           <li>We do not store payment card data</li>
         </ul>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           No method of transmission over the internet is 100% secure. We cannot
           guarantee absolute security.
         </p>
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           9. Children&apos;s Privacy
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           Gellog is not intended for children under the age of 16. We do not
           knowingly collect personal data from children under 16. If you believe
           a child has provided us with personal data, please contact us at{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="mailto:support@gellog.app"
           >
             support@gellog.app
@@ -432,10 +432,10 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           10. Changes to This Policy
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           We may update this Privacy Policy from time to time. When we make
           significant changes, we will notify you via the app or by email. The
           &apos;Last updated&apos; date at the top of this document reflects the
@@ -445,16 +445,16 @@ export default function PrivacyPolicyPage() {
       </section>
 
       <section className="mb-8 space-y-3">
-        <h2 className="mt-10 border-b border-[color:var(--color-teal)] pb-1 text-[18px] font-bold text-[color:var(--color-teal)]">
+        <h2 className="mt-10 border-b border-[color:var(--brand-secondary)] pb-1 text-[18px] font-bold text-[color:var(--brand-secondary)]">
           11. Contact
         </h2>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           For any privacy-related questions or requests:
         </p>
-        <p className="text-sm leading-[1.7] text-[color:var(--color-text-primary)]">
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           Email:{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="mailto:support@gellog.app"
           >
             support@gellog.app
@@ -462,7 +462,7 @@ export default function PrivacyPolicyPage() {
           <br />
           Website:{" "}
           <a
-            className="font-medium text-[color:var(--color-teal)] underline hover:opacity-90"
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
             href="https://gellog.app"
             rel="noopener noreferrer"
             target="_blank"

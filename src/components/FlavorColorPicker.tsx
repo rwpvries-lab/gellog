@@ -52,7 +52,7 @@ export function FlavorColorPicker({
   }, []);
 
   return (
-    <div className="w-full max-w-[360px] rounded-2xl bg-zinc-50 p-4 dark:bg-zinc-800/60">
+    <div className="w-full max-w-[360px] rounded-2xl bg-background-secondary p-4 dark:bg-background-tertiary/60">
 
       {/* ── Header preview ─────────────────────────────────── */}
       <div className="mb-4 flex items-center gap-3">
@@ -61,10 +61,10 @@ export function FlavorColorPicker({
           style={{ backgroundColor: currentHex }}
         />
         <div>
-          <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+          <p className="text-sm font-semibold text-text-primary dark:text-text-primary">
             {selectedLabel}
           </p>
-          <p className="font-mono text-xs uppercase text-zinc-400 dark:text-zinc-500">
+          <p className="font-mono text-xs uppercase text-text-tertiary dark:text-text-tertiary">
             {currentHex}
           </p>
         </div>
@@ -96,13 +96,13 @@ export function FlavorColorPicker({
             className="pointer-events-none flex h-11 w-11 items-center justify-center rounded-full shadow-sm"
             style={{
               backgroundColor: isCustom ? currentHex : "transparent",
-              border: isCustom ? "none" : "2px dashed #a1a1aa",
+              border: isCustom ? "none" : "2px dashed var(--border-strong)",
               outline: isCustom ? `2.5px solid ${currentHex}` : "none",
               outlineOffset: "3px",
             }}
           >
             {!isCustom && (
-              <span className="text-lg leading-none text-zinc-400 dark:text-zinc-500">
+              <span className="text-lg leading-none text-text-tertiary dark:text-text-tertiary">
                 +
               </span>
             )}
@@ -141,8 +141,8 @@ export function FlavorColorPicker({
                   <span
                     className={`max-w-[40px] truncate text-center text-[10px] ${
                       isActive
-                        ? "font-medium text-zinc-700 dark:text-zinc-200"
-                        : "text-zinc-400 dark:text-zinc-500"
+                        ? "font-medium text-text-secondary dark:text-text-secondary"
+                        : "text-text-tertiary dark:text-text-tertiary"
                     }`}
                   >
                     {isActive ? (flavorName || f.label) : f.label}
@@ -159,7 +159,7 @@ export function FlavorColorPicker({
         <button
           type="button"
           onClick={onClose}
-          className="w-full rounded-xl bg-teal-600 py-2 text-sm font-semibold text-white transition hover:bg-teal-700 active:scale-[.98]"
+          className="w-full rounded-xl bg-brand-primary py-2 text-sm font-semibold text-text-inverse transition hover:bg-brand-primary-hover active:scale-[.98]"
         >
           Done
         </button>

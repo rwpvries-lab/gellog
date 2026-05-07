@@ -7,27 +7,75 @@
   /* Subtle rim on pale gelato bases (cream, lemon-pale) for light / dark surfaces */
   --gelato-edge: rgba(0, 0, 0, 0.06);
 
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-primary: 251 245 232;
+  --bg-secondary: 245 238 220;
+  --bg-tertiary: 239 231 204;
+  --surface-elevated-rgb: 255 255 255;
 
-  --color-surface:        #F9F9F9;
-  --color-surface-alt:    #F4F4F5;
-  --color-text-primary:   #111827;
-  --color-text-secondary: #6B7280;
-  --color-border:         #E5E7EB;
-  --color-orange:         #FD7706;
-  --color-teal:           #3D948B;
-  --color-orange-bg:      #FEF3E7;
-  --color-teal-bg:        #EEF7F6;
-  --color-text-tertiary:  #9CA3AF;
-  --color-error:          #DC2626;
-  --color-location:       #3b82f6;
+  --text-primary-rgb: 46 26 22;
+  --text-secondary-rgb: 107 95 88;
+  --text-tertiary-rgb: 123 110 93;
+  --text-inverse-rgb: 251 245 232;
+
+  --brand-primary-rgb: 168 85 48;
+  --brand-primary-hover-rgb: 154 75 40;
+  --brand-primary-active-rgb: 137 67 34;
+  --brand-primary-muted-rgb: 227 179 150;
+  --brand-primary-surface-rgb: 245 224 207;
+
+  --brand-secondary-rgb: 27 94 82;
+  --brand-secondary-hover-rgb: 20 74 65;
+  --brand-secondary-muted-rgb: 214 233 223;
+
+  --border-default-rgb: 226 217 208;
+  --border-strong-rgb: 184 175 163;
+  --border-focus-rgb: 201 111 57;
+
+  --state-success-rgb: 92 138 78;
+  --state-warning-rgb: 216 154 63;
+  --state-error-rgb: 180 81 62;
+  --state-info-rgb: 27 94 82;
+
+  --background-primary: rgb(var(--bg-primary));
+  --background-secondary: rgb(var(--bg-secondary));
+  --background-tertiary: rgb(var(--bg-tertiary));
+  --surface-elevated: rgb(var(--surface-elevated-rgb));
+
+  --text-primary: rgb(var(--text-primary-rgb));
+  --text-secondary: rgb(var(--text-secondary-rgb));
+  --text-tertiary: rgb(var(--text-tertiary-rgb));
+  --text-inverse: rgb(var(--text-inverse-rgb));
+
+  --brand-primary: rgb(var(--brand-primary-rgb));
+  --brand-primary-hover: rgb(var(--brand-primary-hover-rgb));
+  --brand-primary-active: rgb(var(--brand-primary-active-rgb));
+  --brand-primary-muted: rgb(var(--brand-primary-muted-rgb));
+  --brand-primary-surface: rgb(var(--brand-primary-surface-rgb));
+
+  --brand-secondary: rgb(var(--brand-secondary-rgb));
+  --brand-secondary-hover: rgb(var(--brand-secondary-hover-rgb));
+  --brand-secondary-muted: rgb(var(--brand-secondary-muted-rgb));
+
+  --border-default: rgb(var(--border-default-rgb));
+  --border-strong: rgb(var(--border-strong-rgb));
+  --border-focus: rgb(var(--border-focus-rgb));
+
+  --state-success: rgb(var(--state-success-rgb));
+  --state-warning: rgb(var(--state-warning-rgb));
+  --state-error: rgb(var(--state-error-rgb));
+  --state-info: rgb(var(--state-info-rgb));
+
+  --star-filled: var(--brand-primary);
+  --star-empty: var(--border-default);
+
+  --background:           var(--background-primary);
+  --foreground:           var(--text-primary);
 
   /* Log form & overlays (reference palette only via variables) */
-  --color-backdrop:       color-mix(in srgb, var(--color-text-primary) 42%, transparent);
-  --color-error-surface:  color-mix(in srgb, var(--color-error) 8%, var(--color-surface));
-  --color-error-border:   color-mix(in srgb, var(--color-error) 28%, var(--color-border));
-  --color-on-brand:       #ffffff;
+  --color-backdrop:       color-mix(in srgb, var(--text-primary) 42%, transparent);
+  --color-error-surface:  color-mix(in srgb, var(--state-error) 8%, var(--surface-elevated));
+  --color-error-border:   color-mix(in srgb, var(--state-error) 28%, var(--border-default));
+  --color-on-brand: var(--text-inverse);
 
   --color-avatar-0: #4d97d6;
   --color-avatar-1: #60b488;
@@ -38,9 +86,9 @@
   /* Page shells — match profile (surface-alt) with optional soft brand wash */
   --page-gradient-bg: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-teal) 6%, var(--color-surface-alt)) 0%,
-    var(--color-surface-alt) 38%,
-    color-mix(in srgb, var(--color-orange) 5%, var(--color-surface-alt)) 100%
+    color-mix(in srgb, var(--brand-secondary) 6%, var(--background-secondary)) 0%,
+    var(--background-secondary) 38%,
+    color-mix(in srgb, var(--brand-primary) 5%, var(--background-secondary)) 100%
   );
   --shadow-card-sm: 0 2px 12px rgba(0, 0, 0, 0.06);
   --shadow-float: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -49,26 +97,74 @@
 .dark {
   --gelato-edge: rgba(255, 255, 255, 0.12);
 
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --bg-primary: 31 20 17;
+  --bg-secondary: 42 29 24;
+  --bg-tertiary: 53 40 34;
+  --surface-elevated-rgb: 61 48 37;
 
-  --color-surface:        #1C1C1E;
-  --color-surface-alt:    #2C2C2E;
-  --color-text-primary:   #F9F9F9;
-  --color-text-secondary: #AEAEB2;
-  --color-border:         #3A3A3C;
-  --color-orange:         #F97316;
-  --color-teal:           #2A9D8F;
-  --color-orange-bg:      #291A09;
-  --color-teal-bg:        #042F2E;
-  --color-text-tertiary:  #6B7280;
-  --color-error:          #EF4444;
-  --color-location:       #60a5fa;
+  --text-primary-rgb: 251 245 232;
+  --text-secondary-rgb: 203 184 166;
+  --text-tertiary-rgb: 163 126 110;
+  --text-inverse-rgb: 46 26 22;
+
+  --brand-primary-rgb: 224 138 95;
+  --brand-primary-hover-rgb: 238 157 114;
+  --brand-primary-active-rgb: 224 138 95;
+  --brand-primary-muted-rgb: 164 51 45;
+  --brand-primary-surface-rgb: 164 51 45;
+
+  --brand-secondary-rgb: 79 163 145;
+  --brand-secondary-hover-rgb: 79 163 145;
+  --brand-secondary-muted-rgb: 45 116 114;
+
+  --border-default-rgb: 74 61 62;
+  --border-strong-rgb: 106 92 70;
+  --border-focus-rgb: 224 138 95;
+
+  --state-success-rgb: 92 138 78;
+  --state-warning-rgb: 216 154 63;
+  --state-error-rgb: 180 81 62;
+  --state-info-rgb: 27 94 82;
+
+  --background-primary: rgb(var(--bg-primary));
+  --background-secondary: rgb(var(--bg-secondary));
+  --background-tertiary: rgb(var(--bg-tertiary));
+  --surface-elevated: rgb(var(--surface-elevated-rgb));
+
+  --text-primary: rgb(var(--text-primary-rgb));
+  --text-secondary: rgb(var(--text-secondary-rgb));
+  --text-tertiary: rgb(var(--text-tertiary-rgb));
+  --text-inverse: rgb(var(--text-inverse-rgb));
+
+  --brand-primary: rgb(var(--brand-primary-rgb));
+  --brand-primary-hover: rgb(var(--brand-primary-hover-rgb));
+  --brand-primary-active: rgb(var(--brand-primary-active-rgb));
+  --brand-primary-muted: rgb(var(--brand-primary-muted-rgb));
+  --brand-primary-surface: rgb(var(--brand-primary-surface-rgb));
+
+  --brand-secondary: rgb(var(--brand-secondary-rgb));
+  --brand-secondary-hover: rgb(var(--brand-secondary-hover-rgb));
+  --brand-secondary-muted: rgb(var(--brand-secondary-muted-rgb));
+
+  --border-default: rgb(var(--border-default-rgb));
+  --border-strong: rgb(var(--border-strong-rgb));
+  --border-focus: rgb(var(--border-focus-rgb));
+
+  --state-success: rgb(var(--state-success-rgb));
+  --state-warning: rgb(var(--state-warning-rgb));
+  --state-error: rgb(var(--state-error-rgb));
+  --state-info: rgb(var(--state-info-rgb));
+
+  --star-filled: var(--brand-primary);
+  --star-empty: var(--border-default);
+
+  --background:           var(--background-primary);
+  --foreground:           var(--text-primary);
 
   --color-backdrop:       color-mix(in srgb, #000000 55%, transparent);
-  --color-error-surface:  color-mix(in srgb, var(--color-error) 14%, var(--color-surface));
-  --color-error-border:   color-mix(in srgb, var(--color-error) 35%, var(--color-border));
-  --color-on-brand:       #ffffff;
+  --color-error-surface:  color-mix(in srgb, var(--state-error) 14%, var(--surface-elevated));
+  --color-error-border:   color-mix(in srgb, var(--state-error) 35%, var(--border-default));
+  --color-on-brand: var(--text-inverse);
 
   --color-avatar-0: #5ba3e8;
   --color-avatar-1: #6bc49a;
@@ -78,9 +174,9 @@
 
   --page-gradient-bg: linear-gradient(
     180deg,
-    color-mix(in srgb, var(--color-teal) 12%, var(--color-surface-alt)) 0%,
-    var(--color-surface-alt) 40%,
-    color-mix(in srgb, var(--color-orange) 7%, #141414) 100%
+    color-mix(in srgb, var(--brand-secondary) 12%, var(--background-secondary)) 0%,
+    var(--background-secondary) 40%,
+    color-mix(in srgb, var(--brand-primary) 7%, #141414) 100%
   );
   --shadow-card-sm: 0 2px 20px rgba(0, 0, 0, 0.45);
   --shadow-float: 0 2px 14px rgba(0, 0, 0, 0.5);
@@ -89,14 +185,15 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), serif;
   --font-mono: ui-monospace, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
 }
 
 /*
@@ -137,7 +234,7 @@ body {
 /* Custom scrollbar — orange/teal theme */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-orange) var(--color-teal-bg);
+  scrollbar-color: var(--brand-primary) var(--background-secondary);
 }
 
 *::-webkit-scrollbar {
@@ -146,15 +243,15 @@ body {
 }
 
 *::-webkit-scrollbar-track {
-  background: var(--color-teal-bg);
+  background: var(--background-secondary);
   border-radius: 4px;
 }
 
 *::-webkit-scrollbar-thumb {
-  background: var(--color-orange);
+  background: var(--brand-primary);
   border-radius: 4px;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--color-teal);
+  background: var(--brand-secondary);
 }

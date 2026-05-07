@@ -245,7 +245,7 @@ function SalonInlineFlavourScoops({
           ))}
         </span>
         {extra > 0 ? (
-          <span className="z-[4] ml-1 shrink-0 self-end text-[11px] font-semibold tabular-nums text-[color:var(--color-text-secondary)]">
+          <span className="z-[4] ml-1 shrink-0 self-end text-[11px] font-semibold tabular-nums text-[color:var(--text-secondary)]">
             +{extra}
           </span>
         ) : null}
@@ -276,7 +276,7 @@ function SalonInlineFlavourScoops({
         ))}
       </span>
       {extra > 0 ? (
-        <span className="z-[4] ml-1 shrink-0 self-end text-[11px] font-semibold tabular-nums text-[color:var(--color-text-secondary)]">
+        <span className="z-[4] ml-1 shrink-0 self-end text-[11px] font-semibold tabular-nums text-[color:var(--text-secondary)]">
           +{extra}
         </span>
       ) : null}
@@ -290,7 +290,7 @@ function LogDetailGelatoHero({ log }: { log: IceCreamLog }) {
 
   const vessel = log.vessel;
   const labelClass =
-    "max-w-[220px] text-center text-xs font-medium text-[color:var(--color-text-secondary)]";
+    "max-w-[220px] text-center text-xs font-medium text-[color:var(--text-secondary)]";
 
   if (flavours.length === 1) {
     const f = flavours[0];
@@ -386,17 +386,17 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
       onClick={onClose}
     >
       <div
-        className="w-full rounded-t-3xl bg-[color:var(--color-surface)] p-6 shadow-2xl ring-1 ring-[color:var(--color-border)]"
+        className="w-full rounded-t-3xl bg-[color:var(--surface-elevated)] p-6 shadow-2xl ring-1 ring-[color:var(--border-default)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
-          <p className="text-sm font-semibold text-[color:var(--color-text-primary)]">
+          <p className="text-sm font-semibold text-[color:var(--text-primary)]">
             Get directions to {log.salon_name}
           </p>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--color-surface-alt)] text-xs text-[color:var(--color-text-secondary)] transition hover:brightness-95 dark:hover:brightness-110"
+            className="flex h-7 w-7 items-center justify-center rounded-full bg-[color:var(--surface-elevated-alt)] text-xs text-[color:var(--text-secondary)] transition hover:brightness-95 dark:hover:brightness-110"
             aria-label="Close"
           >
             ✕
@@ -405,7 +405,7 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
         <div className="flex flex-col gap-2">
           <a
             href={appleUrl}
-            className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface-alt)] px-4 py-3 text-sm font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
+            className="flex items-center gap-3 rounded-2xl bg-[color:var(--surface-elevated-alt)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)] transition hover:brightness-95 dark:hover:brightness-110"
           >
             <span className="text-lg">🗺️</span>
             Open in Apple Maps
@@ -414,7 +414,7 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
             href={googleUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface-alt)] px-4 py-3 text-sm font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
+            className="flex items-center gap-3 rounded-2xl bg-[color:var(--surface-elevated-alt)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)] transition hover:brightness-95 dark:hover:brightness-110"
           >
             <span className="text-lg">🌐</span>
             Open in Google Maps
@@ -422,7 +422,7 @@ function DirectionsSheet({ log, onClose }: DirectionsSheetProps) {
           <button
             type="button"
             onClick={() => void handleCopyLocation()}
-            className="flex items-center gap-3 rounded-2xl bg-[color:var(--color-surface-alt)] px-4 py-3 text-sm font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
+            className="flex items-center gap-3 rounded-2xl bg-[color:var(--surface-elevated-alt)] px-4 py-3 text-sm font-medium text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)] transition hover:brightness-95 dark:hover:brightness-110"
           >
             <span className="text-lg">{copied ? "✅" : "📋"}</span>
             {copied ? "Copied!" : "Copy location"}
@@ -549,10 +549,10 @@ export function FeedCard({
 
   const ratingBorderClass =
     log.overall_rating >= 4
-      ? "border-l-4 border-l-[color:var(--color-orange)]"
+      ? "border-l-4 border-l-[color:var(--brand-primary)]"
       : log.overall_rating >= 3
-        ? "border-l-4 border-l-[color:var(--color-teal)]"
-        : "border-l-4 border-l-[color:var(--color-border)]";
+        ? "border-l-4 border-l-[color:var(--brand-secondary)]"
+        : "border-l-4 border-l-[color:var(--border-default)]";
 
   const numericFlavourRatings = log.log_flavours
     .map((f) => (typeof f.rating === "number" ? f.rating : null))
@@ -564,7 +564,7 @@ export function FeedCard({
   const photoInitial = (log.salon_name?.trim() || "G").charAt(0).toUpperCase();
 
   const pillBase =
-    "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold text-[color:var(--color-on-brand)]";
+    "inline-flex items-center rounded-full px-3 py-1.5 text-xs font-semibold text-[color:var(--text-inverse)]";
 
   /** Feed layout: only show a tall hero when there is a photo the viewer can see. */
   const feedHeroVisible = isFeedLayout && hasPhotoAttached && canSeePhoto && Boolean(photoUrl);
@@ -572,12 +572,12 @@ export function FeedCard({
   return (
     <>
       <article
-        className={`overflow-hidden rounded-3xl bg-[color:var(--color-surface)] shadow-sm ring-1 backdrop-blur-sm ${
+        className={`overflow-hidden rounded-3xl bg-[color:var(--surface-elevated)] shadow-sm ring-1 backdrop-blur-sm ${
           isFeedLayout ? "" : ratingBorderClass
         } ${
           isOwnLog
-            ? "ring-[color:color-mix(in_srgb,var(--color-orange)_45%,var(--color-border))]"
-            : "ring-[color:var(--color-border)]"
+            ? "ring-[color:color-mix(in_srgb,var(--brand-primary)_45%,var(--border-default))]"
+            : "ring-[color:var(--border-default)]"
         }`}
         onClick={() => {
           if (!isDetailPage) setFeedExpanded((v) => !v);
@@ -587,7 +587,7 @@ export function FeedCard({
         {isFeedLayout ? (
           <>
             {feedHeroVisible && photoUrl ? (
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[color:var(--color-surface-alt)]">
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[color:var(--surface-elevated-alt)]">
                 {!photoImgError ? (
                   <Image
                     src={photoUrl}
@@ -599,8 +599,8 @@ export function FeedCard({
                     onError={() => setPhotoErrorLogId(log.id)}
                   />
                 ) : (
-                  <div className="flex h-full w-full flex-col items-center justify-center bg-[color:var(--color-teal)]">
-                    <span className="text-3xl font-bold text-[color:var(--color-on-brand)]">
+                  <div className="flex h-full w-full flex-col items-center justify-center bg-[color:var(--brand-secondary)]">
+                    <span className="text-3xl font-bold text-[color:var(--text-inverse)]">
                       {photoInitial}
                     </span>
                   </div>
@@ -608,23 +608,23 @@ export function FeedCard({
               </div>
             ) : null}
             {showPhotoPlaceholder ? (
-              <div className="flex items-center gap-2 border-b border-[color:var(--color-border)] bg-[color:var(--color-surface-alt)] px-4 py-2.5">
+              <div className="flex items-center gap-2 border-b border-[color:var(--border-default)] bg-[color:var(--surface-elevated-alt)] px-4 py-2.5">
                 <span className="text-base" aria-hidden>
                   👥
                 </span>
-                <p className="text-xs font-medium text-[color:var(--color-text-secondary)]">
+                <p className="text-xs font-medium text-[color:var(--text-secondary)]">
                   Photo visible to followers only
                 </p>
               </div>
             ) : null}
             <div className="space-y-3 px-4 pb-3 pt-4">
               <div>
-                <h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--color-text-primary)]">
+                <h2 className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--text-primary)]">
                   {log.salon_place_id ? (
                     <Link
                       href={`/salon/${log.salon_place_id}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="min-w-0 text-[color:var(--color-text-primary)] decoration-[color:color-mix(in_srgb,var(--color-teal)_55%,var(--color-border))] decoration-2 underline-offset-4 transition-colors hover:text-[color:var(--color-teal)]"
+                      className="min-w-0 text-[color:var(--text-primary)] decoration-[color:color-mix(in_srgb,var(--brand-secondary)_55%,var(--border-default))] decoration-2 underline-offset-4 transition-colors hover:text-[color:var(--brand-secondary)]"
                     >
                       {log.salon_name}
                     </Link>
@@ -638,7 +638,7 @@ export function FeedCard({
                   />
                 </h2>
                 {log.salon_city?.trim() ? (
-                  <p className="mt-0.5 text-sm text-[color:var(--color-text-secondary)]">
+                  <p className="mt-0.5 text-sm text-[color:var(--text-secondary)]">
                     {log.salon_city.trim()}
                   </p>
                 ) : null}
@@ -659,8 +659,8 @@ export function FeedCard({
                           key={flavour.id}
                           className={`${pillBase} ${
                             i % 2 === 0
-                              ? "bg-[color:var(--color-orange)]"
-                              : "bg-[color:var(--color-teal)]"
+                              ? "bg-[color:var(--brand-primary)]"
+                              : "bg-[color:var(--brand-secondary)]"
                           }`}
                         >
                           {getFlavourDisplayLabel(flavour)}
@@ -668,7 +668,7 @@ export function FeedCard({
                       ))}
                       {!expanded && log.log_flavours.length > FEED_COLLAPSED_FLAVOUR_CAP ? (
                         <span
-                          className={`${pillBase} bg-[color:var(--color-surface-alt)] text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]`}
+                          className={`${pillBase} bg-[color:var(--surface-elevated-alt)] text-[color:var(--text-secondary)] ring-1 ring-[color:var(--border-default)]`}
                         >
                           +{log.log_flavours.length - FEED_COLLAPSED_FLAVOUR_CAP}
                         </span>
@@ -683,14 +683,14 @@ export function FeedCard({
                   <RatingStarsDisplay value={log.overall_rating} size="lg" />
                 </div>
                 {canSeePrice && pricePaid != null ? (
-                  <span className="shrink-0 text-sm font-semibold tabular-nums text-[color:var(--color-text-primary)]">
+                  <span className="shrink-0 text-sm font-semibold tabular-nums text-[color:var(--text-primary)]">
                     €{pricePaid.toFixed(2)}
                   </span>
                 ) : null}
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
+                <span className="inline-flex max-w-full items-center gap-1 rounded-full bg-[color:var(--surface-elevated-alt)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--text-secondary)] ring-1 ring-[color:var(--border-default)]">
                   {log.visibility === "public" ? (
                     <>
                       <span aria-hidden>🌐</span>
@@ -709,14 +709,14 @@ export function FeedCard({
                   )}
                 </span>
                 {feedWeatherLine ? (
-                  <span className="inline-flex max-w-[min(12rem,100%)] items-center gap-0.5 truncate rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
+                  <span className="inline-flex max-w-[min(12rem,100%)] items-center gap-0.5 truncate rounded-full bg-[color:var(--surface-elevated-alt)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--text-secondary)] ring-1 ring-[color:var(--border-default)]">
                     <span className="shrink-0" aria-hidden>
                       ☀️
                     </span>
                     <span className="min-w-0 truncate">{feedWeatherLine}</span>
                   </span>
                 ) : null}
-                <span className="inline-flex items-center rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
+                <span className="inline-flex items-center rounded-full bg-[color:var(--surface-elevated-alt)] px-2.5 py-1 text-[11px] font-medium text-[color:var(--text-secondary)] ring-1 ring-[color:var(--border-default)]">
                   {timeAgo}
                 </span>
               </div>
@@ -726,7 +726,7 @@ export function FeedCard({
         <div className="p-4 pb-3">
           {isDetailPage && log.log_flavours.length > 0 ? <LogDetailGelatoHero log={log} /> : null}
           {/* Header: avatar · username · time ago [· edit/delete] */}
-          <div className="mb-3 flex items-center gap-2 text-xs text-[color:var(--color-text-secondary)]">
+          <div className="mb-3 flex items-center gap-2 text-xs text-[color:var(--text-secondary)]">
             {profile?.username ? (
               <Link
                 href={isOwnLog ? "/icecream/profile" : `/profile/${profile.username}`}
@@ -744,11 +744,11 @@ export function FeedCard({
                     onError={() => setAvatarErrorLogId(log.id)}
                   />
                 ) : (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--brand-secondary)] text-xs font-semibold text-[color:var(--text-inverse)]">
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="font-medium text-[color:var(--color-text-primary)]">
+                <span className="font-medium text-[color:var(--text-primary)]">
                   {displayName}
                 </span>
               </Link>
@@ -765,11 +765,11 @@ export function FeedCard({
                     onError={() => setAvatarErrorLogId(log.id)}
                   />
                 ) : (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[color:var(--brand-secondary)] text-xs font-semibold text-[color:var(--text-inverse)]">
                     {displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="font-medium text-[color:var(--color-text-primary)]">
+                <span className="font-medium text-[color:var(--text-primary)]">
                   {displayName}
                 </span>
               </>
@@ -777,11 +777,11 @@ export function FeedCard({
             <span>·</span>
             <span>{timeAgo}</span>
             {log.visibility === "friends" ? (
-              <span className="rounded-full bg-[color:var(--color-teal-bg)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_35%,var(--color-border))]">
+              <span className="rounded-full bg-[color:var(--brand-secondary-bg)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--brand-secondary)] ring-1 ring-[color:color-mix(in_srgb,var(--brand-secondary)_35%,var(--border-default))]">
                 Friends
               </span>
             ) : log.visibility === "private" ? (
-              <span className="rounded-full bg-[color:var(--color-surface-alt)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--color-text-secondary)] ring-1 ring-[color:var(--color-border)]">
+              <span className="rounded-full bg-[color:var(--surface-elevated-alt)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--text-secondary)] ring-1 ring-[color:var(--border-default)]">
                 Private
               </span>
             ) : null}
@@ -793,7 +793,7 @@ export function FeedCard({
                     e.stopPropagation();
                     router.push(`/icecream/logs/edit/${log.id}`);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-[color:var(--color-text-tertiary)] transition hover:bg-[color:var(--color-surface-alt)] hover:text-[color:var(--color-text-primary)]"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[color:var(--text-tertiary)] transition hover:bg-[color:var(--surface-elevated-alt)] hover:text-[color:var(--text-primary)]"
                   aria-label="Edit log"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -807,7 +807,7 @@ export function FeedCard({
                     e.stopPropagation();
                     setShowDeleteConfirm(true);
                   }}
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-[color:var(--color-text-tertiary)] transition hover:bg-[color:var(--color-error-surface)] hover:text-[color:var(--color-error)]"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[color:var(--text-tertiary)] transition hover:bg-[color:var(--color-error-surface)] hover:text-[color:var(--color-error)]"
                   aria-label="Delete log"
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -823,12 +823,12 @@ export function FeedCard({
 
           {/* Salon name + inline flavour scoops + overall rating */}
           <div className="flex items-start justify-between gap-4">
-            <h2 className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--color-text-primary)]">
+            <h2 className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[1.0625rem] font-semibold leading-snug tracking-tight text-[color:var(--text-primary)]">
               {log.salon_place_id ? (
                 <Link
                   href={`/salon/${log.salon_place_id}`}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex max-w-full shrink-0 items-center gap-1 rounded-full bg-[color:var(--color-teal-bg)] px-3 py-1 text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_40%,var(--color-border))] transition hover:brightness-95 dark:hover:brightness-110"
+                  className="inline-flex max-w-full shrink-0 items-center gap-1 rounded-full bg-[color:var(--brand-secondary-bg)] px-3 py-1 text-[color:var(--brand-secondary)] ring-1 ring-[color:color-mix(in_srgb,var(--brand-secondary)_40%,var(--border-default))] transition hover:brightness-95 dark:hover:brightness-110"
                 >
                   {log.salon_name}
                 </Link>
@@ -843,7 +843,7 @@ export function FeedCard({
             </h2>
             <div className="flex shrink-0 flex-col items-end gap-0.5">
               <RatingStarsDisplay value={log.overall_rating} size="lg" />
-              <span className="text-xs font-medium text-[color:var(--color-text-secondary)]">
+              <span className="text-xs font-medium text-[color:var(--text-secondary)]">
                 {log.overall_rating.toFixed(1)}/5
               </span>
             </div>
@@ -863,17 +863,17 @@ export function FeedCard({
               />
             </div>
           ) : canSeePhoto && photoUrl && photoImgError ? (
-            <div className="mt-3 flex aspect-[4/3] w-full flex-col items-center justify-center rounded-2xl bg-[color:var(--color-teal)]">
-              <span className="text-3xl font-bold text-[color:var(--color-on-brand)]">
+            <div className="mt-3 flex aspect-[4/3] w-full flex-col items-center justify-center rounded-2xl bg-[color:var(--brand-secondary)]">
+              <span className="text-3xl font-bold text-[color:var(--text-inverse)]">
                 {photoInitial}
               </span>
             </div>
           ) : showPhotoPlaceholder ? (
-            <div className="mt-3 flex aspect-[8/5] w-full flex-col items-center justify-center gap-1 rounded-2xl bg-[color:var(--color-surface-alt)] ring-1 ring-[color:var(--color-border)]">
+            <div className="mt-3 flex aspect-[8/5] w-full flex-col items-center justify-center gap-1 rounded-2xl bg-[color:var(--surface-elevated-alt)] ring-1 ring-[color:var(--border-default)]">
               <span className="text-2xl" aria-hidden>
                 👥
               </span>
-              <p className="px-4 text-center text-xs font-medium text-[color:var(--color-text-secondary)]">
+              <p className="px-4 text-center text-xs font-medium text-[color:var(--text-secondary)]">
                 Photo visible to followers only
               </p>
             </div>
@@ -893,7 +893,7 @@ export function FeedCard({
                   {log.log_flavours.map((flavour) => (
                     <span
                       key={flavour.id}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--color-surface-alt)] px-2.5 py-1 text-xs font-semibold text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)]"
+                      className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--surface-elevated-alt)] px-2.5 py-1 text-xs font-semibold text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)]"
                     >
                       <Gelato
                         variant="scoop"
@@ -932,8 +932,8 @@ export function FeedCard({
                       flavour.rating === highestFlavourRating;
 
                     const flavourClass = isTop
-                      ? "bg-[color:var(--color-orange-bg)] text-[color:var(--color-orange)] ring-[color:color-mix(in_srgb,var(--color-orange)_35%,var(--color-border))]"
-                      : "bg-[color:var(--color-surface-alt)] text-[color:var(--color-text-primary)] ring-[color:var(--color-border)]";
+                      ? "bg-[color:var(--brand-primary-bg)] text-[color:var(--brand-primary)] ring-[color:color-mix(in_srgb,var(--brand-primary)_35%,var(--border-default))]"
+                      : "bg-[color:var(--surface-elevated-alt)] text-[color:var(--text-primary)] ring-[color:var(--border-default)]";
 
                     const advancedRatings = getAdvancedRatings(flavour);
 
@@ -961,14 +961,14 @@ export function FeedCard({
                                 DIETARY_TAG_SET.has(tag) ? (
                                   <span
                                     key={tag}
-                                    className="rounded-full bg-[color:var(--color-teal-bg)] px-1.5 py-0 text-[10px] font-medium text-[color:var(--color-teal)]"
+                                    className="rounded-full bg-[color:var(--brand-secondary-bg)] px-1.5 py-0 text-[10px] font-medium text-[color:var(--brand-secondary)]"
                                   >
                                     {tag}
                                   </span>
                                 ) : (
                                   <span
                                     key={tag}
-                                    className="rounded-full bg-[color:var(--color-orange-bg)] px-1.5 py-0 text-[10px] font-medium text-[color:var(--color-orange)]"
+                                    className="rounded-full bg-[color:var(--brand-primary-bg)] px-1.5 py-0 text-[10px] font-medium text-[color:var(--brand-primary)]"
                                   >
                                     {tag}
                                   </span>
@@ -981,7 +981,7 @@ export function FeedCard({
                             {advancedRatings.map(({ label, value }) => (
                               <span
                                 key={label}
-                                className="flex items-center gap-1 text-[10px] text-[color:var(--color-text-secondary)]"
+                                className="flex items-center gap-1 text-[10px] text-[color:var(--text-secondary)]"
                               >
                                 <span className="font-medium">{label}</span>
                                 <RatingStarsDisplay value={value} size="sm" />
@@ -997,7 +997,7 @@ export function FeedCard({
 
               {/* Weather */}
               {weather ? (
-                <p className="flex items-center gap-1 text-xs text-[color:var(--color-text-secondary)]">
+                <p className="flex items-center gap-1 text-xs text-[color:var(--text-secondary)]">
                   <span>☀️</span>
                   {weather}
                 </p>
@@ -1005,8 +1005,8 @@ export function FeedCard({
 
               {/* Price */}
               {canSeePrice && pricePaid != null ? (
-                <p className="text-xs text-[color:var(--color-text-secondary)]">
-                  <span className="font-medium text-[color:var(--color-orange)]">
+                <p className="text-xs text-[color:var(--text-secondary)]">
+                  <span className="font-medium text-[color:var(--brand-primary)]">
                     €{pricePaid.toFixed(2)}
                   </span>{" "}
                   paid
@@ -1015,13 +1015,13 @@ export function FeedCard({
 
               {/* Notes */}
               {log.notes ? (
-                <p className="rounded-2xl bg-[color:var(--color-surface-alt)] px-3 py-2 text-sm text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)]">
+                <p className="rounded-2xl bg-[color:var(--surface-elevated-alt)] px-3 py-2 text-sm text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)]">
                   {log.notes}
                 </p>
               ) : null}
 
               {/* Full date/time */}
-              <p className="text-xs text-[color:var(--color-text-tertiary)]">{fullDate}</p>
+              <p className="text-xs text-[color:var(--text-tertiary)]">{fullDate}</p>
 
               {/* Directions button */}
               {log.salon_lat != null && log.salon_lng != null ? (
@@ -1032,7 +1032,7 @@ export function FeedCard({
                       e.stopPropagation();
                       setShowDirections(true);
                     }}
-                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--color-teal-bg)] px-3 py-1.5 text-xs font-medium text-[color:var(--color-teal)] ring-1 ring-[color:color-mix(in_srgb,var(--color-teal)_35%,var(--color-border))] transition hover:brightness-95 dark:hover:brightness-110"
+                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--brand-secondary-bg)] px-3 py-1.5 text-xs font-medium text-[color:var(--brand-secondary)] ring-1 ring-[color:color-mix(in_srgb,var(--brand-secondary)_35%,var(--border-default))] transition hover:brightness-95 dark:hover:brightness-110"
                   >
                     <svg
                       width="11"
@@ -1058,7 +1058,7 @@ export function FeedCard({
                   <button
                     type="button"
                     onClick={(e) => void handleShare(e)}
-                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--color-surface-alt)] px-3 py-1.5 text-xs font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
+                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--surface-elevated-alt)] px-3 py-1.5 text-xs font-medium text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)] transition hover:brightness-95 dark:hover:brightness-110"
                     aria-label="Share"
                   >
                     <svg
@@ -1086,7 +1086,7 @@ export function FeedCard({
 
         {isFeedLayout ? (
           <div
-            className="flex items-center justify-between gap-3 border-t border-[color:var(--color-border)] px-4 py-3"
+            className="flex items-center justify-between gap-3 border-t border-[color:var(--border-default)] px-4 py-3"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="min-w-0 flex-1">
@@ -1107,11 +1107,11 @@ export function FeedCard({
                       onError={() => setAvatarErrorLogId(log.id)}
                     />
                   ) : (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--brand-secondary)] text-xs font-semibold text-[color:var(--text-inverse)]">
                       {displayName.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="truncate text-sm font-medium text-[color:var(--color-text-primary)]">
+                  <span className="truncate text-sm font-medium text-[color:var(--text-primary)]">
                     {displayName}
                   </span>
                 </Link>
@@ -1128,11 +1128,11 @@ export function FeedCard({
                       onError={() => setAvatarErrorLogId(log.id)}
                     />
                   ) : (
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--color-teal)] text-xs font-semibold text-[color:var(--color-on-brand)]">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--brand-secondary)] text-xs font-semibold text-[color:var(--text-inverse)]">
                       {displayName.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="truncate text-sm font-medium text-[color:var(--color-text-primary)]">
+                  <span className="truncate text-sm font-medium text-[color:var(--text-primary)]">
                     {displayName}
                   </span>
                 </div>
@@ -1143,8 +1143,8 @@ export function FeedCard({
                 type="button"
                 onClick={(e) => void handleLike(e)}
                 disabled={!currentUserId || likeLoading}
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)] disabled:cursor-default"
-                style={{ color: liked ? "var(--color-orange)" : "var(--color-text-secondary)" }}
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)] disabled:cursor-default"
+                style={{ color: liked ? "var(--brand-primary)" : "var(--text-secondary)" }}
                 aria-label={liked ? "Unlike" : "Like"}
               >
                 <svg
@@ -1165,7 +1165,7 @@ export function FeedCard({
               <Link
                 href={isDetailPage ? "#comments" : `/log/${log.id}#comments`}
                 onClick={(e) => e.stopPropagation()}
-                className="flex min-h-[40px] min-w-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-xs font-medium text-[color:var(--color-text-secondary)] transition hover:bg-[color:var(--color-surface-alt)]"
+                className="flex min-h-[40px] min-w-[40px] items-center justify-center gap-1 rounded-full px-2 py-2 text-xs font-medium text-[color:var(--text-secondary)] transition hover:bg-[color:var(--surface-elevated-alt)]"
                 aria-label="Comments"
               >
                 <svg
@@ -1187,7 +1187,7 @@ export function FeedCard({
           </div>
         ) : (
           <div
-            className="grid grid-cols-3 items-center border-t border-[color:var(--color-border)] px-2 py-2.5"
+            className="grid grid-cols-3 items-center border-t border-[color:var(--border-default)] px-2 py-2.5"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Like */}
@@ -1195,8 +1195,8 @@ export function FeedCard({
               type="button"
               onClick={(e) => void handleLike(e)}
               disabled={!currentUserId || likeLoading}
-              className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)] disabled:cursor-default"
-              style={{ color: liked ? "var(--color-orange)" : "var(--color-text-secondary)" }}
+              className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)] disabled:cursor-default"
+              style={{ color: liked ? "var(--brand-primary)" : "var(--text-secondary)" }}
               aria-label={liked ? "Unlike" : "Like"}
             >
               <svg
@@ -1219,8 +1219,8 @@ export function FeedCard({
             <Link
               href={isDetailPage ? "#comments" : `/log/${log.id}#comments`}
               onClick={(e) => e.stopPropagation()}
-              className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)]"
-              style={{ color: "var(--color-text-secondary)" }}
+              className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)]"
+              style={{ color: "var(--text-secondary)" }}
               aria-label="Comments"
             >
               <svg
@@ -1243,8 +1243,8 @@ export function FeedCard({
             <button
               type="button"
               onClick={(e) => void handleShare(e)}
-              className="mx-auto flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--color-surface-alt)]"
-              style={{ color: "var(--color-text-secondary)" }}
+              className="mx-auto flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)]"
+              style={{ color: "var(--text-secondary)" }}
               aria-label="Share"
             >
               <svg
@@ -1269,7 +1269,7 @@ export function FeedCard({
 
         {!isDetailPage ? (
           <div
-            className="flex items-center justify-center gap-1 py-2 text-[10px] font-medium text-[color:var(--color-text-tertiary)]"
+            className="flex items-center justify-center gap-1 py-2 text-[10px] font-medium text-[color:var(--text-tertiary)]"
             aria-hidden
           >
             {expanded ? (
@@ -1302,20 +1302,20 @@ export function FeedCard({
         >
           <div className="absolute inset-0 bg-[color:var(--color-backdrop)]" />
           <div
-            className="relative w-full max-w-sm rounded-3xl bg-[color:var(--color-surface)] p-6 shadow-2xl ring-1 ring-[color:var(--color-border)]"
+            className="relative w-full max-w-sm rounded-3xl bg-[color:var(--surface-elevated)] p-6 shadow-2xl ring-1 ring-[color:var(--border-default)]"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-sm font-semibold text-[color:var(--color-text-primary)]">
+            <p className="text-sm font-semibold text-[color:var(--text-primary)]">
               Delete this log?
             </p>
-            <p className="mt-1 text-xs text-[color:var(--color-text-secondary)]">
+            <p className="mt-1 text-xs text-[color:var(--text-secondary)]">
               Are you sure you want to delete this log? This cannot be undone.
             </p>
             <div className="mt-5 flex gap-3">
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 rounded-full bg-[color:var(--color-surface-alt)] px-4 py-2 text-sm font-medium text-[color:var(--color-text-primary)] ring-1 ring-[color:var(--color-border)] transition hover:brightness-95 dark:hover:brightness-110"
+                className="flex-1 rounded-full bg-[color:var(--surface-elevated-alt)] px-4 py-2 text-sm font-medium text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)] transition hover:brightness-95 dark:hover:brightness-110"
               >
                 Cancel
               </button>
@@ -1323,7 +1323,7 @@ export function FeedCard({
                 type="button"
                 onClick={() => void handleDelete()}
                 disabled={deleting}
-                className="flex-1 rounded-full bg-[color:var(--color-error)] px-4 py-2 text-sm font-semibold text-[color:var(--color-on-brand)] transition hover:brightness-110 disabled:opacity-60"
+                className="flex-1 rounded-full bg-[color:var(--color-error)] px-4 py-2 text-sm font-semibold text-[color:var(--text-inverse)] transition hover:brightness-110 disabled:opacity-60"
               >
                 {deleting ? "Deleting…" : "Delete"}
               </button>

@@ -97,7 +97,7 @@ export function GellogFlavour({
 // GellogGellog: a stylised "G" wordmark letterform in the Gellog brand style
 export function GellogGellog({
   size = 24,
-  color = "var(--color-orange)",
+  color = "var(--brand-primary)",
   ...rest
 }: {
   size?: number;

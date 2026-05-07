@@ -161,7 +161,7 @@ const labelStyle: CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
   textAlign: "center",
-  color: "var(--color-text-primary)",
+  color: "var(--text-primary)",
 };
 
 const emptyCaptionStyle: CSSProperties = {
@@ -169,7 +169,7 @@ const emptyCaptionStyle: CSSProperties = {
   fontSize: 13,
   fontWeight: 600,
   textAlign: "center",
-  color: "var(--color-text-secondary)",
+  color: "var(--text-secondary)",
 };
 
 export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
@@ -250,8 +250,8 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
                   alignItems: "center",
                   justifyContent: "center",
                   borderRadius: 9999,
-                  background: "var(--color-orange, #F97316)",
-                  color: "var(--color-on-brand, #fff)",
+                  background: "var(--brand-primary)",
+                  color: "var(--text-inverse)",
                   boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
                   pointerEvents: "none",
                 }}
@@ -277,7 +277,7 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
               <div>{flavour.displayName}</div>
               {flavour.inputName &&
                 flavour.inputName.toLowerCase() !== flavour.displayName.toLowerCase() && (
-                  <div className="text-[11px] text-[color:var(--color-text-secondary)] opacity-70">
+                  <div className="text-[11px] text-[color:var(--text-secondary)] opacity-70">
                     ({flavour.inputName})
                   </div>
                 )}
@@ -287,7 +287,7 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
 
         const selectedRing: CSSProperties = isSelected
           ? {
-              boxShadow: "0 0 0 2px var(--color-orange, #F97316)",
+              boxShadow: "0 0 0 2px var(--brand-primary)",
               borderRadius: 12,
             }
           : {};
@@ -314,7 +314,7 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
               event.currentTarget.style.transform = "scale(1)";
             }}
             onFocus={(event) => {
-              event.currentTarget.style.outline = "2px solid var(--color-text-info)";
+              event.currentTarget.style.outline = "2px solid var(--state-info)";
             }}
             onBlur={(event) => {
               event.currentTarget.style.outline = "none";
