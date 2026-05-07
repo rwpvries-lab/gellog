@@ -25,16 +25,15 @@ export function useSalonVitrine(salonPlaceId: string | null | undefined): {
 
   useEffect(() => {
     if (!salonPlaceId) {
-      setFlavours([]);
-      setEnabled(false);
-      setLoading(false);
       return;
     }
 
     let cancelled = false;
-    setFlavours([]);
-    setEnabled(false);
-    setLoading(true);
+    const loadingId = requestAnimationFrame(() => {
+      setFlavours([]);
+      setEnabled(false);
+      setLoading(true);
+    });
 
     void (async () => {
       const supabase = createClient();
@@ -84,9 +83,14 @@ export function useSalonVitrine(salonPlaceId: string | null | undefined): {
     })();
 
     return () => {
+      cancelAnimationFrame(loadingId);
       cancelled = true;
     };
   }, [salonPlaceId]);
+
+  if (!salonPlaceId) {
+    return { flavours: [], loading: false, enabled: false };
+  }
 
   return { flavours, loading, enabled };
 }

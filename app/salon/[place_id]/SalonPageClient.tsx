@@ -171,11 +171,7 @@ export function SalonPageClient({ placeId }: Props) {
     new Set(),
   );
   const [vitrineResolvedRows, setVitrineResolvedRows] = useState<SalonVitrineResolvedRow[]>([]);
-  const [salonLogoImgError, setSalonLogoImgError] = useState(false);
-
-  useEffect(() => {
-    setSalonLogoImgError(false);
-  }, [salonProfile?.logo_url]);
+  const [failedSalonLogoUrl, setFailedSalonLogoUrl] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -453,7 +449,8 @@ export function SalonPageClient({ placeId }: Props) {
           <div className="mb-4 flex justify-center">
             {(() => {
               const logoSrc = publicSalonLogoUrl(salonProfile.logo_url);
-              return logoSrc && !salonLogoImgError ? (
+              const showLogo = logoSrc && failedSalonLogoUrl !== logoSrc;
+              return showLogo ? (
                 <Image
                   src={logoSrc}
                   alt={displayName}
@@ -461,7 +458,7 @@ export function SalonPageClient({ placeId }: Props) {
                   height={60}
                   className="rounded-2xl object-cover ring-1 ring-zinc-100 dark:ring-zinc-800"
                   loading="lazy"
-                  onError={() => setSalonLogoImgError(true)}
+                  onError={() => setFailedSalonLogoUrl(logoSrc)}
                 />
               ) : (
                 <div className="flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-[color:var(--color-teal)] text-lg font-semibold text-[color:var(--color-on-brand)] ring-1 ring-zinc-100 dark:ring-zinc-800">

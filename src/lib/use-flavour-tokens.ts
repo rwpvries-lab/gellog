@@ -18,14 +18,11 @@ export function useFlavourTokens(flavourName: string | undefined): {
   useEffect(() => {
     const trimmed = flavourName?.trim() ?? "";
     if (!trimmed) {
-      setTokens(FALLBACK);
-      setResolved(false);
-      setLoading(false);
       return;
     }
 
     let cancelled = false;
-    setLoading(true);
+    const loadingId = requestAnimationFrame(() => setLoading(true));
 
     (async () => {
       const supabase = createClient();
@@ -53,9 +50,15 @@ export function useFlavourTokens(flavourName: string | undefined): {
     })();
 
     return () => {
+      cancelAnimationFrame(loadingId);
       cancelled = true;
     };
   }, [flavourName]);
+
+  const hasFlavour = (flavourName?.trim() ?? "").length > 0;
+  if (!hasFlavour) {
+    return { tokens: FALLBACK, loading: false, resolved: false };
+  }
 
   return { tokens, loading, resolved };
 }

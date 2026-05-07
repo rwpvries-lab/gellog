@@ -19,7 +19,6 @@ import {
   Rss,
   Search,
   Settings,
-  Share2,
   Star,
   Store,
   TrendingUp,

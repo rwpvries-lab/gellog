@@ -5,7 +5,6 @@ import { createClient } from "@/src/lib/supabase/client";
 import { userFacingAuthMessage } from "@/src/lib/userFacingError";
 import { Toast, useToast } from "@/src/components/Toast";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 function GoogleIcon() {
@@ -142,7 +141,6 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [verificationSent, setVerificationSent] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
   async function handleGoogle() {

@@ -171,11 +171,12 @@ export default async function SalonDashboardPage({
 
   let flavourInsightsRows: FlavourInsightRow[] = [];
   if (isPro && salonProfile.created_at) {
+    const nowMs = new Date().getTime();
     const vitrineList = (vitrineFlavoursRaw ?? []) as VitrineFlavour[];
     const activeSeconds = Math.max(
       1,
       Math.floor(
-        (Date.now() - new Date(salonProfile.created_at as string).getTime()) /
+        (nowMs - new Date(salonProfile.created_at as string).getTime()) /
           1000,
       ),
     );
@@ -194,7 +195,7 @@ export default async function SalonDashboardPage({
       let displaySecs = stored;
       if (v.is_visible && v.display_started_at) {
         displaySecs += Math.floor(
-          (Date.now() - new Date(v.display_started_at).getTime()) / 1000,
+          (nowMs - new Date(v.display_started_at).getTime()) / 1000,
         );
       }
       const displayPct = Math.min(100, (displaySecs / activeSeconds) * 100);

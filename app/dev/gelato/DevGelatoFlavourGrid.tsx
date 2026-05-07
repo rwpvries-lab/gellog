@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Gelato } from "@/src/components/Gelato/Gelato";
 import { Vitrine } from "@/src/components/Gelato/variants/Vitrine";
 import {

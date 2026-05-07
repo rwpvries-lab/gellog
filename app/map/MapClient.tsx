@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { shouldShowIceCreamMapMarker } from "@/src/lib/looksLikeIceCreamSalon";
 import { useEffect, useRef, useState } from "react";
@@ -74,9 +75,7 @@ export function MapClient({
   const pickerUserSubmittedIdsRef = useRef<Set<string>>(new Set());
   const placedIdsRef = useRef<Set<string>>(new Set());
   const salonsRef = useRef(salons);
-  salonsRef.current = salons;
   const userSubmittedSalonsRef = useRef(userSubmittedSalons);
-  userSubmittedSalonsRef.current = userSubmittedSalons;
   const idleListenerRef = useRef<{ remove: () => void } | null>(null);
   const dragStartY = useRef<number | null>(null);
   const markerJustTapped = useRef(false);
@@ -91,6 +90,11 @@ export function MapClient({
   const [locationBannerMessage, setLocationBannerMessage] = useState<string | null>(null);
   const [locatingUser, setLocatingUser] = useState(false);
 
+  useEffect(() => {
+    salonsRef.current = salons;
+    userSubmittedSalonsRef.current = userSubmittedSalons;
+  }, [salons, userSubmittedSalons]);
+
   // Lock body scroll
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -103,9 +107,13 @@ export function MapClient({
   // One-time toast
   useEffect(() => {
     if (!sessionStorage.getItem("map-toast-shown")) {
-      setShowToast(true);
+      const showId = requestAnimationFrame(() => setShowToast(true));
       sessionStorage.setItem("map-toast-shown", "1");
-      setTimeout(() => setShowToast(false), 2000);
+      const hideId = setTimeout(() => setShowToast(false), 2000);
+      return () => {
+        cancelAnimationFrame(showId);
+        clearTimeout(hideId);
+      };
     }
   }, []);
 
@@ -154,43 +162,40 @@ export function MapClient({
     }
 
     const pos = userLocation;
+    const overlay = new window.google.maps.OverlayView();
+    let dotEl: HTMLDivElement | null = null;
 
-    class UserDot extends (window.google.maps.OverlayView as any) {
-      private _div: HTMLDivElement | null = null;
+    overlay.onAdd = () => {
+      dotEl = document.createElement("div");
+      Object.assign(dotEl.style, {
+        position: "absolute",
+        width: "16px",
+        height: "16px",
+        borderRadius: "50%",
+        background: "var(--color-location)",
+        border: "2px solid white",
+        boxShadow: "0 0 0 3px color-mix(in srgb, var(--color-location) 25%, transparent)",
+        animation: "gellog-user-pulse 1.5s ease-in-out infinite",
+        pointerEvents: "none",
+      });
+      overlay.getPanes()?.overlayMouseTarget.appendChild(dotEl);
+    };
 
-      onAdd() {
-        this._div = document.createElement("div");
-        Object.assign(this._div.style, {
-          position: "absolute",
-          width: "16px",
-          height: "16px",
-          borderRadius: "50%",
-          background: "var(--color-location)",
-          border: "2px solid white",
-          boxShadow: "0 0 0 3px color-mix(in srgb, var(--color-location) 25%, transparent)",
-          animation: "gellog-user-pulse 1.5s ease-in-out infinite",
-          pointerEvents: "none",
-        });
-        this.getPanes()?.overlayMouseTarget.appendChild(this._div);
-      }
+    overlay.draw = () => {
+      if (!dotEl) return;
+      const point = overlay
+        .getProjection()
+        ?.fromLatLngToDivPixel(new window.google.maps.LatLng(pos.lat, pos.lng));
+      if (!point) return;
+      dotEl.style.left = `${point.x}px`;
+      dotEl.style.top = `${point.y}px`;
+    };
 
-      draw() {
-        if (!this._div) return;
-        const point = this.getProjection()?.fromLatLngToDivPixel(
-          new window.google.maps.LatLng(pos.lat, pos.lng),
-        );
-        if (!point) return;
-        this._div.style.left = `${point.x}px`;
-        this._div.style.top = `${point.y}px`;
-      }
+    overlay.onRemove = () => {
+      dotEl?.parentNode?.removeChild(dotEl);
+      dotEl = null;
+    };
 
-      onRemove() {
-        this._div?.parentNode?.removeChild(this._div);
-        this._div = null;
-      }
-    }
-
-    const overlay = new UserDot();
     overlay.setMap(mapInstanceRef.current);
     userOverlayRef.current = overlay;
 

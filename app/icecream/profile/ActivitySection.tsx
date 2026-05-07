@@ -33,7 +33,10 @@ export function ActivitySection({ weeklyData }: { weeklyData: WeekData[] }) {
   const theme = useTheme();
 
   // Guard against SSR — recharts uses window internally
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
 
   return (
     <section

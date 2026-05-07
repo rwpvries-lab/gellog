@@ -97,8 +97,10 @@ export function LogDetailClient({ logId }: Props) {
   const [navHeight, setNavHeight] = useState(72);
 
   useEffect(() => {
-    setPhase("loading");
-    setLog(null);
+    const resetId = requestAnimationFrame(() => {
+      setPhase("loading");
+      setLog(null);
+    });
     let cancelled = false;
 
     async function load() {
@@ -202,22 +204,29 @@ export function LogDetailClient({ logId }: Props) {
 
     void load();
     return () => {
+      cancelAnimationFrame(resetId);
       cancelled = true;
     };
   }, [logId]);
 
   useEffect(() => {
-    setMounted(true);
+    const mountedId = requestAnimationFrame(() => setMounted(true));
     const nav = document.querySelector("nav");
     if (!nav) {
-      setNavHeight(0);
-      return;
+      requestAnimationFrame(() => setNavHeight(0));
+      return () => cancelAnimationFrame(mountedId);
     }
-    const update = () => setNavHeight(nav.getBoundingClientRect().height);
+    const update = () => {
+      const nextHeight = nav.getBoundingClientRect().height;
+      requestAnimationFrame(() => setNavHeight(nextHeight));
+    };
     update();
     const ro = new ResizeObserver(update);
     ro.observe(nav);
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(mountedId);
+      ro.disconnect();
+    };
   }, []);
 
   useEffect(() => {

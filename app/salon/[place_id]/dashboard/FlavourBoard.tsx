@@ -7,6 +7,10 @@ import { useEffect, useState } from "react";
 
 const DEFAULT_HEX = "#A8C5A0";
 
+function nowMs(): number {
+  return new Date().getTime();
+}
+
 export type VitrineFlavour = {
   id: string;
   salon_place_id: string;
@@ -155,7 +159,7 @@ export function FlavourBoard({
     } else {
       const started = row.display_started_at;
       const addSeconds = started
-        ? Math.max(0, Math.floor((Date.now() - new Date(started).getTime()) / 1000))
+        ? Math.max(0, Math.floor((nowMs() - new Date(started).getTime()) / 1000))
         : 0;
       const baseTotal = Number(row.total_display_seconds ?? 0);
       const newTotal = baseTotal + addSeconds;

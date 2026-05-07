@@ -42,9 +42,12 @@ export async function savePushSubscription(subscription: PushSubscription): Prom
   if (!user) throw new Error("Not authenticated.");
 
   const json = subscription.toJSON();
-  const endpoint = json.endpoint!;
-  const p256dh = json.keys?.p256dh!;
-  const auth = json.keys?.auth!;
+  const endpoint = json.endpoint;
+  const p256dh = json.keys?.p256dh;
+  const auth = json.keys?.auth;
+  if (!endpoint || !p256dh || !auth) {
+    throw new Error("Push subscription is missing required keys.");
+  }
 
   const { error } = await supabase.from("push_subscriptions").upsert(
     { user_id: user.id, endpoint, p256dh, auth },

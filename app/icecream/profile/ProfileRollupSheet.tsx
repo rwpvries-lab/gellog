@@ -85,9 +85,11 @@ export function ProfileRollupSheet({
 
   useEffect(() => {
     if (view === null) {
-      setEntered(false);
-      setDragY(0);
-      return;
+      const id = requestAnimationFrame(() => {
+        setEntered(false);
+        setDragY(0);
+      });
+      return () => cancelAnimationFrame(id);
     }
     userRequestedClose.current = false;
     if (closeFallbackTimer.current) {

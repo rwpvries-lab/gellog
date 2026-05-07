@@ -62,14 +62,6 @@ type WeatherData = {
   uvIndex: number | null;
 };
 
-function uvLabel(uv: number): string {
-  if (uv <= 2) return "Low";
-  if (uv <= 5) return "Moderate";
-  if (uv <= 7) return "High";
-  if (uv <= 10) return "Very High";
-  return "Extreme";
-}
-
 function describeWeatherCode(code: number): { label: string; emoji: string } {
   if (code === 0) {
     return { label: "Clear sky", emoji: "☀️" };

@@ -405,7 +405,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                 +
               </span>
               <span className="text-[color:var(--text-secondary)]">
-                Add <span className="font-semibold text-[color:var(--text-primary)]">"{value}"</span> as a new salon
+                Add <span className="font-semibold text-[color:var(--text-primary)]">&quot;{value}&quot;</span> as a new salon
               </span>
             </button>
           )}
@@ -493,7 +493,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
                   />
                 </div>
                 <p className="rounded-2xl bg-[color:var(--surface-elevated-alt)] px-4 py-3 text-xs text-[color:var(--text-secondary)] ring-1 ring-[color:var(--border-default)]">
-                  We'll review and verify this salon. It'll appear on the map after approval.
+                  We&apos;ll review and verify this salon. It&apos;ll appear on the map after approval.
                 </p>
                 <button
                   type="button"

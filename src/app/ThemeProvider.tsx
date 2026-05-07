@@ -18,12 +18,11 @@ function resolveIsDark(mode: ThemeMode): boolean {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [mode, setModeState] = useState<ThemeMode>("system");
-
-  useEffect(() => {
+  const [mode, setModeState] = useState<ThemeMode>(() => {
+    if (typeof window === "undefined") return "system";
     const stored = localStorage.getItem("gellog-theme") as ThemeMode | null;
-    setModeState(stored === "light" || stored === "dark" ? stored : "system");
-  }, []);
+    return stored === "light" || stored === "dark" ? stored : "system";
+  });
 
   useEffect(() => {
     const apply = () => {

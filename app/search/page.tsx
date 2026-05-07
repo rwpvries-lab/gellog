@@ -126,19 +126,23 @@ export default function SearchPage() {
 
     const trimmed = query.trim();
     if (!trimmed) {
-      setResults([]);
-      setFollowStatus({});
-      setSearched(false);
-      setLoading(false);
-      setSalonResults([]);
-      setPlacesResults([]);
-      setSalonLoading(false);
-      setSalonSearched(false);
-      return;
+      const resetId = requestAnimationFrame(() => {
+        setResults([]);
+        setFollowStatus({});
+        setSearched(false);
+        setLoading(false);
+        setSalonResults([]);
+        setPlacesResults([]);
+        setSalonLoading(false);
+        setSalonSearched(false);
+      });
+      return () => cancelAnimationFrame(resetId);
     }
 
-    setLoading(true);
-    setSalonLoading(true);
+    const startLoadingId = requestAnimationFrame(() => {
+      setLoading(true);
+      setSalonLoading(true);
+    });
 
     debounceRef.current = setTimeout(() => {
       void (async () => {
@@ -272,6 +276,7 @@ export default function SearchPage() {
     }, 400);
 
     return () => {
+      cancelAnimationFrame(startLoadingId);
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
   }, [query, currentUserId]);
