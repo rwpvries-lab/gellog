@@ -1075,6 +1075,20 @@ export function SettingsClient({
 
           <Sep />
 
+          <Link href="/settings/feedback" style={{ ...ROW, textDecoration: "none" }}>
+            <span
+              style={{
+                color: "var(--color-text-primary)",
+                fontSize: 15,
+              }}
+            >
+              Send feedback
+            </span>
+            <Chevron />
+          </Link>
+
+          <Sep />
+
           <div style={ROW}>
             <span
               style={{
