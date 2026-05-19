@@ -22,16 +22,16 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 const LEGEND = [
   { label: 'No logs', className: 'bg-zinc-100 dark:bg-zinc-800' },
-  { label: '1', className: 'bg-teal-100 dark:bg-teal-900/70' },
-  { label: '2', className: 'bg-teal-300 dark:bg-teal-600' },
-  { label: '3+', className: 'bg-teal-600 dark:bg-teal-400' },
+  { label: '1', className: 'bg-[color:var(--brand-primary-surface)]' },
+  { label: '2', className: 'bg-[color:var(--brand-primary-muted)]' },
+  { label: '3+', className: 'bg-[color:var(--brand-primary)]' },
 ];
 
 function cellColorClass(count: number): string {
   if (count === 0) return 'bg-zinc-100 dark:bg-zinc-800';
-  if (count === 1) return 'bg-teal-100 dark:bg-teal-900/70';
-  if (count === 2) return 'bg-teal-300 dark:bg-teal-600';
-  return 'bg-teal-600 dark:bg-teal-400';
+  if (count === 1) return 'bg-[color:var(--brand-primary-surface)]';
+  if (count === 2) return 'bg-[color:var(--brand-primary-muted)]';
+  return 'bg-[color:var(--brand-primary)]';
 }
 
 function toDateStr(d: Date): string {
@@ -136,7 +136,7 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
     <div className="flex flex-col gap-3" data-heatmap>
       {/* Summary pill */}
       <div className="flex items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--brand-primary-surface)] px-3 py-1 text-xs font-medium text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">
           <PlaceholderScoop size={20} seed="heatmap-summary" className="shrink-0" />
           {totalInRange} scoop{totalInRange !== 1 ? 's' : ''} in the last 12 months
         </span>
@@ -194,7 +194,7 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
                       : isToday
                         ? 'ring-2 ring-orange-400 ring-offset-1 dark:ring-orange-500 dark:ring-offset-zinc-900'
                         : isSelected
-                          ? 'ring-2 ring-teal-500 ring-offset-1 dark:ring-teal-400 dark:ring-offset-zinc-900'
+                          ? 'ring-2 ring-[color:var(--brand-primary)] ring-offset-1'
                           : '';
 
                     return (
@@ -228,7 +228,7 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
 
       {/* Inline info panel (tap/click) */}
       {selected !== null && (
-        <div className="rounded-2xl bg-teal-50 px-4 py-3 ring-1 ring-teal-100 dark:bg-teal-900/20 dark:ring-teal-800/60">
+        <div className="rounded-2xl bg-[color:var(--brand-primary-surface)] px-4 py-3 ring-1 ring-[color:var(--brand-primary-muted)]">
           <div className="flex items-start justify-between gap-3">
             <div className="flex flex-col gap-0.5">
               <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
@@ -249,7 +249,7 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
             <button
               type="button"
               onClick={() => setSelected(null)}
-              className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-teal-100 text-[11px] text-teal-600 transition hover:bg-teal-200 dark:bg-teal-900/50 dark:text-teal-300 dark:hover:bg-teal-800/60"
+              className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-[color:var(--brand-primary-surface)] text-[11px] text-[color:var(--brand-primary)] transition hover:opacity-80"
               aria-label="Dismiss"
             >
               ✕

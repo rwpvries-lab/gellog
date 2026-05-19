@@ -685,7 +685,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           {!isToday(visitedAt) ? (
             <p className="text-xs text-zinc-500 dark:text-zinc-500">No weather data available for past visits</p>
           ) : weather ? (
-            <div className="inline-flex items-center gap-2 self-start rounded-full bg-teal-100/90 px-3 py-1 text-xs font-medium text-teal-800 ring-1 ring-teal-200 dark:bg-teal-900/40 dark:text-teal-100 dark:ring-teal-800">
+            <div className="inline-flex items-center gap-2 self-start rounded-full bg-[color:var(--brand-primary-surface)] px-3 py-1 text-xs font-medium text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">
               <span className="text-sm leading-none">✓</span>
               <span>{weather.emoji}</span>
               <span>{Math.round(weather.temperature)}°C · Feels like {Math.round(weather.apparentTemperature)}°C · {weather.label}</span>
@@ -702,7 +702,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
               <button
                 type="button"
                 onClick={handleCaptureWeather}
-                className="text-xs font-medium text-teal-700 underline underline-offset-2 dark:text-teal-400"
+                className="text-xs font-medium text-[color:var(--brand-primary)] underline underline-offset-2"
               >
                 Re-capture
               </button>
@@ -717,13 +717,13 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           ) : weatherUnavailable ? (
             <div className="flex items-center gap-2">
               <p className="text-xs text-zinc-500">⚠️ Weather unavailable</p>
-              <button type="button" onClick={handleCaptureWeather} className="text-xs font-medium text-teal-700 underline underline-offset-2">Retry</button>
+              <button type="button" onClick={handleCaptureWeather} className="text-xs font-medium text-[color:var(--brand-primary)] underline underline-offset-2">Retry</button>
             </div>
           ) : (
             <button
               type="button"
               onClick={handleCaptureWeather}
-              className="inline-flex items-center justify-center self-start rounded-full bg-teal-100 px-4 py-2 text-sm font-medium text-teal-800 ring-1 ring-teal-200 transition hover:bg-teal-200 focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className="inline-flex items-center justify-center self-start rounded-full bg-[color:var(--brand-primary-surface)] px-4 py-2 text-sm font-medium text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)] transition hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]"
             >
               Tap to capture weather 🌤️
             </button>
@@ -740,7 +740,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
             <button
               type="button"
               onClick={handleAddFlavour}
-              className="inline-flex items-center justify-center rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-teal-300"
+              className="inline-flex items-center justify-center rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]"
             >
               + Add flavour
             </button>
@@ -808,7 +808,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
                       setFlavours((prev) => prev.map((item) => item.id === flavour.id ? { ...item, name: value } : item));
                     }}
                     placeholder={`Flavour ${index + 1} (e.g. Stracciatella)`}
-                    className="flex-1 rounded-xl border border-orange-100 bg-white/80 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-100"
+                    className="flex-1 rounded-xl border border-orange-100 bg-white/80 px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-[color:var(--border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-900/80 dark:text-zinc-100"
                   />
                   {flavours.length > 1 ? (
                     <button
@@ -832,7 +832,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
                 <button
                   type="button"
                   onClick={() => toggleAdvanced(flavour.id)}
-                  className="self-start text-xs font-medium text-teal-700 dark:text-teal-400"
+                  className="self-start text-xs font-medium text-[color:var(--brand-primary)]"
                 >
                   {expandedAdvanced.has(flavour.id) ? "− Rate in more detail" : "+ Rate in more detail"}
                 </button>
@@ -878,7 +878,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
                         }
                         className={
                           selected
-                            ? "rounded-full px-2.5 py-0.5 text-xs font-medium bg-teal-600 text-white"
+                            ? "rounded-full px-2.5 py-0.5 text-xs font-medium bg-[color:var(--brand-primary)] text-[color:var(--text-inverse)]"
                             : "rounded-full px-2.5 py-0.5 text-xs font-medium bg-white text-zinc-500 ring-1 ring-zinc-300 dark:bg-zinc-900 dark:text-zinc-400 dark:ring-zinc-600"
                         }
                       >
@@ -959,7 +959,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           <label htmlFor="price-paid" className="text-sm font-medium text-zinc-800 dark:text-zinc-100">
             Price paid (optional)
           </label>
-          <div className="flex items-center rounded-2xl border border-orange-100 bg-white/80 shadow-sm focus-within:border-teal-400 focus-within:ring-2 focus-within:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70">
+          <div className="flex items-center rounded-2xl border border-orange-100 bg-white/80 shadow-sm focus-within:border-[color:var(--border-focus)] focus-within:ring-2 focus-within:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-900/70">
             <span className="pl-3 text-sm text-zinc-400">€</span>
             <input
               id="price-paid"
@@ -980,7 +980,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
               type="checkbox"
               checked={hidePriceFromOthers}
               onChange={(e) => setHidePriceFromOthers(e.target.checked)}
-              className="mt-0.5 rounded border-zinc-300 text-teal-600 focus:ring-teal-500 dark:border-zinc-600"
+              className="mt-0.5 rounded border-zinc-300 accent-[rgb(var(--brand-primary-rgb))] focus:ring-[color:var(--border-focus)] dark:border-zinc-600"
             />
             <span>Hide this price from other people (only you will see it)</span>
           </label>
@@ -1035,7 +1035,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
             onChange={(e) => setNotes(e.target.value)}
             rows={4}
             placeholder="Sunny terrace, friendly staff, maybe a waffle on the side…"
-            className="w-full rounded-2xl border border-orange-100 bg-white/80 px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-300 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
+            className="w-full rounded-2xl border border-orange-100 bg-white/80 px-3 py-2.5 text-sm text-zinc-900 placeholder-zinc-400 shadow-sm focus:border-[color:var(--border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-900/70 dark:text-zinc-100"
           />
         </div>
       </div>
@@ -1050,7 +1050,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex h-11 w-full items-center justify-center rounded-full bg-orange-600 px-6 text-sm font-semibold text-white transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 disabled:opacity-60"
+        className="inline-flex h-11 w-full items-center justify-center rounded-full bg-orange-600 px-6 text-sm font-semibold text-white transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-60"
       >
         {submitting ? "Saving…" : "Save changes"}
       </button>

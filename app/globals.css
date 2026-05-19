@@ -92,6 +92,23 @@
   );
   --shadow-card-sm: 0 2px 12px rgba(0, 0, 0, 0.06);
   --shadow-float: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  /* Legacy aliases — components not yet migrated to new token names */
+  --color-surface: var(--surface-elevated);
+  --color-surface-alt: var(--background-primary);
+  --color-surface-elevated: var(--surface-elevated);
+  --surface-elevated-alt: var(--background-secondary);
+  --color-border: var(--border-default);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-on-brand: var(--text-inverse);
+  --color-teal: var(--brand-primary);
+  --color-teal-bg: color-mix(in srgb, var(--brand-primary) 10%, var(--background-primary));
+  --color-orange: var(--brand-primary);
+  --color-orange-bg: color-mix(in srgb, var(--brand-primary) 10%, var(--background-primary));
+  --color-error: var(--state-error);
+  --brand-secondary-bg: color-mix(in srgb, var(--brand-secondary) 12%, var(--background-primary));
 }
 
 .dark {
@@ -180,6 +197,23 @@
   );
   --shadow-card-sm: 0 2px 20px rgba(0, 0, 0, 0.45);
   --shadow-float: 0 2px 14px rgba(0, 0, 0, 0.5);
+
+  /* Legacy aliases — dark-mode overrides not needed since these point to vars with dark overrides */
+  --color-surface: var(--surface-elevated);
+  --color-surface-alt: var(--background-primary);
+  --color-surface-elevated: var(--surface-elevated);
+  --surface-elevated-alt: var(--background-secondary);
+  --color-border: var(--border-default);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-on-brand: var(--text-inverse);
+  --color-teal: var(--brand-primary);
+  --color-teal-bg: color-mix(in srgb, var(--brand-primary) 10%, var(--background-primary));
+  --color-orange: var(--brand-primary);
+  --color-orange-bg: color-mix(in srgb, var(--brand-primary) 10%, var(--background-primary));
+  --color-error: var(--state-error);
+  --brand-secondary-bg: color-mix(in srgb, var(--brand-secondary) 12%, var(--background-primary));
 }
 
 @theme inline {

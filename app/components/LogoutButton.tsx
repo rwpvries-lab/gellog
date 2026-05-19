@@ -22,7 +22,7 @@ export function LogoutButton() {
       type="button"
       onClick={handleLogout}
       disabled={loading}
-      className="flex h-11 min-w-[120px] items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 dark:focus:ring-offset-zinc-900"
+      className="flex h-11 min-w-[120px] items-center justify-center rounded-lg border border-zinc-300 bg-white px-5 font-medium text-zinc-700 transition-colors hover:bg-zinc-50 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
     >
       {loading ? "Logging out…" : "Log out"}
     </button>

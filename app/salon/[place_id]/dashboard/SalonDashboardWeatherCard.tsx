@@ -9,7 +9,7 @@ export function SalonDashboardWeatherCard({ weather, hasCoordinates }: Props) {
   if (!hasCoordinates) {
     return (
       <section
-        className="mb-5 rounded-2xl bg-white px-4 py-4 shadow-sm ring-2 ring-teal-100 dark:bg-zinc-900 dark:ring-teal-900/50"
+        className="mb-5 rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-[color:var(--border-default)] dark:bg-zinc-900"
         aria-label="Weather"
       >
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
@@ -26,7 +26,7 @@ export function SalonDashboardWeatherCard({ weather, hasCoordinates }: Props) {
   if (!weather) {
     return (
       <section
-        className="mb-5 rounded-2xl bg-white px-4 py-4 shadow-sm ring-2 ring-teal-100 dark:bg-zinc-900 dark:ring-teal-900/50"
+        className="mb-5 rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-[color:var(--border-default)] dark:bg-zinc-900"
         aria-label="Weather"
       >
         <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
@@ -41,7 +41,7 @@ export function SalonDashboardWeatherCard({ weather, hasCoordinates }: Props) {
 
   return (
     <section
-      className="mb-5 rounded-2xl bg-white px-4 py-4 shadow-sm ring-2 ring-teal-100 dark:bg-zinc-900 dark:ring-teal-900/50"
+      className="mb-5 rounded-2xl bg-white px-4 py-4 shadow-sm ring-1 ring-[color:var(--border-default)] dark:bg-zinc-900"
       aria-label="Weather forecast"
     >
       <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
@@ -58,9 +58,9 @@ export function SalonDashboardWeatherCard({ weather, hasCoordinates }: Props) {
             {weather.segments.map((s) => (
               <div
                 key={s.label}
-                className="rounded-xl bg-teal-50/80 px-2.5 py-2 text-center dark:bg-teal-950/40"
+                className="rounded-xl bg-[color:var(--brand-primary-surface)] px-2.5 py-2 text-center"
               >
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-teal-800 dark:text-teal-300">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-[color:var(--brand-primary)]">
                   {s.label}
                 </p>
                 <p className="mt-1 text-lg leading-none" aria-hidden>

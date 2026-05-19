@@ -113,7 +113,7 @@ export function LogStepWrapper({
     setDiscardOpen(false);
   }
 
-  /** Trap duplicate history entry so the first “back” stays on-page for interception. */
+  /** Trap duplicate history entry so the first "back" stays on-page for interception. */
   useEffect(() => {
     window.history.pushState({ gellogLogDraft: true }, "", window.location.href);
     function onPopState() {
@@ -198,7 +198,7 @@ export function LogStepWrapper({
               if (state.currentStep > 1) goBackStep();
               else requestLeave({ kind: "header" });
             }}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border-default bg-transparent text-brand-primary transition hover:bg-background-secondary"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[color:var(--border-default)] bg-transparent text-[color:var(--brand-primary)] transition hover:bg-[color:var(--background-secondary)]"
             aria-label={state.currentStep > 1 ? "Previous step" : "Back"}
           >
             <ChevronLeft size={22} strokeWidth={2} aria-hidden />
@@ -208,22 +208,22 @@ export function LogStepWrapper({
               <div
                 key={n}
                 className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ease-out ${
-                  step >= n ? "bg-brand-primary" : "bg-brand-primary-muted"
+                  step >= n ? "bg-[color:var(--brand-primary)]" : "bg-[color:var(--brand-primary-muted)]"
                 }`}
               />
             ))}
           </div>
         </div>
 
-        <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+        <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
           Step {step} of 3
         </p>
 
-        <h1 className="font-serif text-[clamp(28px,8vw,40px)] font-semibold leading-[1.15] tracking-[-0.02em] text-text-primary">
+        <h1 className="font-serif text-[clamp(28px,8vw,40px)] font-semibold leading-[1.15] tracking-[-0.02em] text-[color:var(--text-primary)]">
           {copy.hero}
         </h1>
         {copy.subtitle ? (
-          <p className="font-sans text-sm text-text-secondary">{copy.subtitle}</p>
+          <p className="font-sans text-sm text-[color:var(--text-secondary)]">{copy.subtitle}</p>
         ) : null}
       </div>
 
@@ -237,18 +237,18 @@ export function LogStepWrapper({
         {submitError ? (
           <div
             role="alert"
-            className="flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm text-state-error ring-1 ring-state-error"
-          style={{
-            background:
-              "color-mix(in srgb, var(--state-error) 10%, var(--background-secondary))",
-          }}
+            className="flex flex-col gap-3 rounded-2xl px-4 py-3 text-sm text-[color:var(--state-error)] ring-1 ring-[color:var(--state-error)]"
+            style={{
+              background:
+                "color-mix(in srgb, var(--state-error) 10%, var(--background-secondary))",
+            }}
           >
             <p>{submitError}</p>
             <button
               type="button"
               onClick={() => void handleFinalSubmit()}
               disabled={submitting}
-              className="inline-flex h-10 items-center justify-center self-start rounded-full border border-border-default bg-background-secondary px-4 text-sm font-medium text-text-primary transition hover:bg-background-tertiary disabled:opacity-50"
+              className="inline-flex h-10 items-center justify-center self-start rounded-full border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] px-4 text-sm font-medium text-[color:var(--text-primary)] transition hover:bg-[color:var(--background-tertiary)] disabled:opacity-50"
             >
               Retry
             </button>
@@ -256,7 +256,7 @@ export function LogStepWrapper({
         ) : null}
       </div>
 
-      <div className="sticky bottom-0 -mx-1 mt-auto bg-background-primary pb-[env(safe-area-inset-bottom)] pt-2">
+      <div className="sticky bottom-0 -mx-1 mt-auto bg-[color:var(--background-primary)] pb-[env(safe-area-inset-bottom)] pt-2">
         {state.currentStep < 3 ? (
           <button
             type="button"
@@ -265,7 +265,7 @@ export function LogStepWrapper({
               (state.currentStep === 1 && !canAdvanceFromStep1(state)) ||
               (state.currentStep === 2 && !canAdvanceFromStep2(state))
             }
-            className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-brand-primary px-6 font-sans text-base font-medium text-text-inverse transition hover:bg-brand-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background-primary disabled:opacity-45"
+            className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[color:var(--brand-primary)] px-6 font-sans text-base font-medium text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background-primary)] disabled:opacity-45"
           >
             Continue
             <ArrowRight size={18} strokeWidth={2.25} aria-hidden />
@@ -275,7 +275,7 @@ export function LogStepWrapper({
             type="button"
             onClick={() => void handleFinalSubmit()}
             disabled={submitting}
-            className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-brand-primary px-6 font-sans text-base font-medium text-text-inverse transition hover:bg-brand-primary-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-2 focus-visible:ring-offset-background-primary disabled:opacity-60"
+            className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[color:var(--brand-primary)] px-6 font-sans text-base font-medium text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background-primary)] disabled:opacity-60"
           >
             {submitting ? (
               "Scooping…"
@@ -295,23 +295,23 @@ export function LogStepWrapper({
           aria-modal="true"
           aria-labelledby="discard-log-title"
         >
-          <div className="w-full max-w-sm rounded-2xl border border-border-default bg-background-secondary p-6 ring-1 ring-border-default">
-            <h2 id="discard-log-title" className="font-serif text-lg font-semibold text-text-primary">
+          <div className="w-full max-w-sm rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] p-6 ring-1 ring-[color:var(--border-default)]">
+            <h2 id="discard-log-title" className="font-serif text-lg font-semibold text-[color:var(--text-primary)]">
               Discard your log?
             </h2>
-            <p className="mt-2 text-sm text-text-secondary">Your answers will not be saved.</p>
+            <p className="mt-2 text-sm text-[color:var(--text-secondary)]">Your answers will not be saved.</p>
             <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 type="button"
                 onClick={cancelDiscard}
-                className="inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-medium text-text-primary ring-1 ring-border-default transition hover:bg-background-tertiary"
+                className="inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-medium text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)] transition hover:bg-[color:var(--background-tertiary)]"
               >
                 Keep editing
               </button>
               <button
                 type="button"
                 onClick={confirmDiscard}
-                className="inline-flex h-11 items-center justify-center rounded-full bg-state-error px-5 text-sm font-semibold text-text-inverse transition hover:brightness-110"
+                className="inline-flex h-11 items-center justify-center rounded-full bg-[color:var(--state-error)] px-5 text-sm font-semibold text-[color:var(--text-inverse)] transition hover:brightness-110"
               >
                 Discard
               </button>

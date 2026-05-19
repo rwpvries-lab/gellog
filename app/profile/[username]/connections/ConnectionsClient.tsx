@@ -324,14 +324,14 @@ function ConnectionsListSkeleton() {
             style={{ minHeight: 64 }}
           >
             <div
-              className="flex-shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700"
+              className="flex-shrink-0 rounded-full bg-[#F0E4CF] dark:bg-zinc-700"
               style={{ width: 44, height: 44 }}
             />
             <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <div className="h-3.5 w-32 rounded bg-zinc-200 dark:bg-zinc-700" />
-              <div className="h-3 w-20 rounded bg-zinc-200 dark:bg-zinc-700" />
+              <div className="h-3.5 w-32 rounded bg-[#F0E4CF] dark:bg-zinc-700" />
+              <div className="h-3 w-20 rounded bg-[#F0E4CF] dark:bg-zinc-700" />
             </div>
-            <div className="h-8 w-20 shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+            <div className="h-8 w-20 shrink-0 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
           </div>
         </div>
       ))}

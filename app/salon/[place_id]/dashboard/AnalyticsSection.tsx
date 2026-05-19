@@ -116,7 +116,7 @@ export function AnalyticsSection({
               </div>
             </div>
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-white/60 dark:bg-zinc-900/60">
-              <SalonUpgradeButtonInline place_id={placeId} tier="basic" label="Upgrade to Salon Basic — €9/mo" className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600" />
+              <SalonUpgradeButtonInline place_id={placeId} tier="basic" label="Upgrade to Salon Basic — €9/mo" className="bg-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary-hover)]" />
             </div>
           </div>
         </div>
@@ -184,7 +184,7 @@ export function AnalyticsSection({
                 </span>
                 <div className="flex-1 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                   <div
-                    className="h-2 rounded-full bg-teal-400 dark:bg-teal-500 transition-all"
+                    className="h-2 rounded-full bg-[color:var(--brand-primary)] transition-all"
                     style={{ width: `${Math.round((f.count / maxFlavourCount) * 100)}%` }}
                   />
                 </div>

@@ -105,7 +105,7 @@ export default async function SalonClaimPage({
             error, contact us at{" "}
             <a
               href="mailto:hello@gellog.app"
-              className="font-medium text-teal-700 hover:underline dark:text-teal-400"
+              className="font-medium text-[color:var(--brand-primary)] hover:underline"
             >
               hello@gellog.app
             </a>
@@ -133,7 +133,7 @@ export default async function SalonClaimPage({
             To manage more salons, contact us at{" "}
             <a
               href="mailto:support@gellog.app"
-              className="font-medium text-teal-700 hover:underline dark:text-teal-400"
+              className="font-medium text-[color:var(--brand-primary)] hover:underline"
             >
               support@gellog.app
             </a>
@@ -141,7 +141,7 @@ export default async function SalonClaimPage({
           </p>
           <a
             href="mailto:support@gellog.app"
-            className="mt-6 inline-flex items-center justify-center rounded-full bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-teal-700"
+            className="mt-6 inline-flex items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-5 py-3 text-sm font-semibold text-[color:var(--text-inverse)] shadow-sm transition hover:bg-[color:var(--brand-primary-hover)]"
           >
             Contact us
           </a>

@@ -63,7 +63,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-zinc-50 px-4 py-12 dark:bg-zinc-950">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[color:var(--background-primary)] px-4 py-12">
       <main className="w-full max-w-sm">
         <div className="mb-10 flex justify-center">
           <GellogLogo size={88} priority />
@@ -112,7 +112,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-[color:var(--border-focus)] focus:outline-none focus:ring-1 focus:ring-[color:var(--border-focus)]"
                 placeholder="you@example.com"
               />
             </div>
@@ -130,13 +130,13 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 autoComplete="current-password"
-                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-zinc-900 placeholder-zinc-400 focus:border-[color:var(--border-focus)] focus:outline-none focus:ring-1 focus:ring-[color:var(--border-focus)]"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="flex h-11 w-full items-center justify-center rounded-lg bg-teal-600 font-medium text-white transition-colors hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 disabled:opacity-50 dark:bg-teal-500 dark:hover:bg-teal-600 dark:focus:ring-offset-zinc-900"
+              className="flex h-11 w-full items-center justify-center rounded-lg bg-[color:var(--brand-primary)] font-medium text-[color:var(--text-inverse)] transition-colors hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-50"
             >
               {loading ? "Logging in…" : "Log in"}
             </button>
@@ -147,7 +147,7 @@ export default function LoginPage() {
           Don&apos;t have an account?{" "}
           <Link
             href="/signup"
-            className="font-medium text-teal-600 hover:underline dark:text-teal-400"
+            className="font-medium text-[color:var(--brand-primary)] hover:underline"
           >
             Sign up
           </Link>
@@ -155,14 +155,14 @@ export default function LoginPage() {
         <p className="mt-6 text-center text-xs text-zinc-500 dark:text-zinc-400">
           <Link
             href="/privacy"
-            className="text-teal-600 hover:underline dark:text-teal-400"
+            className="text-[color:var(--brand-primary)] hover:underline"
           >
             Privacy Policy
           </Link>{" "}
           ·{" "}
           <Link
             href="/terms"
-            className="text-teal-600 hover:underline dark:text-teal-400"
+            className="text-[color:var(--brand-primary)] hover:underline"
           >
             Terms &amp; Conditions
           </Link>

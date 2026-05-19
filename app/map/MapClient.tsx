@@ -550,7 +550,7 @@ export function MapClient({
           <button
             type="button"
             onClick={() => router.push(pickerReturnTo)}
-            className="rounded-xl px-2 py-1 text-sm font-medium text-teal-600 dark:text-teal-400"
+            className="rounded-xl px-2 py-1 text-sm font-medium text-[color:var(--brand-primary)]"
           >
             ← Back
           </button>
@@ -562,7 +562,7 @@ export function MapClient({
 
       {!mapReady && (
         <div className="absolute inset-0 flex items-center justify-center bg-white/80 dark:bg-zinc-900/80">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-400 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[color:var(--brand-primary)] border-t-transparent" />
         </div>
       )}
 
@@ -659,7 +659,7 @@ export function MapClient({
               <button
                 type="button"
                 onClick={confirmPickerSelection}
-                className="w-full rounded-2xl bg-teal-500 px-4 py-3 text-center text-sm font-semibold text-white"
+                className="w-full rounded-2xl bg-[color:var(--brand-primary)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--text-inverse)]"
               >
                 Use this salon
               </button>
@@ -689,7 +689,7 @@ export function MapClient({
                   <div className="flex gap-3">
                     <Link
                       href={`/salon/${encodeURIComponent(selected.place_id)}`}
-                      className="flex-1 rounded-2xl bg-teal-500 px-4 py-3 text-center text-sm font-semibold text-white"
+                      className="flex-1 rounded-2xl bg-[color:var(--brand-primary)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--text-inverse)]"
                     >
                       View salon page →
                     </Link>
@@ -706,13 +706,13 @@ export function MapClient({
                 <>
                   <Link
                     href={`/salon/${encodeURIComponent(selected.place_id)}`}
-                    className="mb-3 block w-full rounded-2xl bg-teal-500/15 px-4 py-3 text-center text-sm font-medium text-teal-800 transition hover:bg-teal-500/25 dark:bg-teal-500/20 dark:text-teal-200 dark:hover:bg-teal-500/30"
+                    className="mb-3 block w-full rounded-2xl bg-[color:var(--brand-primary-surface)] px-4 py-3 text-center text-sm font-medium text-[color:var(--text-primary)] transition hover:opacity-90"
                   >
                     No logs here yet — visit salon page
                   </Link>
                   <Link
                     href={`/salon/${encodeURIComponent(selected.place_id)}`}
-                    className="mb-3 block w-full rounded-2xl bg-teal-500 px-4 py-3 text-center text-sm font-semibold text-white transition hover:bg-teal-600"
+                    className="mb-3 block w-full rounded-2xl bg-[color:var(--brand-primary)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)]"
                   >
                     View salon page →
                   </Link>

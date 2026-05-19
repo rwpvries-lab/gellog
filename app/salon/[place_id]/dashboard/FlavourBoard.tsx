@@ -316,7 +316,7 @@ export function FlavourBoard({
                     if (e.key === "Enter") void saveName(f.id);
                     if (e.key === "Escape") setEditingNameId(null);
                   }}
-                  className="w-full rounded-lg border border-teal-300 bg-white px-2 py-0.5 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-teal-700 dark:bg-zinc-800 dark:text-zinc-50"
+                  className="w-full rounded-lg border border-[color:var(--border-default)] bg-white px-2 py-0.5 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                 />
               ) : (
                 <button
@@ -337,7 +337,7 @@ export function FlavourBoard({
               onClick={() => void toggleVitrine(f)}
               className={`flex shrink-0 items-center justify-center rounded-full p-1.5 transition ${
                 f.is_visible
-                  ? "text-teal-600 ring-1 ring-teal-200 dark:text-teal-400 dark:ring-teal-800/60"
+                  ? "text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]"
                   : "text-zinc-400 ring-1 ring-zinc-200 dark:text-zinc-500 dark:ring-zinc-700"
               }`}
               title={f.is_visible ? "On vitrine — tap to hide from public page" : "Off vitrine — tap to show on public page"}
@@ -393,7 +393,7 @@ export function FlavourBoard({
 
       {addingNew && (
         <div>
-          <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-3 py-2.5 ring-1 ring-teal-200 dark:bg-zinc-800/50 dark:ring-teal-800">
+          <div className="flex items-center gap-3 rounded-2xl bg-zinc-50 px-3 py-2.5 ring-1 ring-[color:var(--brand-primary-muted)] dark:bg-zinc-800/50">
             <button
               type="button"
               onClick={() => setNewColourPickerOpen(!newColourPickerOpen)}
@@ -415,14 +415,14 @@ export function FlavourBoard({
                 }
               }}
               placeholder="Flavour name…"
-              className="flex-1 rounded-lg border border-teal-300 bg-white px-2 py-0.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-teal-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500"
+              className="flex-1 rounded-lg border border-[color:var(--border-default)] bg-white px-2 py-0.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500"
             />
 
             <button
               type="button"
               onClick={() => void addFlavour()}
               disabled={addSaving || !newName.trim()}
-              className="rounded-full bg-teal-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-teal-700 disabled:opacity-50"
+              className="rounded-full bg-[color:var(--brand-primary)] px-3 py-1 text-xs font-semibold text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] disabled:opacity-50"
             >
               {addSaving ? "…" : "Add"}
             </button>
@@ -475,7 +475,7 @@ export function FlavourBoard({
                 <button
                   type="button"
                   onClick={() => void approveSuggestion(s)}
-                  className="rounded-full bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700 ring-1 ring-teal-100 transition hover:bg-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60"
+                  className="rounded-full bg-[color:var(--brand-primary-surface)] px-2.5 py-1 text-xs font-medium text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)] transition hover:opacity-80"
                 >
                   Add ✓
                 </button>

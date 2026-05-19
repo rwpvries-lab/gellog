@@ -376,7 +376,7 @@ export function DashboardClient({
       <div className="-mx-4 mb-5 flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 lg:hidden">
         <Link
           href={`/salon/${salonProfile.place_id}`}
-          className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-zinc-700 transition hover:text-teal-700 dark:text-zinc-200 dark:hover:text-teal-400"
+          className="flex shrink-0 items-center gap-1.5 text-sm font-medium text-zinc-700 transition hover:text-[color:var(--brand-primary)] dark:text-zinc-200"
         >
           <Icon name="GellogBack" size={18} strokeWidth={2} />
           <span>Salon page</span>
@@ -387,12 +387,12 @@ export function DashboardClient({
       </div>
       {/* Success banner after claiming */}
       {showClaimed && (
-        <div className="mb-5 flex items-start justify-between gap-3 rounded-2xl bg-teal-50 px-4 py-3 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:ring-teal-800">
+        <div className="mb-5 flex items-start justify-between gap-3 rounded-2xl bg-[color:var(--brand-primary-surface)] px-4 py-3 ring-1 ring-[color:var(--brand-primary-muted)]">
           <div>
-            <p className="text-sm font-semibold text-teal-800 dark:text-teal-300">
+            <p className="text-sm font-semibold text-[color:var(--text-primary)]">
               Claim submitted!
             </p>
-            <p className="mt-0.5 text-xs text-teal-700 dark:text-teal-400">
+            <p className="mt-0.5 text-xs text-[color:var(--text-secondary)]">
               You can start managing your page now. We will verify your
               ownership within 48 hours.
             </p>
@@ -400,7 +400,7 @@ export function DashboardClient({
           <button
             type="button"
             onClick={() => setShowClaimed(false)}
-            className="mt-0.5 text-teal-500 hover:text-teal-700 dark:text-teal-400"
+            className="mt-0.5 text-[color:var(--brand-primary)] hover:opacity-70"
           >
             ✕
           </button>
@@ -409,19 +409,19 @@ export function DashboardClient({
 
       {/* Success banner after upgrading */}
       {showUpgraded && (
-        <div className="mb-5 flex items-start justify-between gap-3 rounded-2xl bg-teal-50 px-4 py-3 ring-1 ring-teal-200 dark:bg-teal-950/30 dark:ring-teal-800">
+        <div className="mb-5 flex items-start justify-between gap-3 rounded-2xl bg-[color:var(--brand-primary-surface)] px-4 py-3 ring-1 ring-[color:var(--brand-primary-muted)]">
           <div>
-            <p className="text-sm font-semibold text-teal-800 dark:text-teal-300">
+            <p className="text-sm font-semibold text-[color:var(--text-primary)]">
               Subscription active!
             </p>
-            <p className="mt-0.5 text-xs text-teal-700 dark:text-teal-400">
+            <p className="mt-0.5 text-xs text-[color:var(--text-secondary)]">
               Your salon plan has been upgraded. Thank you!
             </p>
           </div>
           <button
             type="button"
             onClick={() => setShowUpgraded(false)}
-            className="mt-0.5 text-teal-500 hover:text-teal-700 dark:text-teal-400"
+            className="mt-0.5 text-[color:var(--brand-primary)] hover:opacity-70"
           >
             ✕
           </button>
@@ -445,7 +445,7 @@ export function DashboardClient({
                 router.push(`/salon/${encodeURIComponent(next)}/dashboard`);
               }
             }}
-            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm font-medium text-zinc-900 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:border-teal-600 dark:focus:ring-teal-900/40"
+            className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2.5 text-sm font-medium text-zinc-900 focus:border-[color:var(--border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
           >
             {ownerSalons.map((s) => (
               <option key={s.place_id} value={s.place_id}>
@@ -564,7 +564,7 @@ export function DashboardClient({
                         setNameInput(salonName);
                       }
                     }}
-                    className="w-full rounded-lg border border-teal-300 bg-white px-2 py-1 text-lg font-bold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-teal-200 dark:border-teal-700 dark:bg-zinc-800 dark:text-zinc-50"
+                    className="w-full rounded-lg border border-[color:var(--border-default)] bg-white px-2 py-1 text-lg font-bold text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
                   />
                 ) : (
                   <button
@@ -583,7 +583,7 @@ export function DashboardClient({
 
                 <div className="mt-1.5 flex flex-wrap items-center gap-2">
                   {salonProfile.claim_verified ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--brand-primary-surface)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">
                       ✓ Verified
                     </span>
                   ) : (
@@ -596,7 +596,7 @@ export function DashboardClient({
                       Salon Pro — €29/mo
                     </span>
                   ) : tier === "basic" ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2.5 py-0.5 text-xs font-medium text-teal-700 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--brand-primary-surface)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">
                       Salon Basic — €9/mo
                     </span>
                   ) : (
@@ -606,7 +606,7 @@ export function DashboardClient({
                   )}
                   <Link
                     href={`/salon/${salonProfile.place_id}`}
-                    className="text-xs text-teal-700 hover:underline dark:text-teal-400"
+                    className="text-xs text-[color:var(--brand-primary)] hover:underline"
                   >
                     View public page →
                   </Link>
@@ -697,7 +697,7 @@ export function DashboardClient({
                               </span>
                               {" — "}
                               {r.set_visible ? (
-                                <span className="text-teal-600 dark:text-teal-400">shown</span>
+                                <span className="text-[color:var(--brand-primary)]">shown</span>
                               ) : (
                                 <span className="text-zinc-500">hidden</span>
                               )}
@@ -769,7 +769,7 @@ export function DashboardClient({
                       maxLength={280}
                       rows={3}
                       placeholder="Tell visitors about your salon…"
-                      className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-teal-600 dark:focus:ring-teal-900/40"
+                      className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[color:var(--border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500"
                     />
                     <p className="text-right text-xs text-zinc-400">{bio.length}/280</p>
                   </div>
@@ -784,7 +784,7 @@ export function DashboardClient({
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="+31 6 00 000 000"
-                      className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-teal-600 dark:focus:ring-teal-900/40"
+                      className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[color:var(--border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500"
                     />
                   </div>
 
@@ -798,7 +798,7 @@ export function DashboardClient({
                       value={website}
                       onChange={(e) => setWebsite(e.target.value)}
                       placeholder="https://yoursalon.com"
-                      className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-teal-400 focus:outline-none focus:ring-2 focus:ring-teal-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-teal-600 dark:focus:ring-teal-900/40"
+                      className="rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[color:var(--border-focus)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder:text-zinc-500"
                     />
                   </div>
 
@@ -806,7 +806,7 @@ export function DashboardClient({
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">
                     To update your logo, tap the image in the header above.
                     {logoFile && (
-                      <span className="ml-1 font-medium text-teal-700 dark:text-teal-400">
+                      <span className="ml-1 font-medium text-[color:var(--brand-primary)]">
                         New logo selected — save to apply.
                       </span>
                     )}
@@ -825,7 +825,7 @@ export function DashboardClient({
                   </button>
 
                   {saved && (
-                    <p className="text-center text-xs text-teal-600 dark:text-teal-400">
+                    <p className="text-center text-xs text-[color:var(--brand-primary)]">
                       Saved ✓
                     </p>
                   )}
@@ -849,7 +849,7 @@ export function DashboardClient({
                         <th className="px-3 py-2 text-left font-semibold text-zinc-500 dark:text-zinc-400">
                           Feature
                         </th>
-                        <th className="px-3 py-2 text-center font-semibold text-teal-700 dark:text-teal-400">
+                        <th className="px-3 py-2 text-center font-semibold text-[color:var(--brand-primary)]">
                           Basic
                         </th>
                         <th className="px-3 py-2 text-center font-semibold text-orange-600 dark:text-orange-400">
@@ -887,7 +887,7 @@ export function DashboardClient({
                     place_id={salonProfile.place_id}
                     tier="basic"
                     label="Upgrade to Salon Basic — €9/mo"
-                    className="bg-teal-600 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600"
+                    className="bg-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary-hover)]"
                   />
                 )}
                 {tier !== "pro" && (

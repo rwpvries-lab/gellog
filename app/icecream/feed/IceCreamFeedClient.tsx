@@ -309,17 +309,17 @@ export function IceCreamFeedClient({
               <PlaceholderScoop size={56} seed="feed-empty-b" />
               <PlaceholderScoop size={36} seed="feed-empty-c" className="translate-y-2 opacity-90" />
             </div>
-            <p className="text-base font-semibold text-[color:var(--color-text-primary)]">
-              No scoops yet
+            <p className="font-serif text-2xl font-medium text-[color:var(--text-primary)]">
+              No logs yet
             </p>
-            <p className="mt-2 max-w-[260px] text-sm leading-relaxed text-[color:var(--color-text-secondary)]">
-              Be the first to log a visit — your feed will fill up with flavour here.
+            <p className="mt-2 max-w-[260px] text-sm leading-relaxed text-[color:var(--text-secondary)]">
+              Follow some friends or log your first gelato.
             </p>
             <Link
-              href="/log"
-              className="mt-8 inline-flex items-center justify-center rounded-full bg-[color:var(--color-orange)] px-6 py-3 text-sm font-semibold text-[color:var(--color-on-brand)] shadow-[0_6px_20px_color-mix(in_srgb,var(--color-orange)_25%,transparent)] transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-teal)] focus:ring-offset-2 focus:ring-offset-[color:var(--color-surface)]"
+              href="/icecream/logs/new"
+              className="mt-8 inline-flex items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-6 py-3 text-sm font-semibold text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2"
             >
-              Log your first scoop
+              Log your first gelato →
             </Link>
           </div>
         </div>
@@ -335,15 +335,15 @@ export function IceCreamFeedClient({
               <span className="text-6xl leading-none">👥</span>
               <PlaceholderScoop size={48} seed="feed-friends-empty" className="inline-flex" />
             </div>
-            <p className="text-base font-semibold text-[color:var(--color-text-primary)]">
+            <p className="font-serif text-2xl font-medium text-[color:var(--text-primary)]">
               No friend activity yet
             </p>
-            <p className="mt-2 max-w-[260px] text-sm leading-relaxed text-[color:var(--color-text-secondary)]">
+            <p className="mt-2 max-w-[260px] text-sm leading-relaxed text-[color:var(--text-secondary)]">
               Follow people you know to see their gelato logs in this tab.
             </p>
             <Link
               href="/search"
-              className="mt-8 inline-flex items-center justify-center rounded-full bg-[color:var(--color-teal)] px-6 py-3 text-sm font-semibold text-[color:var(--color-on-brand)] shadow-[0_6px_20px_color-mix(in_srgb,var(--color-teal)_28%,transparent)] transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[color:var(--color-orange)] focus:ring-offset-2 focus:ring-offset-[color:var(--color-surface)]"
+              className="mt-8 inline-flex items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-6 py-3 text-sm font-semibold text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2"
             >
               Find people
             </Link>

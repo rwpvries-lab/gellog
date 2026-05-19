@@ -85,10 +85,10 @@ type FollowStatus = Record<string, boolean>;
 function SkeletonRow() {
   return (
     <div className="flex animate-pulse items-center gap-3 rounded-2xl bg-[color:var(--color-surface)] p-3 shadow-sm ring-1 ring-[color:var(--color-border)]">
-      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-[color:var(--color-surface-alt)]" />
+      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
       <div className="flex flex-1 flex-col gap-2">
-        <div className="h-3 w-28 rounded bg-[color:var(--color-surface-alt)]" />
-        <div className="h-3 w-16 rounded bg-[color:var(--color-surface-alt)]" />
+        <div className="h-3 w-28 rounded bg-[#F0E4CF] dark:bg-zinc-700" />
+        <div className="h-3 w-16 rounded bg-[#F0E4CF] dark:bg-zinc-700" />
       </div>
     </div>
   );
@@ -326,8 +326,12 @@ export default function SearchPage() {
                 <SkeletonRow />
                 <SkeletonRow />
               </>
-            ) : searched && results.length === 0 ? (
-              <p className="py-8 text-center text-sm text-[color:var(--color-text-secondary)]">
+            ) : !searched ? (
+              <p className="py-8 text-center text-sm text-[color:var(--text-secondary)]">
+                Try a salon name, a flavour, or a city.
+              </p>
+            ) : results.length === 0 ? (
+              <p className="py-8 text-center text-sm text-[color:var(--text-secondary)]">
                 No users found for &ldquo;{query.trim()}&rdquo;
               </p>
             ) : (
@@ -378,11 +382,15 @@ export default function SearchPage() {
               <SkeletonRow />
               <SkeletonRow />
             </>
+          ) : !salonSearched ? (
+            <p className="py-8 text-center text-sm text-[color:var(--text-secondary)]">
+              Try a salon name, a flavour, or a city.
+            </p>
           ) : noSalonResults ? (
-            <p className="py-8 text-center text-sm text-[color:var(--color-text-secondary)]">
+            <p className="py-8 text-center text-sm text-[color:var(--text-secondary)]">
               No salons found for &ldquo;{query.trim()}&rdquo;
             </p>
-          ) : !salonSearched ? null : (
+          ) : (
             <>
               {/* Gellog salons */}
               {salonResults.map((salon) => (

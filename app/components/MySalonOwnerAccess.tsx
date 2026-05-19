@@ -21,7 +21,7 @@ export function MySalonProfileShortcut() {
     <div className="flex justify-end">
       <Link
         href={href}
-        className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-teal-800 shadow-sm transition hover:border-teal-300 hover:bg-teal-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-teal-300 dark:hover:border-teal-700 dark:hover:bg-teal-950/40"
+        className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200 bg-white px-3 py-2 text-xs font-semibold text-[color:var(--brand-primary)] shadow-sm transition hover:border-[color:var(--brand-primary-muted)] hover:bg-[color:var(--brand-primary-surface)] dark:border-zinc-700 dark:bg-zinc-900"
       >
         <Store className="h-4 w-4 shrink-0" strokeWidth={2} aria-hidden />
         {label}

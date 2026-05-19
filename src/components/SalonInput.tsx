@@ -32,9 +32,15 @@ type SalonInputProps = {
   onOpenMap?: () => void;
 };
 
+type RecentSalon = {
+  name: string;
+  place_id: string | null;
+  city: string | null;
+};
+
 type DropdownItem =
   | { type: "place"; prediction: Prediction }
-  | { type: "recent"; name: string };
+  | { type: "recent"; salon: RecentSalon };
 
 function predictionMainText(p: Prediction): string {
   return (
@@ -60,7 +66,7 @@ function narrowAutocompletePredictions(raw: Prediction[]): Prediction[] {
 
 export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInputProps) {
   const [items, setItems] = useState<DropdownItem[]>([]);
-  const [recentSalons, setRecentSalons] = useState<string[]>([]);
+  const [recentSalons, setRecentSalons] = useState<RecentSalon[]>([]);
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const userLocationRef = useRef<{ lat: number; lng: number } | null>(null);
@@ -82,18 +88,18 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
     const supabase = createClient();
     supabase
       .from("ice_cream_logs")
-      .select("salon_name")
+      .select("salon_name, salon_place_id, salon_city")
       .eq("user_id", userId)
       .order("visited_at", { ascending: false })
       .limit(30)
       .then(({ data }) => {
         if (!data) return;
         const seen = new Set<string>();
-        const unique: string[] = [];
+        const unique: RecentSalon[] = [];
         for (const row of data) {
           if (row.salon_name && !seen.has(row.salon_name)) {
             seen.add(row.salon_name);
-            unique.push(row.salon_name);
+            unique.push({ name: row.salon_name, place_id: row.salon_place_id ?? null, city: row.salon_city ?? null });
             if (unique.length >= 3) break;
           }
         }
@@ -148,7 +154,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
 
     if (val.length === 0) {
       if (recentSalons.length > 0) {
-        setItems(recentSalons.map((name) => ({ type: "recent" as const, name })));
+        setItems(recentSalons.map((salon) => ({ type: "recent" as const, salon })));
         setOpen(true);
       } else {
         setItems([]);
@@ -170,7 +176,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
 
   function handleFocus() {
     if (!value && recentSalons.length > 0) {
-      setItems(recentSalons.map((name) => ({ type: "recent" as const, name })));
+      setItems(recentSalons.map((salon) => ({ type: "recent" as const, salon })));
       setOpen(true);
     }
   }
@@ -202,8 +208,8 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
     }
   }
 
-  function selectRecent(name: string) {
-    onPlaceSelect({ salon_name: name, salon_place_id: null, salon_address: null, salon_lat: null, salon_lng: null, salon_city: null });
+  function selectRecent(salon: RecentSalon) {
+    onPlaceSelect({ salon_name: salon.name, salon_place_id: salon.place_id, salon_address: null, salon_lat: null, salon_lng: null, salon_city: salon.city });
     setOpen(false);
   }
 
@@ -225,7 +231,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
       if (item.type === "place") {
         selectPlace(item.prediction.place_id, predictionMainText(item.prediction));
       } else {
-        selectRecent(item.name);
+        selectRecent(item.salon);
       }
     }
   }
@@ -322,7 +328,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
   const showRecentHeader = items.length > 0 && items[0].type === "recent";
 
   const hasExactMatch = items.some((item) => {
-    const name = item.type === "place" ? predictionMainText(item.prediction) : item.name;
+    const name = item.type === "place" ? predictionMainText(item.prediction) : item.salon.name;
     return name.toLowerCase() === value.toLowerCase();
   });
   const showAddRow = value.length >= 3 && !hasExactMatch;
@@ -362,15 +368,15 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
             if (item.type === "recent") {
               return (
                 <button
-                  key={`recent-${item.name}`}
+                  key={`recent-${item.salon.name}`}
                   type="button"
-                  onMouseDown={() => selectRecent(item.name)}
+                  onMouseDown={() => selectRecent(item.salon)}
                   className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition ${
                     isActive ? "bg-[color:var(--brand-secondary-bg)]" : "hover:bg-[color:var(--brand-secondary-bg)]"
                   }`}
                 >
                   <span className="text-[color:var(--text-tertiary)]">🕐</span>
-                  <span className="font-medium text-[color:var(--text-primary)]">{item.name}</span>
+                  <span className="font-medium text-[color:var(--text-primary)]">{item.salon.name}</span>
                 </button>
               );
             }

@@ -118,8 +118,8 @@ export function FollowListSheet({ userId, type, count, currentUserId }: FollowLi
                 <div className="flex flex-col gap-3 py-2">
                   {[0, 1, 2].map((i) => (
                     <div key={i} className="flex animate-pulse items-center gap-3">
-                      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-zinc-200 dark:bg-zinc-700" />
-                      <div className="h-3 w-32 rounded bg-zinc-200 dark:bg-zinc-700" />
+                      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
+                      <div className="h-3 w-32 rounded bg-[#F0E4CF] dark:bg-zinc-700" />
                     </div>
                   ))}
                 </div>

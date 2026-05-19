@@ -7,7 +7,7 @@ import {
 import { BASE_TOKENS } from "@/src/lib/gelato-tokens";
 import { createClient } from "@/src/lib/supabase/client";
 import { useFlavourTokens } from "@/src/lib/use-flavour-tokens";
-import { Star } from "lucide-react";
+import { Star, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { LogFlowAction, LogFlowState } from "../logFlowReducer";
 
@@ -92,11 +92,11 @@ function FlavourNameInput({
         }}
         placeholder="Flavour name"
         autoComplete="off"
-        className="w-full border-none bg-transparent font-serif text-[18px] font-medium text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-0 disabled:opacity-50"
+        className="w-full border-none bg-transparent font-serif text-[18px] font-medium text-[color:var(--text-primary)] placeholder:text-[color:var(--text-tertiary)] focus:outline-none focus:ring-0 disabled:opacity-50"
       />
       {open && items.length > 0 ? (
         <ul
-          className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-48 overflow-auto rounded-2xl border border-border-default bg-background-secondary py-1 shadow-sm"
+          className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-48 overflow-auto rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] py-1 shadow-sm"
           role="listbox"
         >
           {items.map((item) => (
@@ -104,7 +104,7 @@ function FlavourNameInput({
               <button
                 type="button"
                 role="option"
-                className="flex w-full px-3 py-2 text-left font-sans text-sm text-text-primary hover:bg-background-tertiary"
+                className="flex w-full px-3 py-2 text-left font-sans text-sm text-[color:var(--text-primary)] hover:bg-[color:var(--background-tertiary)]"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   onPickCanonical(item);
@@ -138,17 +138,17 @@ function StarRow({
             key={n}
             type="button"
             onClick={() => onChange(n)}
-            className="p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-border-focus focus-visible:ring-offset-1 rounded-sm"
+            className="rounded-sm p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+            style={{ '--tw-ring-color': 'var(--border-focus)' } as React.CSSProperties}
             aria-label={`${n} stars`}
           >
             <Star
               size={20}
               strokeWidth={1.75}
-              className={
-                isOn
-                  ? "fill-brand-primary text-brand-primary"
-                  : "fill-brand-primary-muted text-brand-primary-muted"
-              }
+              style={{
+                fill: isOn ? 'var(--brand-primary)' : 'transparent',
+                color: 'var(--brand-primary)',
+              }}
             />
           </button>
         );
@@ -259,12 +259,12 @@ export function Step2_Flavours({
   return (
     <div className="flex flex-col gap-6">
       {salonPlaceId && vitrineLoading ? (
-        <p className="font-sans text-xs text-text-secondary">Loading vitrine…</p>
+        <p className="font-sans text-xs text-[color:var(--text-secondary)]">Loading vitrine…</p>
       ) : null}
 
       {showVitrineStrip ? (
         <div className="flex flex-col gap-2">
-          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
             From today&apos;s vitrine
           </p>
           <div
@@ -287,8 +287,8 @@ export function Step2_Flavours({
                   onClick={() => handlePillClick(row)}
                   className={`flex h-9 shrink-0 items-center gap-2 rounded-full border px-3 font-sans text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
                     selected
-                      ? "border-brand-primary bg-brand-primary-surface text-text-primary"
-                      : "border-border-default bg-background-secondary text-text-primary"
+                      ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-primary-surface)] text-[color:var(--text-primary)]"
+                      : "border-[color:var(--border-default)] bg-[color:var(--background-secondary)] text-[color:var(--text-primary)]"
                   }`}
                 >
                   <span
@@ -317,7 +317,7 @@ export function Step2_Flavours({
           return (
             <div
               key={flavour.id}
-              className="flex items-center gap-4 rounded-2xl border border-border-default bg-background-secondary p-4"
+              className="flex items-center gap-4 rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] p-4"
             >
               {swatchHex ? (
                 <SwatchDot colour={swatchHex} />
@@ -355,6 +355,14 @@ export function Step2_Flavours({
                   })
                 }
               />
+              <button
+                type="button"
+                onClick={() => dispatch({ type: "REMOVE_FLAVOUR", id: flavour.id })}
+                className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[color:var(--text-tertiary)] transition hover:bg-[color:var(--background-tertiary)] hover:text-[color:var(--text-secondary)]"
+                aria-label="Remove flavour"
+              >
+                <X size={16} strokeWidth={2} aria-hidden />
+              </button>
             </div>
           );
         })}
@@ -367,7 +375,7 @@ export function Step2_Flavours({
           if (atMax) return;
           dispatch({ type: "ADD_FLAVOUR" });
         }}
-        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border-default bg-transparent font-sans text-base font-medium text-brand-primary transition hover:bg-brand-primary-surface/40 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[color:var(--border-default)] bg-transparent font-sans text-base font-medium text-[color:var(--brand-primary)] transition hover:bg-[color:var(--brand-primary-surface)] disabled:cursor-not-allowed disabled:opacity-40"
       >
         <span aria-hidden>+</span>
         Add another flavour

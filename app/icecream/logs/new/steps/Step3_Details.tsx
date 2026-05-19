@@ -149,11 +149,11 @@ export function Step3_Details({
 
   return (
     <div className="flex flex-col gap-5">
-      <section className="rounded-2xl border border-border-default bg-background-secondary p-4">
-        <h2 className="mb-4 font-serif text-[18px] font-medium text-text-primary">How you had it</h2>
+      <section className="rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] p-4">
+        <h2 className="mb-4 font-serif text-[18px] font-medium text-[color:var(--text-primary)]">How you had it</h2>
 
         <div className="mb-6 flex flex-col gap-2">
-          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
             Vessel
           </p>
           <div className="grid grid-cols-2 gap-3">
@@ -176,8 +176,8 @@ export function Step3_Details({
                   }
                   className={`flex h-20 flex-row items-center gap-3 overflow-hidden rounded-2xl border px-3 transition-colors ${
                     selected
-                      ? "border-brand-primary bg-brand-primary-surface"
-                      : "border-border-default bg-background-tertiary"
+                      ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-primary-surface)]"
+                      : "border-[color:var(--border-default)] bg-[color:var(--background-tertiary)]"
                   }`}
                   aria-pressed={selected}
                 >
@@ -189,7 +189,7 @@ export function Step3_Details({
                       seed={`new-log-${value}`}
                     />
                   </div>
-                  <span className="font-sans text-base font-medium text-text-primary">{label}</span>
+                  <span className="font-sans text-base font-medium text-[color:var(--text-primary)]">{label}</span>
                 </button>
               );
             })}
@@ -197,16 +197,16 @@ export function Step3_Details({
         </div>
 
         <div className="mb-6 flex flex-col gap-2">
-          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
             Photo
           </p>
           <button
             type="button"
             onClick={() => photoInputRef.current?.click()}
-            className="flex h-[120px] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-border-default bg-background-primary"
+            className="flex h-[120px] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[color:var(--border-default)] bg-[color:var(--background-primary)]"
           >
-            <Camera className="h-6 w-6 text-brand-primary" strokeWidth={2} aria-hidden />
-            <span className="font-sans text-sm text-text-secondary">
+            <Camera className="h-6 w-6 text-[color:var(--brand-primary)]" strokeWidth={2} aria-hidden />
+            <span className="font-sans text-sm text-[color:var(--text-secondary)]">
               {state.step3.photoFile ? state.step3.photoFile.name : "Tap to add photo"}
             </span>
           </button>
@@ -223,7 +223,7 @@ export function Step3_Details({
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
             Notes
           </p>
           <textarea
@@ -231,13 +231,13 @@ export function Step3_Details({
             onChange={(e) => dispatch({ type: "SET_NOTES", notes: e.target.value })}
             rows={4}
             placeholder="Arrived at 11am to avoid the queue…"
-            className="min-h-[96px] w-full resize-none rounded-2xl border border-border-default bg-background-primary px-3 py-3 font-sans text-sm italic text-text-primary placeholder:text-text-tertiary focus:border-border-focus focus:outline-none"
+            className="min-h-[96px] w-full resize-none rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-primary)] px-3 py-3 font-sans text-sm italic text-[color:var(--text-primary)] placeholder:text-[color:var(--text-tertiary)] focus:border-[color:var(--border-focus)] focus:outline-none"
           />
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border-default bg-background-secondary p-4">
-        <h2 className="mb-4 font-serif text-[18px] font-medium text-text-primary">Context</h2>
+      <section className="rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] p-4">
+        <h2 className="mb-4 font-serif text-[18px] font-medium text-[color:var(--text-primary)]">Context</h2>
 
         <LocationPermissionBanner
           message={weatherBanner}
@@ -246,7 +246,7 @@ export function Step3_Details({
 
         <div className="mb-6 grid grid-cols-2 gap-4">
           <div className="flex min-w-0 flex-col gap-2">
-            <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+            <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
               Visibility
             </p>
             <div className="relative inline-flex items-center self-start">
@@ -258,7 +258,7 @@ export function Step3_Details({
                     visibility: e.target.value as Visibility,
                   })
                 }
-                className="cursor-pointer appearance-none rounded-full border border-transparent bg-transparent py-1 pl-0 pr-7 font-sans text-sm font-medium text-brand-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-border-focus"
+                className="cursor-pointer appearance-none rounded-full border border-transparent bg-transparent py-1 pl-0 pr-7 font-sans text-sm font-medium text-[color:var(--brand-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--border-focus)]"
                 aria-label="Visibility"
               >
                 <option value="public">Public</option>
@@ -266,26 +266,26 @@ export function Step3_Details({
                 <option value="private">Private</option>
               </select>
               <ChevronDown
-                className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-brand-primary"
+                className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-[color:var(--brand-primary)]"
                 aria-hidden
               />
             </div>
           </div>
           <div className="flex min-w-0 flex-col gap-2">
-            <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+            <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
               Weather
             </p>
-            <p className="truncate font-sans text-sm text-text-primary">{weatherChipText()}</p>
+            <p className="truncate font-sans text-sm text-[color:var(--text-primary)]">{weatherChipText()}</p>
           </div>
         </div>
 
         <div className="flex flex-col gap-2">
-          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+          <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
             Price paid
           </p>
           <div className="flex flex-wrap items-center gap-4">
-            <div className="flex min-w-[60%] flex-1 items-center rounded-2xl border border-border-default bg-background-primary px-3 py-2 focus-within:border-border-focus">
-              <span className="font-sans text-base text-text-tertiary">€</span>
+            <div className="flex min-w-[60%] flex-1 items-center rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-primary)] px-3 py-2 focus-within:border-[color:var(--border-focus)]">
+              <span className="font-sans text-base text-[color:var(--text-tertiary)]">€</span>
               <input
                 type="text"
                 inputMode="decimal"
@@ -306,24 +306,24 @@ export function Step3_Details({
                     });
                 }}
                 placeholder="0.00"
-                className="min-w-0 flex-1 border-none bg-transparent px-2 font-sans text-base text-text-primary placeholder:text-text-tertiary focus:outline-none"
+                className="min-w-0 flex-1 border-none bg-transparent px-2 font-sans text-base text-[color:var(--text-primary)] placeholder:text-[color:var(--text-tertiary)] focus:outline-none"
               />
             </div>
-            <label className="flex cursor-pointer items-center gap-2 font-sans text-[13px] text-text-secondary">
+            <label className="flex cursor-pointer items-center gap-2 font-sans text-[13px] text-[color:var(--text-secondary)]">
               <input
                 type="checkbox"
                 checked={state.step3.hidePrice}
                 onChange={(e) =>
                   dispatch({ type: "SET_PRICE", hidePrice: e.target.checked })
                 }
-                className="h-4 w-4 rounded border-border-default accent-[rgb(var(--brand-primary-rgb))]"
+                className="h-4 w-4 rounded border-[color:var(--border-default)] accent-[rgb(var(--brand-primary-rgb))]"
               />
               Hide from others
             </label>
           </div>
           {state.step3.priceWarning != null ? (
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 pt-1">
-              <p className="text-sm italic text-text-secondary">
+              <p className="text-sm italic text-[color:var(--text-secondary)]">
                 That seems high — did you mean €{state.step3.priceWarning.toFixed(2)}?
               </p>
               <button
@@ -335,7 +335,7 @@ export function Step3_Details({
                     priceWarning: null,
                   })
                 }
-                className="rounded-full bg-background-tertiary px-2.5 py-1 text-xs font-medium text-text-primary ring-1 ring-border-default"
+                className="rounded-full bg-[color:var(--background-tertiary)] px-2.5 py-1 text-xs font-medium text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)]"
               >
                 Use €{state.step3.priceWarning.toFixed(2)}
               </button>

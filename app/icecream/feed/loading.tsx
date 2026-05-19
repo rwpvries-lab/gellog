@@ -47,34 +47,34 @@ export default function IceCreamFeedLoading() {
               key={i}
               className="animate-pulse overflow-hidden rounded-3xl bg-[color:var(--color-surface)] shadow-sm ring-1 ring-[color:var(--color-border)]"
             >
-              <div className="aspect-[4/3] w-full bg-[color:var(--color-surface-alt)]" />
+              <div className="aspect-[4/3] w-full bg-[#F0E4CF] dark:bg-zinc-700" />
               <div className="space-y-3 p-4">
                 <div className="space-y-2">
-                  <div className="h-4 w-3/5 max-w-[14rem] rounded bg-[color:var(--color-surface-alt)]" />
-                  <div className="h-3 w-2/5 max-w-[8rem] rounded bg-[color:var(--color-surface-alt)]" />
+                  <div className="h-4 w-3/5 max-w-[14rem] rounded bg-[#F0E4CF] dark:bg-zinc-700" />
+                  <div className="h-3 w-2/5 max-w-[8rem] rounded bg-[#F0E4CF] dark:bg-zinc-700" />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <div className="h-7 w-20 rounded-full bg-[color:var(--color-surface-alt)]" />
-                  <div className="h-7 w-24 rounded-full bg-[color:var(--color-surface-alt)]" />
+                  <div className="h-7 w-20 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
+                  <div className="h-7 w-24 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
                 </div>
                 <div className="flex justify-between gap-3 pt-1">
-                  <div className="h-4 flex-1 rounded bg-[color:var(--color-surface-alt)]" />
-                  <div className="h-4 w-14 shrink-0 rounded bg-[color:var(--color-surface-alt)]" />
+                  <div className="h-4 flex-1 rounded bg-[#F0E4CF] dark:bg-zinc-700" />
+                  <div className="h-4 w-14 shrink-0 rounded bg-[#F0E4CF] dark:bg-zinc-700" />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <div className="h-6 w-16 rounded-full bg-[color:var(--color-surface-alt)]" />
-                  <div className="h-6 w-24 rounded-full bg-[color:var(--color-surface-alt)]" />
-                  <div className="h-6 w-14 rounded-full bg-[color:var(--color-surface-alt)]" />
+                  <div className="h-6 w-16 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
+                  <div className="h-6 w-24 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
+                  <div className="h-6 w-14 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
                 </div>
               </div>
               <div className="flex items-center justify-between border-t border-[color:var(--color-border)] px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <div className="h-9 w-9 rounded-full bg-[color:var(--color-surface-alt)]" />
-                  <div className="h-3 w-24 rounded bg-[color:var(--color-surface-alt)]" />
+                  <div className="h-9 w-9 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
+                  <div className="h-3 w-24 rounded bg-[#F0E4CF] dark:bg-zinc-700" />
                 </div>
                 <div className="flex gap-2">
-                  <div className="h-9 w-9 rounded-full bg-[color:var(--color-surface-alt)]" />
-                  <div className="h-9 w-9 rounded-full bg-[color:var(--color-surface-alt)]" />
+                  <div className="h-9 w-9 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
+                  <div className="h-9 w-9 rounded-full bg-[#F0E4CF] dark:bg-zinc-700" />
                 </div>
               </div>
             </div>

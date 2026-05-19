@@ -185,7 +185,7 @@ export default async function UserProfilePage({
 
         {/* Stats pill */}
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-medium text-teal-700 ring-1 ring-teal-100 dark:bg-teal-900/30 dark:text-teal-300 dark:ring-teal-800/60">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[color:var(--brand-primary-surface)] px-3 py-1 text-xs font-medium text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">
             <PlaceholderScoop size={20} seed={`profile-stats-${profile.id}`} className="shrink-0" />
             {logs.length === 5 ? "5+ recent public scoops" : `${logs.length} public scoop${logs.length !== 1 ? "s" : ""}`}
           </span>
@@ -193,13 +193,10 @@ export default async function UserProfilePage({
 
         {/* Recent public logs */}
         {logs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-3xl bg-white px-8 py-12 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-            <span className="mb-4 text-5xl">😋</span>
-            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-              No public logs yet
-            </p>
-            <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-              {displayName} hasn&apos;t shared any scoops publicly.
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-[color:var(--border-default)] bg-[color:var(--surface-elevated)] px-8 py-12 text-center shadow-[var(--shadow-card-sm)]">
+            <PlaceholderScoop size={96} seed={`profile-empty-${profile.id}`} className="mb-4" />
+            <p className="font-serif text-2xl font-medium text-[color:var(--text-primary)]">
+              {isOwnProfile ? "You haven't logged any gelato yet." : `@${profile.username ?? displayName} hasn't logged any gelato yet.`}
             </p>
           </div>
         ) : (

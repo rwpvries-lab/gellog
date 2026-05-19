@@ -7,7 +7,6 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -173,39 +172,6 @@ export function Step1_SalonDate({
     [],
   );
 
-  const predictionKey = useMemo(
-    () => predictions.map((p) => p.place_id).join("|"),
-    [predictions],
-  );
-
-  /** Predictions + fetch impl via refs so the effect deps stay a fixed-length array (React 19). */
-  const predictionsRef = useRef(predictions);
-  predictionsRef.current = predictions;
-  const fetchPlaceDetailsRef = useRef(fetchPlaceDetails);
-  fetchPlaceDetailsRef.current = fetchPlaceDetails;
-  const dispatchRef = useRef(dispatch);
-  dispatchRef.current = dispatch;
-
-  /** When the typeahead result set changes, default-select the first salon (v2 spec). */
-  useEffect(() => {
-    const preds = predictionsRef.current;
-    if (preds.length === 0) return;
-    const first = preds[0];
-    let cancelled = false;
-    void (async () => {
-      const data = await fetchPlaceDetailsRef.current(
-        first.place_id,
-        predictionMainText(first),
-      );
-      if (!cancelled) {
-        dispatchRef.current({ type: "SET_SALON", salon: data });
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [predictionKey]);
-
   useLayoutEffect(() => {
     const el = chipsRef.current;
     if (!el) return;
@@ -235,6 +201,7 @@ export function Step1_SalonDate({
   async function handlePickPrediction(p: Prediction) {
     const data = await fetchPlaceDetails(p.place_id, predictionMainText(p));
     applySalonData(data);
+    setPredictions([]);
   }
 
   const visitedLabel = formatLongDate(state.step1.date);
@@ -245,11 +212,11 @@ export function Step1_SalonDate({
   return (
     <div className="flex flex-col gap-8">
       <div
-        className={`flex h-[52px] w-full items-center gap-3 rounded-full border bg-background-secondary px-4 transition-colors ${
-          focused ? "border-border-focus" : "border-border-strong"
+        className={`flex h-[52px] w-full items-center gap-3 rounded-full border bg-[color:var(--background-secondary)] px-4 transition-colors ${
+          focused ? "border-[color:var(--border-focus)]" : "border-[color:var(--border-strong)]"
         }`}
       >
-        <Search className="h-5 w-5 shrink-0 text-brand-primary" strokeWidth={2} aria-hidden />
+        <Search className="h-5 w-5 shrink-0 text-[color:var(--brand-primary)]" strokeWidth={2} aria-hidden />
         <input
           type="search"
           value={state.step1.salonInput}
@@ -258,7 +225,7 @@ export function Step1_SalonDate({
           onBlur={() => setFocused(false)}
           placeholder="e.g. Gelateria Roma"
           autoComplete="off"
-          className="min-w-0 flex-1 bg-transparent font-sans text-base text-text-primary placeholder:text-text-tertiary focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent font-sans text-base text-[color:var(--text-primary)] placeholder:text-[color:var(--text-tertiary)] focus:outline-none"
         />
       </div>
 
@@ -275,26 +242,27 @@ export function Step1_SalonDate({
                 onClick={() => void handlePickPrediction(p)}
                 className={`flex h-16 w-full shrink-0 items-center gap-3 rounded-2xl border px-3 text-left transition-colors ${
                   selected
-                    ? "border-brand-primary bg-brand-primary-surface"
-                    : "border-border-default bg-background-secondary"
+                    ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-primary-surface)]"
+                    : "border-[color:var(--border-default)] bg-[color:var(--background-secondary)]"
                 }`}
               >
                 <div
                   className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
-                    selected ? "bg-brand-primary text-text-inverse" : "bg-brand-primary-muted/40 text-brand-primary"
+                    selected ? "bg-[color:var(--brand-primary)] text-[color:var(--text-inverse)]" : "text-[color:var(--brand-primary)]"
                   }`}
+                  style={!selected ? { background: 'color-mix(in srgb, var(--brand-primary-muted) 40%, transparent)' } : undefined}
                 >
                   <MapPin className="h-[18px] w-[18px]" strokeWidth={2} aria-hidden />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-serif text-[18px] font-medium text-text-primary">
+                  <p className="truncate font-serif text-[18px] font-medium text-[color:var(--text-primary)]">
                     {main}
                   </p>
                   {secondary ? (
-                    <p className="truncate font-sans text-[13px] text-text-secondary">{secondary}</p>
+                    <p className="truncate font-sans text-[13px] text-[color:var(--text-secondary)]">{secondary}</p>
                   ) : null}
                 </div>
-                <ChevronRight className="h-5 w-5 shrink-0 text-brand-primary" aria-hidden />
+                <ChevronRight className="h-5 w-5 shrink-0 text-[color:var(--brand-primary)]" aria-hidden />
               </button>
             );
           })}
@@ -302,17 +270,17 @@ export function Step1_SalonDate({
       ) : null}
 
       <div className="flex flex-col gap-3">
-        <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-text-tertiary">
+        <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
           Date &amp; time of visit
         </p>
         <div className="flex items-start justify-between gap-3">
-          <p className="min-w-0 flex-1 font-serif text-2xl font-medium leading-tight text-text-primary">
+          <p className="min-w-0 flex-1 font-serif text-2xl font-medium leading-tight text-[color:var(--text-primary)]">
             {visitedLabel}
           </p>
           <button
             type="button"
             onClick={() => setTimeOpen(true)}
-            className="inline-flex shrink-0 items-center gap-1 font-serif text-2xl font-medium text-brand-primary"
+            className="inline-flex shrink-0 items-center gap-1 font-serif text-2xl font-medium text-[color:var(--brand-primary)]"
           >
             {timeLabel}
             <ChevronDown className="h-5 w-5" strokeWidth={2} aria-hidden />
@@ -340,8 +308,8 @@ export function Step1_SalonDate({
                   onClick={() => dispatch({ type: "SET_DATE", date: dateStr })}
                   className={`flex h-16 w-[52px] shrink-0 flex-col items-center justify-center rounded-2xl border font-sans transition-colors ${
                     selected
-                      ? "border-brand-primary bg-brand-primary text-text-inverse"
-                      : "border-border-default bg-background-secondary text-text-primary"
+                      ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-primary)] text-[color:var(--text-inverse)]"
+                      : "border-[color:var(--border-default)] bg-[color:var(--background-secondary)] text-[color:var(--text-primary)]"
                   }`}
                 >
                   <span className="text-[10px] font-medium uppercase tracking-wide opacity-90">{dow}</span>
@@ -361,25 +329,25 @@ export function Step1_SalonDate({
             aria-label="Close"
             onClick={() => setTimeOpen(false)}
           />
-          <div className="relative rounded-t-2xl border border-border-default bg-background-secondary px-5 pb-8 pt-4">
+          <div className="relative rounded-t-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] px-5 pb-8 pt-4">
             <div className="mb-4 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setTimeOpen(false)}
-                className="font-sans text-sm text-text-secondary"
+                className="font-sans text-sm text-[color:var(--text-secondary)]"
               >
                 Cancel
               </button>
               <button
                 type="button"
                 onClick={() => setTimeOpen(false)}
-                className="font-sans text-sm font-medium text-brand-primary"
+                className="font-sans text-sm font-medium text-[color:var(--brand-primary)]"
               >
                 Done
               </button>
             </div>
             <label className="flex flex-col gap-2">
-              <span className="font-sans text-xs uppercase tracking-[0.08em] text-text-tertiary">
+              <span className="font-sans text-xs uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
                 Time
               </span>
               <input
@@ -390,7 +358,7 @@ export function Step1_SalonDate({
                   const [hh, mm] = e.target.value.split(":").map(Number);
                   dispatch({ type: "SET_TIME", hour: hh ?? 0, minute: mm ?? 0 });
                 }}
-                className="h-12 w-full rounded-2xl border border-border-default bg-background-primary px-3 font-sans text-lg text-text-primary focus:border-border-focus focus:outline-none"
+                className="h-12 w-full rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-primary)] px-3 font-sans text-lg text-[color:var(--text-primary)] focus:border-[color:var(--border-focus)] focus:outline-none"
               />
             </label>
           </div>

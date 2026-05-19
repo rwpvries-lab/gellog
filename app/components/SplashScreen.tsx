@@ -78,7 +78,7 @@ export function SplashScreen({ onRevealContent, onComplete }: SplashScreenProps)
         <GellogLogo size={120} priority />
       </div>
       <p
-        className={`mt-3 text-center text-sm italic text-teal-400 transition-opacity ease-out dark:text-teal-300 ${
+        className={`mt-3 text-center text-sm italic text-[color:var(--brand-primary)] transition-opacity ease-out ${
           logoVisible ? "opacity-100" : "opacity-0"
         }`}
         style={{ transitionDuration: `${LOGO_FADE_MS}ms` }}

@@ -45,7 +45,7 @@ export default async function MySalonsPage() {
           </p>
           <Link
             href="/search"
-            className="mt-4 inline-block text-sm font-medium text-teal-700 hover:underline dark:text-teal-400"
+            className="mt-4 inline-block text-sm font-medium text-[color:var(--brand-primary)] hover:underline"
           >
             Find a salon →
           </Link>
@@ -56,7 +56,7 @@ export default async function MySalonsPage() {
             <li key={s.place_id}>
               <Link
                 href={`/salon/${encodeURIComponent(s.place_id)}/dashboard`}
-                className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-zinc-100 transition hover:ring-teal-200 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:ring-teal-800"
+                className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm ring-1 ring-zinc-100 transition hover:ring-[color:var(--brand-primary-muted)] dark:bg-zinc-900 dark:ring-zinc-800"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium text-zinc-900 dark:text-zinc-50">{s.salon_name}</p>
@@ -64,7 +64,7 @@ export default async function MySalonsPage() {
                     {s.claim_verified ? "Verified" : "Pending verification"}
                   </p>
                 </div>
-                <span className="shrink-0 text-sm text-teal-700 dark:text-teal-400">Dashboard →</span>
+                <span className="shrink-0 text-sm text-[color:var(--brand-primary)]">Dashboard →</span>
               </Link>
             </li>
           ))}
