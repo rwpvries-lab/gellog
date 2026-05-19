@@ -13,6 +13,7 @@ import {
   type VitrineFlavour,
   type VitrineVisibilityLogRow,
 } from "./FlavourBoard";
+import { OpeningHoursEditor } from "./OpeningHoursEditor";
 import {
   AnalyticsSection,
   FlavourInsightsCollapsibleSection,
@@ -831,6 +832,9 @@ export function DashboardClient({
                   )}
                 </form>
               </div>
+
+              {/* Opening hours */}
+              <OpeningHoursEditor placeId={salonProfile.place_id} />
 
               {/* Billing */}
               <div
