@@ -50,13 +50,13 @@ export default async function IceCreamFeedPage() {
       photo_url,
       visited_at,
       vessel,
-      price_paid,
-      weather_temp,
+      price_cents,
+      weather_temp_c,
       weather_condition,
       weather_uv_index,
       visibility,
       photo_visibility,
-      price_hidden_from_others,
+      hide_price,
       profiles (
         id,
         username,
@@ -118,13 +118,7 @@ export default async function IceCreamFeedPage() {
   }));
 
   if (error) {
-     
-    console.error("Failed to load ice cream logs:", {
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      hint: error.hint,
-    });
+    console.error("Failed to load ice cream logs:", error);
   }
 
   return (

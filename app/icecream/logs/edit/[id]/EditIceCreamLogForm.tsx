@@ -24,12 +24,17 @@ import { useLayoutEffect, useMemo, useRef, useState } from "react";
 type LogFlavourRow = {
   id: string;
   flavour_name: string;
-  rating: number | null;
+  rating?: number | null;
+  rating_stars?: number | null;
   tags: string[] | null;
-  rating_texture: number | null;
-  rating_originality: number | null;
-  rating_intensity: number | null;
-  rating_presentation: number | null;
+  rating_texture?: number | null;
+  texture?: number | null;
+  rating_originality?: number | null;
+  originality?: number | null;
+  rating_intensity?: number | null;
+  intensity?: number | null;
+  rating_presentation?: number | null;
+  presentation?: number | null;
 };
 
 type LogRow = {
@@ -46,12 +51,12 @@ type LogRow = {
   photo_url: string | null;
   visited_at: string;
   vessel: "cup" | "cone" | null;
-  price_paid: number | null;
-  weather_temp: number | null;
+  price_cents: number | null;
+  weather_temp_c: number | null;
   weather_condition: string | null;
   visibility: Visibility;
   photo_visibility?: PhotoVisibility;
-  price_hidden_from_others?: boolean;
+  hide_price?: boolean;
   log_flavours: LogFlavourRow[];
 };
 
@@ -287,19 +292,21 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
       ? log.log_flavours.map((f, i) => ({
           id: i + 1,
           name: f.flavour_name,
-          rating: f.rating,
+          rating: f.rating_stars ?? f.rating ?? null,
           tags: f.tags ?? [],
-          ratingTexture: f.rating_texture,
-          ratingOriginality: f.rating_originality,
-          ratingIntensity: f.rating_intensity,
-          ratingPresentation: f.rating_presentation,
+          ratingTexture: f.texture ?? f.rating_texture ?? null,
+          ratingOriginality: f.originality ?? f.rating_originality ?? null,
+          ratingIntensity: f.intensity ?? f.rating_intensity ?? null,
+          ratingPresentation: f.presentation ?? f.rating_presentation ?? null,
         }))
       : [{ id: 1, name: "", rating: null, tags: [], ratingTexture: null, ratingOriginality: null, ratingIntensity: null, ratingPresentation: null }]
   );
 
   const [overallRating, setOverallRating] = useState<number | null>(log.overall_rating);
   const [vessel, setVessel] = useState<"cup" | "cone" | null>(log.vessel);
-  const [pricePaid, setPricePaid] = useState(log.price_paid != null ? String(log.price_paid) : "");
+  const [pricePaid, setPricePaid] = useState(
+    log.price_cents != null ? String(log.price_cents / 100) : "",
+  );
   const [notes, setNotes] = useState(log.notes ?? "");
   const [expandedAdvanced, setExpandedAdvanced] = useState<Set<number>>(new Set());
   const [submitting, setSubmitting] = useState(false);
@@ -318,9 +325,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
   const [photoVisibility, setPhotoVisibility] = useState<PhotoVisibility>(
     log.photo_visibility ?? "public",
   );
-  const [hidePriceFromOthers, setHidePriceFromOthers] = useState(
-    log.price_hidden_from_others ?? false,
-  );
+  const [hidePriceFromOthers, setHidePriceFromOthers] = useState(log.hide_price ?? false);
 
   const visitedAt = buildVisitedAt(selectedDay, selectedHour, selectedMinute);
   const selectedFlavours = useMemo(
@@ -532,10 +537,13 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           notes: notes.trim() || null,
           visited_at: new Date(visitedAt).toISOString(),
           vessel: vessel ?? null,
-          price_paid: pricePaid !== "" ? parseFloat(pricePaid.replace(",", ".")) : null,
-          price_hidden_from_others: hidePriceFromOthers,
+          price_cents:
+            pricePaid !== ""
+              ? Math.round(parseFloat(pricePaid.replace(",", ".")) * 100)
+              : null,
+          hide_price: hidePriceFromOthers,
           photo_visibility: log.photo_url ? photoVisibility : "public",
-          weather_temp: weather?.temperature ?? log.weather_temp,
+          weather_temp_c: weather?.temperature ?? log.weather_temp_c,
           weather_condition: weather
             ? `${weather.emoji} ${weather.label}`
             : log.weather_condition,
@@ -560,12 +568,12 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
           activeFlavours.map((f) => ({
             log_id: log.id,
             flavour_name: f.name,
-            rating: f.rating,
+            rating_stars: f.rating,
             tags: f.tags.length > 0 ? f.tags : null,
-            rating_texture: f.ratingTexture,
-            rating_originality: f.ratingOriginality,
-            rating_intensity: f.ratingIntensity,
-            rating_presentation: f.ratingPresentation,
+            texture: f.ratingTexture,
+            originality: f.ratingOriginality,
+            intensity: f.ratingIntensity,
+            presentation: f.ratingPresentation,
           }))
         );
 
@@ -687,7 +695,9 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
               <div className="inline-flex items-center gap-1.5 rounded-full bg-zinc-100 px-3 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                 <span>Saved:</span>
                 <span>{log.weather_condition}</span>
-                {log.weather_temp != null ? <span>· {Math.round(log.weather_temp)}°C</span> : null}
+                {log.weather_temp_c != null ? (
+                  <span>· {Math.round(log.weather_temp_c)}°C</span>
+                ) : null}
               </div>
               <button
                 type="button"

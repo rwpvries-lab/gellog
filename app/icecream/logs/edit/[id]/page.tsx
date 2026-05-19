@@ -37,21 +37,22 @@ export default async function EditIceCreamLogPage({
       photo_url,
       visited_at,
       vessel,
-      price_paid,
-      weather_temp,
+      price_cents,
+      weather_temp_c,
       weather_condition,
       visibility,
       photo_visibility,
-      price_hidden_from_others,
+      hide_price,
       log_flavours (
         id,
         flavour_name,
-        rating,
+        canonical_flavour_id,
+        rating_stars,
         tags,
-        rating_texture,
-        rating_originality,
-        rating_intensity,
-        rating_presentation
+        texture,
+        originality,
+        intensity,
+        presentation
       )
     `,
     )

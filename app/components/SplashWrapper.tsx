@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useLayoutEffect, useRef, useState } from "react"
+import { usePathname } from "next/navigation"
 import { BottomNav } from "./BottomNav"
 import { SplashScreen } from "./SplashScreen"
 
@@ -13,6 +14,8 @@ type SplashWrapperProps = {
 }
 
 export function SplashWrapper({ children, user }: SplashWrapperProps) {
+  const pathname = usePathname()
+  const hideBottomNav = pathname.startsWith("/icecream/logs/new")
   const [splashActive, setSplashActive] = useState(false)
   const [contentVisible, setContentVisible] = useState(true)
   const ranLayoutRef = useRef(false)
@@ -52,8 +55,18 @@ export function SplashWrapper({ children, user }: SplashWrapperProps) {
           contentVisible ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
       >
-        <div className={user ? "min-h-screen pb-28 lg:pb-0" : "min-h-screen"}>{children}</div>
-        {user ? <BottomNav /> : null}
+        <div
+          className={
+            user
+              ? hideBottomNav
+                ? "min-h-screen"
+                : "min-h-screen pb-28 lg:pb-0"
+              : "min-h-screen"
+          }
+        >
+          {children}
+        </div>
+        {user && !hideBottomNav ? <BottomNav /> : null}
       </div>
       {splashActive ? (
         <SplashScreen onRevealContent={handleRevealContent} onComplete={handleSplashComplete} />

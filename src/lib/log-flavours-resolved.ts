@@ -26,12 +26,18 @@ export type LogFlavoursResolvedRow = {
   log_flavour_id: string;
   log_id: string;
   input_name: string | null;
-  rating: number | null;
+  /** @deprecated DB column renamed to `rating_stars` */
+  rating?: number | null;
+  rating_stars?: number | null;
   tags: string[] | null;
-  rating_texture: number | null;
-  rating_originality: number | null;
-  rating_intensity: number | null;
-  rating_presentation: number | null;
+  rating_texture?: number | null;
+  texture?: number | null;
+  rating_originality?: number | null;
+  originality?: number | null;
+  rating_intensity?: number | null;
+  intensity?: number | null;
+  rating_presentation?: number | null;
+  presentation?: number | null;
   flavour_id: string | null;
   flavour_slug: string | null;
   canonical_name_en: string | null;
@@ -45,12 +51,18 @@ export type LogFlavoursResolvedRow = {
 type LegacyLogFlavourEmbedRow = {
   id: unknown;
   flavour_name?: unknown;
+  canonical_flavour_id?: unknown;
   rating?: unknown;
+  rating_stars?: unknown;
   tags?: unknown;
   rating_texture?: unknown;
+  texture?: unknown;
   rating_originality?: unknown;
+  originality?: unknown;
   rating_intensity?: unknown;
+  intensity?: unknown;
   rating_presentation?: unknown;
+  presentation?: unknown;
   base_token?: unknown;
   drizzle_token?: unknown;
   crumble_token?: unknown;
@@ -70,12 +82,13 @@ export const LOG_FLAVOURS_RESOLVED_SELECT = `
   log_flavours (
     id,
     flavour_name,
-    rating,
+    canonical_flavour_id,
+    rating_stars,
     tags,
-    rating_texture,
-    rating_originality,
-    rating_intensity,
-    rating_presentation,
+    texture,
+    originality,
+    intensity,
+    presentation,
     base_token,
     drizzle_token,
     crumble_token,
@@ -98,12 +111,12 @@ export function mapResolvedRowsToLogFlavours(
     base_token: r.base_token,
     drizzle_token: r.drizzle_token,
     crumble_token: r.crumble_token,
-    rating: r.rating,
+    rating: r.rating_stars ?? r.rating ?? null,
     tags: r.tags,
-    rating_texture: r.rating_texture,
-    rating_originality: r.rating_originality,
-    rating_intensity: r.rating_intensity,
-    rating_presentation: r.rating_presentation,
+    rating_texture: r.texture ?? r.rating_texture ?? null,
+    rating_originality: r.originality ?? r.rating_originality ?? null,
+    rating_intensity: r.intensity ?? r.rating_intensity ?? null,
+    rating_presentation: r.presentation ?? r.rating_presentation ?? null,
   }));
 }
 
@@ -123,12 +136,12 @@ export function mapLegacyEmbedRowsToLogFlavours(
       base_token: lf.base_token != null ? String(lf.base_token) : null,
       drizzle_token: lf.drizzle_token != null ? String(lf.drizzle_token) : null,
       crumble_token: lf.crumble_token != null ? String(lf.crumble_token) : null,
-      rating: toNumOrNull(lf.rating),
+      rating: toNumOrNull(lf.rating_stars ?? lf.rating),
       tags: Array.isArray(lf.tags) ? (lf.tags as string[]) : null,
-      rating_texture: toNumOrNull(lf.rating_texture),
-      rating_originality: toNumOrNull(lf.rating_originality),
-      rating_intensity: toNumOrNull(lf.rating_intensity),
-      rating_presentation: toNumOrNull(lf.rating_presentation),
+      rating_texture: toNumOrNull(lf.texture ?? lf.rating_texture),
+      rating_originality: toNumOrNull(lf.originality ?? lf.rating_originality),
+      rating_intensity: toNumOrNull(lf.intensity ?? lf.rating_intensity),
+      rating_presentation: toNumOrNull(lf.presentation ?? lf.rating_presentation),
     };
   });
 }

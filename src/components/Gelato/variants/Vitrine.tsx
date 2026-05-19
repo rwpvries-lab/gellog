@@ -44,6 +44,10 @@ const DRIZZLE_PATHS = [
 
 const PLACEHOLDER_GELATO = "#C4C4C4";
 
+/** Vitrine tub shell (warm stainless + recessed shadow). */
+const VITRINE_TRAY_OUTER = "#A8A895";
+const VITRINE_TRAY_INNER = "#C9C2B5";
+
 function isLegacyProps(props: VitrineProps | LegacyVitrineProps): props is LegacyVitrineProps {
   return "tokens" in props;
 }
@@ -87,8 +91,8 @@ function VitrineTubSvg({
 }) {
   return (
     <svg viewBox={SVG_VIEWBOX} width="100%" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-      <rect x="0" y="0" width="365" height="690" rx="57" fill="#B5B5B5" />
-      <rect x="18" y="17" width="330" height="655" rx="57" fill="#D9D9D9" />
+      <rect x="0" y="0" width="365" height="690" rx="57" fill={VITRINE_TRAY_OUTER} />
+      <rect x="18" y="17" width="330" height="655" rx="57" fill={VITRINE_TRAY_INNER} />
       <rect
         x="24"
         y="24"
@@ -132,8 +136,8 @@ function VitrineTubSvg({
 function PlaceholderTub() {
   return (
     <svg viewBox={SVG_VIEWBOX} width="100%" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-      <rect x="0" y="0" width="365" height="690" rx="57" fill="#B5B5B5" />
-      <rect x="18" y="17" width="330" height="655" rx="57" fill="#D9D9D9" />
+      <rect x="0" y="0" width="365" height="690" rx="57" fill={VITRINE_TRAY_OUTER} />
+      <rect x="18" y="17" width="330" height="655" rx="57" fill={VITRINE_TRAY_INNER} />
       <rect
         x="24"
         y="24"

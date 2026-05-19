@@ -47,7 +47,7 @@ type IceCreamLog = {
   salon_place_id: string | null;
   overall_rating: number;
   visited_at: string;
-  price_paid: number | null;
+  price_cents: number | null;
   weather_condition: string | null;
   log_flavours: LogFlavour[];
 };
@@ -204,10 +204,13 @@ function deriveStats(logs: IceCreamLog[]) {
       ? Array.from(weatherCounts.entries()).sort((a, b) => b[1] - a[1])[0][0]
       : null;
 
-  const logsWithPrice = logs.filter((log) => log.price_paid != null);
+  const logsWithPrice = logs.filter((log) => log.price_cents != null);
   const totalSpent =
     logsWithPrice.length >= 3
-      ? logsWithPrice.reduce((sum, log) => sum + (log.price_paid ?? 0), 0)
+      ? logsWithPrice.reduce(
+          (sum, log) => sum + (log.price_cents ?? 0) / 100,
+          0,
+        )
       : null;
   const averagePerVisit =
     logsWithPrice.length >= 3 ? totalSpent! / logsWithPrice.length : null;
@@ -276,17 +279,17 @@ export default async function IceCreamProfilePage() {
     supabase
       .from("ice_cream_logs")
       .select(
-        `id, salon_name, salon_place_id, overall_rating, visited_at, price_paid, weather_condition,
+        `id, salon_name, salon_place_id, overall_rating, visited_at, price_cents, weather_condition,
 ${LOG_FLAVOURS_RESOLVED_SELECT}`,
       )
       .eq("user_id", user.id),
     supabase
       .from("ice_cream_logs")
       .select(
-        `id, user_id, salon_name, salon_lat, salon_lng, salon_place_id,
-         overall_rating, notes, photo_url, visited_at, vessel, price_paid,
-         weather_temp, weather_condition, visibility, photo_visibility,
-         price_hidden_from_others,
+        `id, user_id, salon_name, salon_city, salon_lat, salon_lng, salon_place_id,
+         overall_rating, notes, photo_url, visited_at, vessel, price_cents,
+         weather_temp_c, weather_condition, weather_uv_index, visibility, photo_visibility,
+         hide_price,
          profiles (id, username, avatar_url),
 ${LOG_FLAVOURS_RESOLVED_SELECT}`,
       )
@@ -339,14 +342,14 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
     const { data: lfRows } = await supabase
       .from("log_flavours")
       .select(
-        "log_id, flavour_name, rating, base_token, drizzle_token, crumble_token, canonical_name_en, canonical_name_nl, canonical_name_it",
+        "log_id, flavour_name, rating_stars, base_token, drizzle_token, crumble_token, canonical_name_en, canonical_name_nl, canonical_name_it",
       )
       .in("log_id", logIds);
 
     type LfRow = {
       log_id: string;
       flavour_name: string;
-      rating: number | null;
+      rating_stars: number | null;
       base_token?: string | null;
       drizzle_token?: string | null;
       crumble_token?: string | null;
@@ -366,7 +369,7 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
         base_token: row.base_token ?? null,
         drizzle_token: row.drizzle_token ?? null,
         crumble_token: row.crumble_token ?? null,
-        rating: row.rating != null ? Number(row.rating) : null,
+        rating: row.rating_stars != null ? Number(row.rating_stars) : null,
         input_name: typeof row.flavour_name === "string" ? row.flavour_name : null,
       };
     });

@@ -1,8 +1,7 @@
 import { AppShell } from "@/app/components/AppShell";
-import { GellogLogo } from "@/app/components/GellogLogo";
 import { createClient } from "@/src/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { NewIceCreamLogForm } from "./NewIceCreamLogForm";
+import { LogStepWrapper } from "./LogStepWrapper";
 import type { SalonData } from "@/src/components/SalonInput";
 
 async function googlePlaceDisplayName(placeId: string): Promise<string | null> {
@@ -134,15 +133,16 @@ export default async function NewIceCreamLogPage({
   }
 
   return (
-    <AppShell contained={false}>
-      <div className="mx-auto flex w-full max-w-md flex-col gap-5 pb-4">
-        <div className="flex flex-col items-center gap-2">
-          <GellogLogo size={88} priority />
-          <p className="text-center text-sm text-[color:var(--color-text-secondary)]">
-            New scoop, who this?
-          </p>
-        </div>
-        <NewIceCreamLogForm
+    <AppShell
+      contained={false}
+      mainStyle={{
+        background: "var(--background-primary)",
+        minHeight: "100vh",
+      }}
+      className="px-6 pb-8 pt-6"
+    >
+      <div className="mx-auto flex w-full max-w-md flex-col">
+        <LogStepWrapper
           userId={user.id}
           defaultVisibility={defaultVisibility}
           initialSalonData={initialSalonData}

@@ -57,13 +57,14 @@ export type IceCreamLog = {
   photo_url: string | null;
   visited_at: string;
   vessel: "cup" | "cone" | null;
-  price_paid: number | null;
-  weather_temp: number | null;
+  /** Stored in minor units (e.g. euro cents). */
+  price_cents: number | null;
+  weather_temp_c: number | null;
   weather_condition: string | null;
   weather_uv_index: number | null;
   visibility: "public" | "friends" | "private";
   photo_visibility?: "public" | "friends";
-  price_hidden_from_others?: boolean;
+  hide_price?: boolean;
   profiles: LogProfile | null;
   log_flavours: LogFlavour[];
   like_count?: number;
@@ -95,14 +96,14 @@ function formatFullDate(isoDate: string): string {
 
 function formatWeather(log: IceCreamLog): string | null {
   const hasWeather =
-    log.weather_temp != null || (log.weather_condition?.trim().length ?? 0) > 0;
+    log.weather_temp_c != null || (log.weather_condition?.trim().length ?? 0) > 0;
   if (!hasWeather) return null;
 
   const tempNumber =
-    typeof log.weather_temp === "number"
-      ? log.weather_temp
-      : log.weather_temp != null
-        ? Number(log.weather_temp)
+    typeof log.weather_temp_c === "number"
+      ? log.weather_temp_c
+      : log.weather_temp_c != null
+        ? Number(log.weather_temp_c)
         : null;
 
   const tempPart =
@@ -129,10 +130,10 @@ function formatWeather(log: IceCreamLog): string | null {
 /** Compact weather + city for feed metadata (no UV). */
 function formatFeedWeatherLine(log: IceCreamLog): string | null {
   const tempNumber =
-    typeof log.weather_temp === "number"
-      ? log.weather_temp
-      : log.weather_temp != null
-        ? Number(log.weather_temp)
+    typeof log.weather_temp_c === "number"
+      ? log.weather_temp_c
+      : log.weather_temp_c != null
+        ? Number(log.weather_temp_c)
         : null;
   const tempPart =
     tempNumber != null && Number.isFinite(tempNumber)
@@ -536,9 +537,9 @@ export function FeedCard({
       photoVisibility === "public" ||
       (photoVisibility === "friends" && viewerFollowsAuthor));
   const showPhotoPlaceholder = Boolean(photoUrl) && !canSeePhoto;
-  const pricePaid = log.price_paid;
+  const priceEuros = log.price_cents != null ? log.price_cents / 100 : null;
   const canSeePrice =
-    pricePaid != null && (!log.price_hidden_from_others || isOwnLog);
+    priceEuros != null && (!log.hide_price || isOwnLog);
   const weather = formatWeather(log);
   const feedWeatherLine = formatFeedWeatherLine(log);
   const fullDate = formatFullDate(log.visited_at);
@@ -682,9 +683,9 @@ export function FeedCard({
                 <div className="flex min-w-0 items-center gap-2">
                   <RatingStarsDisplay value={log.overall_rating} size="lg" />
                 </div>
-                {canSeePrice && pricePaid != null ? (
+                {canSeePrice && priceEuros != null ? (
                   <span className="shrink-0 text-sm font-semibold tabular-nums text-[color:var(--text-primary)]">
-                    €{pricePaid.toFixed(2)}
+                    €{priceEuros.toFixed(2)}
                   </span>
                 ) : null}
               </div>
@@ -1004,10 +1005,10 @@ export function FeedCard({
               ) : null}
 
               {/* Price */}
-              {canSeePrice && pricePaid != null ? (
+              {canSeePrice && priceEuros != null ? (
                 <p className="text-xs text-[color:var(--text-secondary)]">
                   <span className="font-medium text-[color:var(--brand-primary)]">
-                    €{pricePaid.toFixed(2)}
+                    €{priceEuros.toFixed(2)}
                   </span>{" "}
                   paid
                 </p>

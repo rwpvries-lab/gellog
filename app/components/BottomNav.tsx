@@ -66,6 +66,11 @@ function NavIconLink({ item }: { item: NavItem }) {
 }
 
 export function BottomNav() {
+  const pathname = usePathname();
+  if (pathname.startsWith("/icecream/logs/new")) {
+    return null;
+  }
+
   return (
     <nav
       className="pointer-events-none fixed inset-x-0 bottom-0 z-30 lg:hidden"

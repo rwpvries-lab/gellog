@@ -3,7 +3,8 @@ import { GellogLogo } from "./GellogLogo";
 import { BookMarked, Map, UsersRound } from "lucide-react";
 
 const brandOrange = "#D97706";
-const brandTeal = "#0D9488";
+/** Forest secondary — aligns with cup / logo palette. */
+const brandForest = "#1B5E52";
 
 const steps = [
   { title: "Log your gelato", description: "Capture flavours, spots, and moments in one place." },
@@ -16,19 +17,19 @@ const featureCards = [
     title: "Your gelato diary",
     description: "A calm log for every scoop — notes, places, and photos that stay organized.",
     icon: BookMarked,
-    gradient: `linear-gradient(145deg, color-mix(in srgb, ${brandTeal} 18%, transparent), color-mix(in srgb, ${brandOrange} 12%, transparent))`,
+    gradient: `linear-gradient(145deg, color-mix(in srgb, ${brandForest} 18%, transparent), color-mix(in srgb, ${brandOrange} 12%, transparent))`,
   },
   {
     title: "Salons on the map",
     description: "Browse salons, see activity, and save the ones you want to visit next.",
     icon: Map,
-    gradient: `linear-gradient(145deg, color-mix(in srgb, ${brandOrange} 16%, transparent), color-mix(in srgb, ${brandTeal} 14%, transparent))`,
+    gradient: `linear-gradient(145deg, color-mix(in srgb, ${brandOrange} 16%, transparent), color-mix(in srgb, ${brandForest} 14%, transparent))`,
   },
   {
     title: "Social by design",
     description: "Follow friends, compare tastes, and discover flavours through people you trust.",
     icon: UsersRound,
-    gradient: `linear-gradient(145deg, color-mix(in srgb, ${brandTeal} 14%, transparent), color-mix(in srgb, ${brandOrange} 14%, transparent))`,
+    gradient: `linear-gradient(145deg, color-mix(in srgb, ${brandForest} 14%, transparent), color-mix(in srgb, ${brandOrange} 14%, transparent))`,
   },
 ] as const;
 
@@ -42,7 +43,7 @@ export function HomeLanding() {
           </Link>
           <Link
             href="/login"
-            className="text-sm font-medium text-[color:var(--color-text-secondary)] transition-colors hover:text-[#0D9488]"
+            className="text-sm font-medium text-[color:var(--color-text-secondary)] transition-colors hover:text-[#1B5E52]"
           >
             Log in
           </Link>
@@ -54,7 +55,7 @@ export function HomeLanding() {
           <div className="mx-auto max-w-2xl text-center">
             <p
               className="text-xs font-semibold uppercase tracking-[0.2em] sm:text-sm"
-              style={{ color: brandTeal }}
+              style={{ color: brandForest }}
             >
               Gelato · Logger
             </p>
@@ -69,8 +70,8 @@ export function HomeLanding() {
             <div className="mt-10 flex justify-center">
               <Link
                 href="/signup"
-                className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-full px-10 text-base font-semibold text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
-                style={{ backgroundColor: brandTeal }}
+                className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-full px-10 text-base font-semibold text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1B5E52] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+                style={{ backgroundColor: brandForest }}
               >
                 Start logging
               </Link>
@@ -81,7 +82,7 @@ export function HomeLanding() {
         <section
           className="border-y border-[color:var(--color-border)] py-16 sm:py-20"
           style={{
-            background: `linear-gradient(180deg, color-mix(in srgb, ${brandTeal} 6%, var(--color-surface)) 0%, var(--color-surface) 48%, color-mix(in srgb, ${brandOrange} 5%, var(--color-surface)) 100%)`,
+            background: `linear-gradient(180deg, color-mix(in srgb, ${brandForest} 6%, var(--color-surface)) 0%, var(--color-surface) 48%, color-mix(in srgb, ${brandOrange} 5%, var(--color-surface)) 100%)`,
           }}
         >
           <div className="mx-auto max-w-5xl px-4 sm:px-6">
@@ -99,10 +100,10 @@ export function HomeLanding() {
                     style={{
                       background:
                         i === 1
-                          ? `linear-gradient(135deg, ${brandOrange}, color-mix(in srgb, ${brandOrange} 65%, ${brandTeal}))`
+                          ? `linear-gradient(135deg, ${brandOrange}, color-mix(in srgb, ${brandOrange} 65%, ${brandForest}))`
                           : i === 0
-                            ? brandTeal
-                            : `linear-gradient(135deg, ${brandTeal}, color-mix(in srgb, ${brandTeal} 70%, ${brandOrange}))`,
+                            ? brandForest
+                            : `linear-gradient(135deg, ${brandForest}, color-mix(in srgb, ${brandForest} 70%, ${brandOrange}))`,
                     }}
                   >
                     {i + 1}
@@ -144,7 +145,7 @@ export function HomeLanding() {
                         <Icon
                           className="h-14 w-14 sm:h-16 sm:w-16"
                           strokeWidth={1.25}
-                          style={{ color: brandTeal }}
+                          style={{ color: brandForest }}
                         />
                       </div>
                     </div>
@@ -164,7 +165,7 @@ export function HomeLanding() {
         <section
           className="py-14 sm:py-16"
           style={{
-            background: `linear-gradient(90deg, color-mix(in srgb, ${brandTeal} 12%, var(--color-surface)), color-mix(in srgb, ${brandOrange} 10%, var(--color-surface)))`,
+            background: `linear-gradient(90deg, color-mix(in srgb, ${brandForest} 12%, var(--color-surface)), color-mix(in srgb, ${brandOrange} 10%, var(--color-surface)))`,
           }}
         >
           <div className="mx-auto max-w-3xl px-4 text-center sm:px-6">
@@ -178,8 +179,8 @@ export function HomeLanding() {
             <div className="mt-8">
               <Link
                 href="/search"
-                className="inline-flex h-11 items-center justify-center rounded-full border-2 bg-[color:var(--background)] px-8 text-sm font-semibold transition-colors hover:bg-[color:var(--color-surface-alt)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0D9488] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
-                style={{ borderColor: brandTeal, color: brandTeal }}
+                className="inline-flex h-11 items-center justify-center rounded-full border-2 bg-[color:var(--background)] px-8 text-sm font-semibold transition-colors hover:bg-[color:var(--color-surface-alt)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1B5E52] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+                style={{ borderColor: brandForest, color: brandForest }}
               >
                 Find your salon
               </Link>
@@ -193,19 +194,19 @@ export function HomeLanding() {
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
             <Link
               href="/privacy"
-              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#0D9488]"
+              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#1B5E52]"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#0D9488]"
+              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#1B5E52]"
             >
               Terms of Service
             </Link>
             <a
               href="mailto:support@gellog.app"
-              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#0D9488]"
+              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#1B5E52]"
             >
               support@gellog.app
             </a>

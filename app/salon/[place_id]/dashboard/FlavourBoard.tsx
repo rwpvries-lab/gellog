@@ -277,7 +277,7 @@ export function FlavourBoard({
           <button
             type="button"
             onClick={() => setAddingNew(true)}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#0D9488] px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-teal-300 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#1B5E52] px-4 py-2 text-xs font-semibold text-[#FBF5E8] shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#1B5E52]/30 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950"
           >
             <span className="text-base leading-none">+</span> Add flavour
           </button>

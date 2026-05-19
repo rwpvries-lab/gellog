@@ -23,6 +23,7 @@ const config: Config = {
           "primary-hover": "rgb(var(--brand-primary-hover-rgb) / <alpha-value>)",
           "primary-active": "rgb(var(--brand-primary-active-rgb) / <alpha-value>)",
           "primary-muted": "rgb(var(--brand-primary-muted-rgb) / <alpha-value>)",
+          "primary-surface": "rgb(var(--brand-primary-surface-rgb) / <alpha-value>)",
           secondary: "rgb(var(--brand-secondary-rgb) / <alpha-value>)",
           "secondary-muted": "rgb(var(--brand-secondary-muted-rgb) / <alpha-value>)",
         },
