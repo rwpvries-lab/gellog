@@ -1,6 +1,7 @@
 "use client";
 
 import type { CSSProperties } from "react";
+import { useRef } from "react";
 import type { GelatoTokens } from "@/src/lib/gelato-tokens";
 import { BASE_TOKENS, DRIZZLE_TOKENS } from "@/src/lib/gelato-tokens";
 import { getCrumbleFill, makeCrumbleDots } from "./shared";
@@ -22,6 +23,14 @@ export type VitrineProps = {
   selectedFlavourNames?: string[];
   seed?: string;
   className?: string;
+  /** 'select' enables tap-to-toggle with ring + checkmark; 'display' (default) preserves existing behaviour. */
+  mode?: "display" | "select";
+  /** IDs of currently selected flavours (used in select mode). */
+  selectedFlavourIds?: string[];
+  /** Called with the flavour id when a tub is tapped in select mode. */
+  onToggle?: (id: string) => void;
+  /** Maximum simultaneous selections; unselected scoops beyond cap render at 50% opacity. */
+  maxSelections?: number;
 };
 
 type LegacyVitrineProps = {
@@ -177,12 +186,34 @@ const emptyCaptionStyle: CSSProperties = {
 };
 
 export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
+  // Hooks must be unconditional
+  const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
   const flavours = resolveFlavours(props);
+  const isSelectMode = !isLegacyProps(props) && props.mode === "select";
   const onTabClick = isLegacyProps(props) ? undefined : props.onTabClick;
   const selectedFlavourNames = isLegacyProps(props) ? undefined : props.selectedFlavourNames;
+  const selectedFlavourIds = isLegacyProps(props) ? undefined : props.selectedFlavourIds;
+  const onToggle = isLegacyProps(props) ? undefined : props.onToggle;
+  const maxSelections = isLegacyProps(props) ? undefined : props.maxSelections;
   const seed = props.seed;
   const className = props.className;
   const legacyMaxWidth = isLegacyProps(props) ? props.size : undefined;
+
+  const selectedCount = selectedFlavourIds?.length ?? 0;
+  const atCap = maxSelections != null && selectedCount >= maxSelections;
+
+  // Reset button refs array length each render
+  buttonRefs.current = [];
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLButtonElement>, idx: number) {
+    if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      const next = e.key === "ArrowLeft" ? idx - 1 : idx + 1;
+      const clamped = Math.max(0, Math.min(flavours.length - 1, next));
+      buttonRefs.current[clamped]?.focus();
+    }
+  }
 
   if (flavours.length === 0) {
     return (
@@ -200,141 +231,230 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
     );
   }
 
-  return (
-    <div className={className} style={gridStyle}>
-      {flavours.map((flavour) => {
-        const tabSeed = seed ? `${seed}-${flavour.id}` : flavour.id;
-        const drizzleMeta = DRIZZLE_TOKENS[flavour.tokens.drizzle];
-        const showDrizzle = flavour.tokens.drizzle !== "none";
-        const crumbleDots =
-          flavour.tokens.crumble === "none"
-            ? []
-            : makeCrumbleDots({
-                seed: tabSeed,
-                count: 12,
-                centerX: 182,
-                centerY: 345,
-                radius: 280,
-                hemisphere: "full",
-                minDistance: 80,
-                maxRetriesPerDot: 12,
-              });
+  const selectGridStyle: CSSProperties = {
+    ...gridStyle,
+    gridAutoColumns: "minmax(88px, 88px)",
+    gap: 8,
+  };
 
-        const baseHex = BASE_TOKENS[flavour.tokens.base].hex;
+  const cells = flavours.map((flavour, idx) => {
+    const tabSeed = seed ? `${seed}-${flavour.id}` : flavour.id;
+    const drizzleMeta = DRIZZLE_TOKENS[flavour.tokens.drizzle];
+    const showDrizzle = flavour.tokens.drizzle !== "none";
+    const crumbleDots =
+      flavour.tokens.crumble === "none"
+        ? []
+        : makeCrumbleDots({
+            seed: tabSeed,
+            count: 12,
+            centerX: 182,
+            centerY: 345,
+            radius: 280,
+            hemisphere: "full",
+            minDistance: 80,
+            maxRetriesPerDot: 12,
+          });
 
-        const cellStyle: CSSProperties = {
-          display: "flex",
-          minWidth: 0,
-          flexDirection: "column",
-          ...(legacyMaxWidth !== undefined ? { maxWidth: legacyMaxWidth, width: "100%" } : null),
-        };
+    const baseHex = BASE_TOKENS[flavour.tokens.base].hex;
 
-        const isSelected = isTubSelected(flavour, selectedFlavourNames);
+    const isSelected = isSelectMode
+      ? (selectedFlavourIds?.includes(flavour.id) ?? false)
+      : isTubSelected(flavour, selectedFlavourNames);
 
-        const tubVisual = (
-          <div style={{ position: "relative", width: "100%" }}>
-            <VitrineTubSvg
-              baseHex={baseHex}
-              drizzleStroke={drizzleMeta.stroke}
-              drizzleOpacity={drizzleMeta.opacity}
-              showDrizzle={showDrizzle}
-              crumbleDots={crumbleDots}
-              crumbleToken={flavour.tokens.crumble}
-            />
-            {isSelected ? (
-              <span
-                aria-hidden
-                style={{
-                  position: "absolute",
-                  right: 6,
-                  top: 6,
-                  display: "flex",
-                  height: 22,
-                  width: 22,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 9999,
-                  background: "var(--brand-primary)",
-                  color: "var(--text-inverse)",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                  pointerEvents: "none",
-                }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <path
-                    d="M20 6L9 17l-5-5"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-            ) : null}
-          </div>
-        );
+    const isDisabled = isSelectMode && atCap && !isSelected;
 
-        const body = (
-          <>
-            {tubVisual}
-            <div style={labelStyle}>
-              <div>{flavour.displayName}</div>
-              {flavour.inputName &&
-                flavour.inputName.toLowerCase() !== flavour.displayName.toLowerCase() && (
-                  <div className="text-[11px] text-[color:var(--text-secondary)] opacity-70">
-                    ({flavour.inputName})
-                  </div>
-                )}
-            </div>
-          </>
-        );
+    const cellStyle: CSSProperties = {
+      display: "flex",
+      minWidth: 0,
+      flexDirection: "column",
+      ...(legacyMaxWidth !== undefined ? { maxWidth: legacyMaxWidth, width: "100%" } : null),
+    };
 
-        const selectedRing: CSSProperties = isSelected
-          ? {
-              boxShadow: "0 0 0 2px var(--brand-primary)",
-              borderRadius: 12,
-            }
-          : {};
+    const selectedRing: CSSProperties = isSelected
+      ? { boxShadow: "0 0 0 2px var(--brand-primary)", borderRadius: 12 }
+      : {};
 
-        if (!onTabClick) {
-          return (
-            <div key={flavour.id} style={{ ...cellStyle, ...selectedRing }}>
-              {body}
-            </div>
-          );
-        }
-
-        return (
-          <button
-            key={flavour.id}
-            type="button"
-            aria-label={flavour.displayName}
-            aria-pressed={isSelected}
-            onClick={() => onTabClick(flavour.id)}
-            onMouseEnter={(event) => {
-              event.currentTarget.style.transform = "scale(1.02)";
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.transform = "scale(1)";
-            }}
-            onFocus={(event) => {
-              event.currentTarget.style.outline = "2px solid var(--state-info)";
-            }}
-            onBlur={(event) => {
-              event.currentTarget.style.outline = "none";
-            }}
+    const tubVisual = (
+      <div style={{ position: "relative", width: "100%" }}>
+        <VitrineTubSvg
+          baseHex={baseHex}
+          drizzleStroke={drizzleMeta.stroke}
+          drizzleOpacity={drizzleMeta.opacity}
+          showDrizzle={showDrizzle}
+          crumbleDots={crumbleDots}
+          crumbleToken={flavour.tokens.crumble}
+        />
+        {isSelected ? (
+          <span
+            aria-hidden
             style={{
-              all: "unset",
-              cursor: "pointer",
-              ...cellStyle,
-              ...selectedRing,
-              transition: "transform 150ms, box-shadow 150ms",
+              position: "absolute",
+              right: 6,
+              top: 6,
+              display: "flex",
+              height: 22,
+              width: 22,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 9999,
+              background: "var(--brand-primary)",
+              color: "var(--text-inverse)",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              pointerEvents: "none",
             }}
           >
-            {body}
-          </button>
-        );
-      })}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M20 6L9 17l-5-5"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+        ) : null}
+      </div>
+    );
+
+    // In select mode: no sub-label (ring + checkmark is the focal point)
+    const body = isSelectMode ? tubVisual : (
+      <>
+        {tubVisual}
+        <div style={labelStyle}>
+          <div>{flavour.displayName}</div>
+          {flavour.inputName &&
+            flavour.inputName.toLowerCase() !== flavour.displayName.toLowerCase() && (
+              <div className="text-[11px] text-[color:var(--text-secondary)] opacity-70">
+                ({flavour.inputName})
+              </div>
+            )}
+        </div>
+      </>
+    );
+
+    // ── Select mode cell ──
+    if (isSelectMode) {
+      return (
+        <button
+          key={flavour.id}
+          ref={(el) => { buttonRefs.current[idx] = el; }}
+          type="button"
+          role="button"
+          aria-pressed={isSelected}
+          aria-label={`${flavour.displayName}${isSelected ? ", selected" : ""}`}
+          disabled={isDisabled}
+          onClick={() => { if (!isDisabled) onToggle?.(flavour.id); }}
+          onKeyDown={(e) => handleKeyDown(e, idx)}
+          style={{
+            all: "unset",
+            display: "flex",
+            flexDirection: "column",
+            cursor: isDisabled ? "default" : "pointer",
+            opacity: isDisabled ? 0.45 : 1,
+            ...selectedRing,
+            transition: "opacity 150ms, box-shadow 150ms",
+          }}
+        >
+          {body}
+          <div
+            style={{
+              marginTop: 6,
+              fontSize: 11,
+              fontWeight: 600,
+              textAlign: "center",
+              color: "var(--text-primary)",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {flavour.displayName}
+          </div>
+        </button>
+      );
+    }
+
+    // ── Display mode cell (existing behaviour) ──
+    if (!onTabClick) {
+      return (
+        <div key={flavour.id} style={{ ...cellStyle, ...selectedRing }}>
+          {body}
+        </div>
+      );
+    }
+
+    return (
+      <button
+        key={flavour.id}
+        type="button"
+        aria-label={flavour.displayName}
+        aria-pressed={isSelected}
+        onClick={() => onTabClick(flavour.id)}
+        onMouseEnter={(event) => { event.currentTarget.style.transform = "scale(1.02)"; }}
+        onMouseLeave={(event) => { event.currentTarget.style.transform = "scale(1)"; }}
+        onFocus={(event) => { event.currentTarget.style.outline = "2px solid var(--state-info)"; }}
+        onBlur={(event) => { event.currentTarget.style.outline = "none"; }}
+        style={{
+          all: "unset",
+          cursor: "pointer",
+          ...cellStyle,
+          ...selectedRing,
+          transition: "transform 150ms, box-shadow 150ms",
+        }}
+      >
+        {body}
+      </button>
+    );
+  });
+
+  // ── Select mode: scroll wrapper + cap caption ──
+  if (isSelectMode) {
+    const needsFade = flavours.length > 5;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div
+          style={{
+            overflowX: "auto",
+            WebkitOverflowScrolling: "touch" as CSSProperties["WebkitOverflowScrolling"],
+            scrollbarWidth: "none" as CSSProperties["scrollbarWidth"],
+            ...(needsFade
+              ? {
+                  maskImage:
+                    "linear-gradient(to right, black 0%, black 82%, transparent 100%)",
+                  WebkitMaskImage:
+                    "linear-gradient(to right, black 0%, black 82%, transparent 100%)",
+                }
+              : {}),
+          }}
+        >
+          <div
+            className={className}
+            style={{ ...selectGridStyle, minWidth: "max-content", paddingBottom: 4 }}
+          >
+            {cells}
+          </div>
+        </div>
+        {atCap && maxSelections != null && (
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: 12,
+              fontWeight: 500,
+              color: "var(--text-secondary)",
+            }}
+          >
+            Max {maxSelections} flavours
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // ── Display mode: original grid ──
+  return (
+    <div className={className} style={gridStyle}>
+      {cells}
     </div>
   );
 }
