@@ -10,6 +10,8 @@ import {
   applyResolvedFlavoursToLogRow,
   LOG_FLAVOURS_RESOLVED_SELECT,
 } from "@/src/lib/log-flavours-resolved";
+import { OpeningHoursCard } from "@/src/components/OpeningHoursCard";
+import { type WeekHours } from "@/src/lib/opening-hours";
 import { SalonShareButton } from "./SalonShareButton";
 import Image from "next/image";
 import Link from "next/link";
@@ -172,6 +174,7 @@ export function SalonPageClient({ placeId }: Props) {
   );
   const [vitrineResolvedRows, setVitrineResolvedRows] = useState<SalonVitrineResolvedRow[]>([]);
   const [failedSalonLogoUrl, setFailedSalonLogoUrl] = useState<string | null>(null);
+  const [hours, setHours] = useState<WeekHours | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -193,7 +196,7 @@ export function SalonPageClient({ placeId }: Props) {
         .eq("is_visible", true)
         .order("input_name", { ascending: true });
 
-      const [{ data: logsData }, { data: profileRow }, { data: vitrineData }] =
+      const [{ data: logsData }, { data: profileRow }, { data: vitrineData }, hoursData] =
         await Promise.all([
           supabase
             .from("ice_cream_logs")
@@ -207,6 +210,13 @@ export function SalonPageClient({ placeId }: Props) {
             .eq("place_id", placeId)
             .maybeSingle<SalonProfile>(),
           vitrineSelect,
+          fetch(`/api/salon/${encodeURIComponent(placeId)}/hours`)
+            .then((r) =>
+              r.ok
+                ? (r.json() as Promise<{ hours: WeekHours | null }>)
+                : null,
+            )
+            .catch(() => null),
         ]);
 
       if (cancelled) return;
@@ -231,6 +241,7 @@ export function SalonPageClient({ placeId }: Props) {
         setSalonProfile(profile);
         setFollowingAuthorIds(new Set());
         setVitrineResolvedRows((vitrineData ?? []) as SalonVitrineResolvedRow[]);
+        setHours(hoursData?.hours ?? null);
         setLoading(false);
         return;
       }
@@ -274,6 +285,7 @@ export function SalonPageClient({ placeId }: Props) {
       setFollowingAuthorIds(following);
       setEmptyPlaceName(null);
       setVitrineResolvedRows((vitrineData ?? []) as SalonVitrineResolvedRow[]);
+      setHours(hoursData?.hours ?? null);
       setLoading(false);
     }
 
@@ -367,6 +379,12 @@ export function SalonPageClient({ placeId }: Props) {
             />
           </div>
         ) : null}
+
+        {hours && (
+          <div className="mb-5">
+            <OpeningHoursCard hours={hours} isOwner={isOwner} placeId={placeId} />
+          </div>
+        )}
 
         <div className="rounded-3xl bg-white px-6 py-8 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
           <div className="mb-2 flex justify-center" aria-hidden>
@@ -522,6 +540,12 @@ export function SalonPageClient({ placeId }: Props) {
           />
         </div>
       ) : null}
+
+      {hours && (
+        <div className="mb-5">
+          <OpeningHoursCard hours={hours} isOwner={isOwner} placeId={placeId} />
+        </div>
+      )}
 
       <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
