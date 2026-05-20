@@ -34,12 +34,14 @@ export function Step3_Details({
   const photoInputRef = useRef<HTMLInputElement>(null);
   const [weatherBanner, setWeatherBanner] = useState<string | null>(null);
   const [weatherAttemptDone, setWeatherAttemptDone] = useState(false);
+  const [weatherIsHistorical, setWeatherIsHistorical] = useState(false);
 
   const visitedAt = buildVisitedAt(state.step1.date, state.step1.hour, state.step1.minute);
   const todayVisit = isVisitToday(state.step1.date);
 
   useEffect(() => {
     setWeatherAttemptDone(false);
+    setWeatherIsHistorical(false);
   }, [todayVisit]);
 
   useEffect(() => {
@@ -134,12 +136,67 @@ export function Step3_Details({
     };
   }, [todayVisit, dispatch, state.step3.weather]);
 
-  function weatherChipText(): string {
-    if (!todayVisit) {
-      return "Past visit — no snapshot";
+  // Historical weather fetch for past visits
+  useEffect(() => {
+    if (todayVisit) return;
+    if (state.step3.weather) return;
+
+    const lat = state.step1.salon?.salon_lat;
+    const lng = state.step1.salon?.salon_lng;
+    if (lat == null || lng == null) {
+      setWeatherAttemptDone(true);
+      return;
     }
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const [y, m, d] = state.step1.date.split("-").map(Number);
+        const iso = new Date(y, m - 1, d, state.step1.hour, state.step1.minute, 0, 0).toISOString();
+
+        const res = await fetch("/api/weather/historical", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat, lng, iso }),
+        });
+
+        if (cancelled || !res.ok) return;
+
+        const w = await res.json() as { tempC?: unknown; code?: unknown; condition?: unknown };
+        if (typeof w.tempC !== "number" || typeof w.code !== "number") return;
+
+        const { label, emoji } = describeWeatherCode(w.code);
+        const weather: WeatherData = {
+          temperature: w.tempC,
+          apparentTemperature: w.tempC,
+          code: w.code,
+          label,
+          emoji,
+          uvIndex: null,
+        };
+        if (!cancelled) {
+          dispatch({ type: "SET_WEATHER", weather });
+          setWeatherIsHistorical(true);
+        }
+      } catch {
+        // soft-fail
+      } finally {
+        if (!cancelled) setWeatherAttemptDone(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [todayVisit, state.step1.salon, state.step1.date, state.step1.hour, state.step1.minute, dispatch, state.step3.weather]);
+
+  function weatherChipText(): string {
     const w = state.step3.weather;
     if (!w) {
+      if (!todayVisit) {
+        return weatherAttemptDone ? "Weather unavailable" : "Looking up past weather…";
+      }
       return weatherAttemptDone ? "Weather unavailable" : "Fetching…";
     }
     const t = Math.round(w.temperature);
@@ -275,7 +332,15 @@ export function Step3_Details({
             <p className="font-sans text-[12px] font-medium uppercase tracking-[0.08em] text-[color:var(--text-tertiary)]">
               Weather
             </p>
-            <p className="truncate font-sans text-sm text-[color:var(--text-primary)]">{weatherChipText()}</p>
+            <p
+              className="flex items-center gap-1 truncate font-sans text-sm text-[color:var(--text-primary)]"
+              title={weatherIsHistorical ? "Weather from your visit day." : undefined}
+            >
+              <span className="truncate">{weatherChipText()}</span>
+              {weatherIsHistorical && state.step3.weather ? (
+                <span className="shrink-0 text-[color:var(--brand-primary)]" aria-hidden>✦</span>
+              ) : null}
+            </p>
           </div>
         </div>
 

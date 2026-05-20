@@ -85,7 +85,43 @@ export async function submitIceCreamLog(args: {
   }
 
   const visitedAtIso = visitedAtToIsoUtc(state);
-  const weather = state.step3.weather;
+  const isRetroactive = Date.now() - new Date(visitedAtIso).getTime() > 60 * 60 * 1000;
+
+  // For retroactive visits: always fetch historical weather from Open-Meteo.
+  // For today's visits: use whatever the live weather widget captured in state.
+  let weatherTempC: number | null = null;
+  let weatherFeelsLike: number | null = null;
+  let weatherCondition: string | null = null;
+  let weatherUvIndex: number | null = null;
+
+  if (isRetroactive) {
+    const lat = state.step1.salon?.salon_lat;
+    const lng = state.step1.salon?.salon_lng;
+    if (lat != null && lng != null) {
+      try {
+        const res = await fetch("/api/weather/historical", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lat, lng, iso: visitedAtIso }),
+        });
+        if (res.ok) {
+          const w = (await res.json()) as { tempC?: unknown; condition?: unknown };
+          if (typeof w.tempC === "number" && typeof w.condition === "string") {
+            weatherTempC = w.tempC;
+            weatherCondition = w.condition;
+          }
+        }
+      } catch {
+        // soft-fail — log saves with null weather
+      }
+    }
+  } else {
+    const weather = state.step3.weather;
+    weatherTempC = weather?.temperature ?? null;
+    weatherFeelsLike = weather?.apparentTemperature ?? null;
+    weatherCondition = weather ? `${weather.emoji} ${weather.label}` : null;
+    weatherUvIndex = weather?.uvIndex ?? null;
+  }
 
   const euroParsed =
     state.step3.priceInput.trim() !== ""
@@ -112,10 +148,10 @@ export async function submitIceCreamLog(args: {
     price_cents: priceCents,
     hide_price: state.step3.hidePrice,
     photo_visibility: state.step3.photoVisibility,
-    weather_temp_c: weather?.temperature ?? null,
-    weather_feels_like: weather?.apparentTemperature ?? null,
-    weather_condition: weather ? `${weather.emoji} ${weather.label}` : null,
-    weather_uv_index: weather?.uvIndex ?? null,
+    weather_temp_c: weatherTempC,
+    weather_feels_like: weatherFeelsLike,
+    weather_condition: weatherCondition,
+    weather_uv_index: weatherUvIndex,
     visibility: state.step3.visibility,
   };
 
