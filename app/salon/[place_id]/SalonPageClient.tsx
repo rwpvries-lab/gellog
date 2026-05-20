@@ -89,6 +89,7 @@ const FEED_FIELDS = `
   notes,
   photo_url,
   visited_at,
+  created_at,
   vessel,
   price_cents,
   weather_temp_c,

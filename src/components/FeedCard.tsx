@@ -56,6 +56,7 @@ export type IceCreamLog = {
   notes: string | null;
   photo_url: string | null;
   visited_at: string;
+  created_at?: string | null;
   vessel: "cup" | "cone" | null;
   /** Stored in minor units (e.g. euro cents). */
   price_cents: number | null;
@@ -151,6 +152,14 @@ function formatFeedWeatherLine(log: IceCreamLog): string | null {
   if (city) return city;
   if (condition) return condition;
   return null;
+}
+
+/** Returns how many days later the log was created vs. visited, or null if ≤ 24h. */
+function retroactiveDaysLater(log: IceCreamLog): number | null {
+  if (!log.created_at) return null;
+  const diffMs = new Date(log.created_at).getTime() - new Date(log.visited_at).getTime();
+  if (diffMs <= 24 * 60 * 60 * 1000) return null;
+  return Math.round(diffMs / (24 * 60 * 60 * 1000));
 }
 
 const FEED_COLLAPSED_FLAVOUR_CAP = 3;
@@ -547,6 +556,7 @@ export function FeedCard({
   const photoImgError = photoErrorLogId === log.id;
 
   const isFeedLayout = layout === "feed" && !isDetailPage;
+  const retroDays = retroactiveDaysLater(log);
 
   const ratingBorderClass =
     log.overall_rating >= 4
@@ -739,6 +749,12 @@ export function FeedCard({
                     </span>
                   ) : null}
                 </div>
+              ) : null}
+
+              {retroDays != null ? (
+                <p className="font-sans text-[11px] font-medium text-[color:var(--brand-primary)]">
+                  logged {retroDays} {retroDays === 1 ? "day" : "days"} later
+                </p>
               ) : null}
 
               {/* Footer: author + actions */}
@@ -1133,6 +1149,11 @@ export function FeedCard({
 
               {/* Full date/time */}
               <p className="text-xs text-[color:var(--text-tertiary)]">{fullDate}</p>
+              {retroDays != null ? (
+                <p className="font-sans text-[11px] font-medium text-[color:var(--brand-primary)]">
+                  logged {retroDays} {retroDays === 1 ? "day" : "days"} later
+                </p>
+              ) : null}
 
               {/* Directions button */}
               {log.salon_lat != null && log.salon_lng != null ? (

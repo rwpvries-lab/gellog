@@ -6,7 +6,6 @@ import { ChevronDown, ChevronRight, MapPin, Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -55,10 +54,22 @@ function formatLongDate(dateStr: string): string {
   });
 }
 
-function last7Days(): string[] {
+function todayLocalStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function sevenDaysAgoStr(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 7);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** Returns 8 dates: today first, then 1–7 days ago. */
+function last8Days(): string[] {
   const out: string[] = [];
   const today = new Date();
-  for (let i = 6; i >= 0; i--) {
+  for (let i = 0; i <= 7; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
     out.push(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
@@ -66,7 +77,20 @@ function last7Days(): string[] {
   return out;
 }
 
-const DAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+function chipLabel(daysAgo: number): string {
+  if (daysAgo === 0) return "Today";
+  if (daysAgo === 1) return "Yesterday";
+  return `${daysAgo} days ago`;
+}
+
+function chipTitle(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
 
 export function Step1_SalonDate({
   state,
@@ -82,8 +106,9 @@ export function Step1_SalonDate({
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userLocationRef = useRef<{ lat: number; lng: number } | null>(null);
-  const chipsRef = useRef<HTMLDivElement>(null);
   const [timeOpen, setTimeOpen] = useState(false);
+  const todayStr = todayLocalStr();
+  const minDateStr = sevenDaysAgoStr();
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -172,12 +197,6 @@ export function Step1_SalonDate({
     [],
   );
 
-  useLayoutEffect(() => {
-    const el = chipsRef.current;
-    if (!el) return;
-    el.scrollLeft = el.scrollWidth - el.clientWidth;
-  }, [state.step1.date]);
-
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     const val = e.target.value;
     applySalonData({
@@ -206,8 +225,9 @@ export function Step1_SalonDate({
 
   const visitedLabel = formatLongDate(state.step1.date);
   const timeLabel = `${pad(state.step1.hour)}:${pad(state.step1.minute)}`;
+  const isRetroactive = state.step1.date !== todayStr;
 
-  const chips = last7Days();
+  const chips = last8Days();
 
   return (
     <div className="flex flex-col gap-8">
@@ -287,39 +307,55 @@ export function Step1_SalonDate({
           </button>
         </div>
 
-        <div className="relative">
-          <div
-            ref={chipsRef}
-            className="-mx-1 flex gap-2 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            style={{
-              maskImage: "linear-gradient(to right, transparent 0%, black 28px)",
-              WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 28px)",
+        <div
+          className="-mx-1 flex gap-2 overflow-x-auto pb-1 pt-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          style={{
+            maskImage: "linear-gradient(to left, transparent 0%, black 28px)",
+            WebkitMaskImage: "linear-gradient(to left, transparent 0%, black 28px)",
+          }}
+        >
+          {chips.map((dateStr, i) => {
+            const selected = state.step1.date === dateStr;
+            return (
+              <button
+                key={dateStr}
+                type="button"
+                title={chipTitle(dateStr)}
+                onClick={() => dispatch({ type: "SET_DATE", date: dateStr })}
+                className={`h-9 shrink-0 rounded-full border px-3 font-sans text-[13px] font-medium tabular-nums transition-colors ${
+                  selected
+                    ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-primary)] text-[color:var(--text-inverse)]"
+                    : "border-[color:var(--border-default)] bg-[color:var(--background-secondary)] text-[color:var(--text-primary)]"
+                }`}
+              >
+                {chipLabel(i)}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-1">
+          <input
+            type="date"
+            min={minDateStr}
+            max={todayStr}
+            value={state.step1.date}
+            onChange={(e) => {
+              if (e.target.value) dispatch({ type: "SET_DATE", date: e.target.value });
             }}
-          >
-            {chips.map((dateStr) => {
-              const [y, m, d] = dateStr.split("-").map(Number);
-              const dt = new Date(y, m - 1, d);
-              const dow = DAY_SHORT[dt.getDay()];
-              const selected = state.step1.date === dateStr;
-              return (
-                <button
-                  key={dateStr}
-                  type="button"
-                  onClick={() => dispatch({ type: "SET_DATE", date: dateStr })}
-                  className={`flex h-16 w-[52px] shrink-0 flex-col items-center justify-center rounded-2xl border font-sans transition-colors ${
-                    selected
-                      ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-primary)] text-[color:var(--text-inverse)]"
-                      : "border-[color:var(--border-default)] bg-[color:var(--background-secondary)] text-[color:var(--text-primary)]"
-                  }`}
-                >
-                  <span className="text-[10px] font-medium uppercase tracking-wide opacity-90">{dow}</span>
-                  <span className="text-lg font-semibold leading-none">{dt.getDate()}</span>
-                </button>
-              );
-            })}
-          </div>
+            className="h-9 w-full rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] px-3 font-sans text-sm text-[color:var(--text-primary)] focus:border-[color:var(--border-focus)] focus:outline-none"
+          />
         </div>
       </div>
+
+      {isRetroactive ? (
+        <p
+          className="rounded-xl px-3 py-2 font-sans text-[13px] font-medium text-[color:var(--brand-primary)]"
+          style={{ background: "color-mix(in srgb, var(--brand-primary) 10%, var(--background-secondary))" }}
+        >
+          ✦ Logging a past visit — weather will be looked up for that day.
+        </p>
+      ) : null}
 
       {timeOpen ? (
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
