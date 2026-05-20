@@ -20,6 +20,9 @@ export type LogFlavour = {
   rating_originality: number | null;
   rating_intensity: number | null;
   rating_presentation: number | null;
+  is_exclusive?: boolean | null;
+  is_brand_new?: boolean | null;
+  is_vegan?: boolean | null;
 };
 
 export type LogFlavoursResolvedRow = {
@@ -69,6 +72,9 @@ type LegacyLogFlavourEmbedRow = {
   canonical_name_en?: unknown;
   canonical_name_nl?: unknown;
   canonical_name_it?: unknown;
+  is_exclusive?: unknown;
+  is_brand_new?: unknown;
+  is_vegan?: unknown;
 };
 
 function toNumOrNull(v: unknown): number | null {
@@ -94,7 +100,10 @@ export const LOG_FLAVOURS_RESOLVED_SELECT = `
     crumble_token,
     canonical_name_en,
     canonical_name_nl,
-    canonical_name_it
+    canonical_name_it,
+    is_exclusive,
+    is_brand_new,
+    is_vegan
   )
 `;
 
@@ -142,6 +151,9 @@ export function mapLegacyEmbedRowsToLogFlavours(
       rating_originality: toNumOrNull(lf.originality ?? lf.rating_originality),
       rating_intensity: toNumOrNull(lf.intensity ?? lf.rating_intensity),
       rating_presentation: toNumOrNull(lf.presentation ?? lf.rating_presentation),
+      is_exclusive: typeof lf.is_exclusive === "boolean" ? lf.is_exclusive : null,
+      is_brand_new: typeof lf.is_brand_new === "boolean" ? lf.is_brand_new : null,
+      is_vegan: typeof lf.is_vegan === "boolean" ? lf.is_vegan : null,
     };
   });
 }

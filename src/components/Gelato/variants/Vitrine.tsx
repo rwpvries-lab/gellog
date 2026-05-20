@@ -11,6 +11,9 @@ export type VitrineFlavour = {
   /** Optional; used with `selectedFlavourNames` for case-insensitive match against form values. */
   inputName?: string;
   tokens: GelatoTokens;
+  isExclusive?: boolean;
+  isBrandNew?: boolean;
+  isVegan?: boolean;
 };
 
 export type VitrineProps = {
@@ -274,6 +277,12 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
           </div>
         );
 
+        const activeBadges = [
+          flavour.isExclusive ? { symbol: "✦", label: "Exclusive" } : null,
+          flavour.isBrandNew  ? { symbol: "⟳", label: "New" }       : null,
+          flavour.isVegan     ? { symbol: "🌱", label: "Vegan" }     : null,
+        ].filter(Boolean) as { symbol: string; label: string }[];
+
         const body = (
           <>
             {tubVisual}
@@ -285,6 +294,24 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
                     ({flavour.inputName})
                   </div>
                 )}
+              {activeBadges.length > 0 && (
+                <div style={{ display: "flex", justifyContent: "center", gap: 4, marginTop: 4, flexWrap: "wrap" }}>
+                  {activeBadges.map(({ symbol, label }) => (
+                    <span
+                      key={label}
+                      title={label}
+                      style={{
+                        fontSize: 11,
+                        color: "#A85530",
+                        fontWeight: 600,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {symbol} {label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         );

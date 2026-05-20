@@ -725,14 +725,26 @@ export function FeedCard({
               {/* Flavour chips — outlined */}
               {log.log_flavours.length > 0 ? (
                 <div className="flex flex-wrap gap-[6px]">
-                  {log.log_flavours.slice(0, FEED_COLLAPSED_FLAVOUR_CAP).map((flavour) => (
+                  {log.log_flavours.slice(0, FEED_COLLAPSED_FLAVOUR_CAP).map((flavour) => {
+                    const badges = [
+                      flavour.is_exclusive ? { symbol: "✦", label: "Exclusive" } : null,
+                      flavour.is_brand_new  ? { symbol: "⟳", label: "New" }       : null,
+                      flavour.is_vegan      ? { symbol: "🌱", label: "Vegan" }     : null,
+                    ].filter(Boolean) as { symbol: string; label: string }[];
+                    return (
                     <span
                       key={flavour.id}
-                      className="inline-flex items-center rounded-full border border-[color:var(--brand-primary)] bg-[color:var(--background-primary)] px-3 py-1.5 text-xs font-medium leading-none text-[color:var(--brand-primary)]"
+                      className="inline-flex items-center gap-1 rounded-full border border-[color:var(--brand-primary)] bg-[color:var(--background-primary)] px-3 py-1.5 text-xs font-medium leading-none text-[color:var(--brand-primary)]"
                     >
                       {getFlavourDisplayLabel(flavour)}
+                      {badges.map(({ symbol, label }) => (
+                        <span key={label} title={label} className="text-[11px] font-semibold text-[#A85530]">
+                          {symbol}
+                        </span>
+                      ))}
                     </span>
-                  ))}
+                    );
+                  })}
                   {!expanded && log.log_flavours.length > FEED_COLLAPSED_FLAVOUR_CAP ? (
                     <span className="inline-flex items-center rounded-full border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] px-3 py-1.5 text-xs font-medium leading-none text-[color:var(--text-secondary)]">
                       +{log.log_flavours.length - FEED_COLLAPSED_FLAVOUR_CAP}
