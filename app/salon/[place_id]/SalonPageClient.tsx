@@ -12,6 +12,7 @@ import {
 } from "@/src/lib/log-flavours-resolved";
 import { OpeningHoursCard } from "@/src/components/OpeningHoursCard";
 import { type WeekHours } from "@/src/lib/opening-hours";
+import type { PeakGridPayload } from "@/src/lib/salonPeakGrid";
 import { SalonShareButton } from "./SalonShareButton";
 import Image from "next/image";
 import Link from "next/link";
@@ -106,6 +107,26 @@ const FEED_FIELDS = `
 ${LOG_FLAVOURS_RESOLVED_SELECT}
 `;
 
+function peakChips(data: PeakGridPayload): { quietHour: number | null; busyHour: number | null } {
+  const todayRow = (new Date().getDay() + 6) % 7;
+  const row = data.grid[todayRow];
+  if (!row) return { quietHour: null, busyHour: null };
+
+  const open = row
+    .map((score, idx) => ({ score, hour: 9 + idx }))
+    .filter((c): c is { score: number; hour: number } => c.score !== null);
+
+  if (open.length === 0) return { quietHour: null, busyHour: null };
+
+  const quietHour = open.reduce((a, b) => (a.score <= b.score ? a : b)).hour;
+  const busyHour = open.reduce((a, b) => (a.score >= b.score ? a : b)).hour;
+  return { quietHour, busyHour };
+}
+
+function fmtHour(h: number): string {
+  return `${String(h).padStart(2, "0")}:00–${String(h + 1).padStart(2, "0")}:00`;
+}
+
 function SalonPageSkeleton() {
   return (
     <main className="mx-auto max-w-lg px-4 py-8">
@@ -175,6 +196,7 @@ export function SalonPageClient({ placeId }: Props) {
   const [vitrineResolvedRows, setVitrineResolvedRows] = useState<SalonVitrineResolvedRow[]>([]);
   const [failedSalonLogoUrl, setFailedSalonLogoUrl] = useState<string | null>(null);
   const [hours, setHours] = useState<WeekHours | null>(null);
+  const [peakData, setPeakData] = useState<PeakGridPayload | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -196,7 +218,7 @@ export function SalonPageClient({ placeId }: Props) {
         .eq("is_visible", true)
         .order("input_name", { ascending: true });
 
-      const [{ data: logsData }, { data: profileRow }, { data: vitrineData }, hoursData] =
+      const [{ data: logsData }, { data: profileRow }, { data: vitrineData }, hoursData, peakResult] =
         await Promise.all([
           supabase
             .from("ice_cream_logs")
@@ -216,6 +238,9 @@ export function SalonPageClient({ placeId }: Props) {
                 ? (r.json() as Promise<{ hours: WeekHours | null }>)
                 : null,
             )
+            .catch(() => null),
+          fetch(`/api/salon/${encodeURIComponent(placeId)}/peak`)
+            .then((r) => (r.ok ? (r.json() as Promise<PeakGridPayload>) : null))
             .catch(() => null),
         ]);
 
@@ -242,6 +267,7 @@ export function SalonPageClient({ placeId }: Props) {
         setFollowingAuthorIds(new Set());
         setVitrineResolvedRows((vitrineData ?? []) as SalonVitrineResolvedRow[]);
         setHours(hoursData?.hours ?? null);
+        setPeakData(peakResult);
         setLoading(false);
         return;
       }
@@ -286,6 +312,7 @@ export function SalonPageClient({ placeId }: Props) {
       setEmptyPlaceName(null);
       setVitrineResolvedRows((vitrineData ?? []) as SalonVitrineResolvedRow[]);
       setHours(hoursData?.hours ?? null);
+      setPeakData(peakResult);
       setLoading(false);
     }
 
@@ -546,6 +573,23 @@ export function SalonPageClient({ placeId }: Props) {
           <OpeningHoursCard hours={hours} isOwner={isOwner} placeId={placeId} />
         </div>
       )}
+
+      {peakData && peakData.total_count >= 20 && (() => {
+        const { quietHour, busyHour } = peakChips(peakData);
+        if (quietHour === null) return null;
+        return (
+          <div className="mb-5 flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--brand-primary-surface)] px-3 py-1.5 text-xs font-medium text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">
+              Quieter at {fmtHour(quietHour)} today
+            </span>
+            {busyHour !== null && busyHour !== quietHour && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950/30 dark:text-amber-300 dark:ring-amber-800">
+                Likely busy at {fmtHour(busyHour)}
+              </span>
+            )}
+          </div>
+        );
+      })()}
 
       <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
