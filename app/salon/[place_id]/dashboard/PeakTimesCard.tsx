@@ -23,7 +23,7 @@ export function PeakTimesCard({ peak }: Props) {
 
   return (
     <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
-      <h2 className="mb-1 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+      <h2 className="mb-1 font-serif text-sm font-semibold text-zinc-900 dark:text-zinc-50">
         Peak times
       </h2>
       <p className="mb-4 text-xs text-zinc-400 dark:text-zinc-500">

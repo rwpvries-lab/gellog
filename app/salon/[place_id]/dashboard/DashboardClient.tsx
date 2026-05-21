@@ -733,7 +733,7 @@ export function DashboardClient({
                 </p>
                 <a
                   href="#billing"
-                  className="mt-3 inline-block text-xs font-medium text-orange-600 hover:underline dark:text-orange-400"
+                  className="mt-3 inline-block text-xs font-medium text-[color:var(--brand-primary)] hover:underline"
                 >
                   View billing & plans
                 </a>
@@ -828,7 +828,7 @@ export function DashboardClient({
                   <button
                     type="submit"
                     disabled={saving}
-                    className="inline-flex items-center justify-center rounded-full bg-[#D97706] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-orange-300 focus:ring-offset-2 focus:ring-offset-white disabled:opacity-60 dark:focus:ring-offset-zinc-950"
+                    className="inline-flex items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--brand-primary-muted)] focus:ring-offset-2 focus:ring-offset-white disabled:opacity-60 dark:focus:ring-offset-zinc-950"
                   >
                     {saving ? "Saving…" : "Save changes"}
                   </button>

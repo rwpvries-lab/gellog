@@ -283,7 +283,7 @@ export function FlavourBoard({
     <div className="flex flex-col gap-2">
       <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">Flavour Board</h2>
+          <h2 className="font-serif text-sm font-semibold text-zinc-900 dark:text-zinc-50">Flavour Board</h2>
           <p className="mt-1 text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
             The eye toggle controls what visitors see on your public salon page. Hiding a flavour does
             not delete it.
