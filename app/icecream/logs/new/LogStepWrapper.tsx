@@ -13,7 +13,8 @@ import {
   flowFingerprint,
   logFlowReducer,
 } from "./logFlowReducer";
-import { submitIceCreamLog } from "./submitIceCreamLog";
+import { submitIceCreamLog, visitedAtToIsoUtc } from "./submitIceCreamLog";
+import { isVisitedAtValid } from "@/src/lib/visitedAtValidator";
 import { Step1_SalonDate } from "./steps/Step1_SalonDate";
 import { Step2_Flavours } from "./steps/Step2_Flavours";
 import { Step3_Details } from "./steps/Step3_Details";
@@ -65,6 +66,7 @@ export function LogStepWrapper({
   const [discardOpen, setDiscardOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [step1DateError, setStep1DateError] = useState<string | null>(null);
   const pendingLeaveRef = useRef<
     | { kind: "href"; href: string }
     | { kind: "header" }
@@ -161,8 +163,19 @@ export function LogStepWrapper({
     return () => document.removeEventListener("pointerdown", onPointerDownCapture, true);
   }, [isDirty, pathname]);
 
+  useEffect(() => {
+    setStep1DateError(null);
+  }, [state.step1.date, state.step1.hour, state.step1.minute]);
+
   function goNext() {
-    if (state.currentStep === 1 && !canAdvanceFromStep1(state)) return;
+    if (state.currentStep === 1) {
+      if (!canAdvanceFromStep1(state)) return;
+      const validation = isVisitedAtValid(visitedAtToIsoUtc(state));
+      if (!validation.ok) {
+        setStep1DateError(validation.reason ?? "Invalid visit date.");
+        return;
+      }
+    }
     if (state.currentStep === 2 && !canAdvanceFromStep2(state)) return;
     dispatch({ type: "GO_NEXT" });
   }
@@ -173,6 +186,11 @@ export function LogStepWrapper({
 
   async function handleFinalSubmit() {
     setSubmitError(null);
+    const dateValidation = isVisitedAtValid(visitedAtToIsoUtc(state));
+    if (!dateValidation.ok) {
+      setSubmitError(dateValidation.reason ?? "Invalid visit date.");
+      return;
+    }
     setSubmitting(true);
     const result = await submitIceCreamLog({ userId, state });
     setSubmitting(false);
@@ -257,6 +275,13 @@ export function LogStepWrapper({
       </div>
 
       <div className="sticky bottom-0 -mx-1 mt-auto bg-[color:var(--background-primary)] pb-[env(safe-area-inset-bottom)] pt-2">
+        {state.currentStep === 1 && step1DateError ? (
+          <p className="mb-2 rounded-xl px-3 py-2 font-sans text-[13px] text-[color:var(--state-error)] ring-1 ring-[color:var(--state-error)]"
+            style={{ background: "color-mix(in srgb, var(--state-error) 8%, var(--background-secondary))" }}
+          >
+            {step1DateError}
+          </p>
+        ) : null}
         {state.currentStep < 3 ? (
           <button
             type="button"

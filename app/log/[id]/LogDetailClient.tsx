@@ -19,7 +19,7 @@ type Props = {
 
 const LOG_SELECT = `
   id, user_id, salon_name, salon_lat, salon_lng, salon_place_id,
-  overall_rating, notes, photo_url, visited_at, vessel, price_cents,
+  overall_rating, notes, photo_url, visited_at, created_at, vessel, price_cents,
   weather_temp_c, weather_condition, weather_uv_index, visibility,
   photo_visibility, hide_price,
   profiles ( id, username, avatar_url ),
