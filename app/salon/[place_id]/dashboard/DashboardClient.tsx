@@ -37,16 +37,20 @@ function getLogoUrl(path: string | null): string | null {
   return `${supabaseUrl}/storage/v1/object/public/salon-logos/${path}`;
 }
 
-/** Fixed UTC string so SSR and browser hydration always match (avoids locale/ICU differences). */
 function formatVisibilityLogInstant(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const day = String(d.getUTCDate()).padStart(2, "0");
-  const h = String(d.getUTCHours()).padStart(2, "0");
-  const min = String(d.getUTCMinutes()).padStart(2, "0");
-  return `${y}-${m}-${day} ${h}:${min} UTC`;
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterdayStart = new Date(todayStart.getTime() - 86400000);
+  const weekAgoStart = new Date(todayStart.getTime() - 6 * 86400000);
+  const hhmm = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  if (d >= todayStart) return `Today at ${hhmm}`;
+  if (d >= yesterdayStart) return `Yesterday at ${hhmm}`;
+  if (d >= weekAgoStart) return `${d.toLocaleDateString(undefined, { weekday: "short" })} at ${hhmm}`;
+  const sameYear = d.getFullYear() === now.getFullYear();
+  const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric", ...(sameYear ? {} : { year: "numeric" }) });
+  return `${dateStr} at ${hhmm}`;
 }
 
 type SalonProfile = {
@@ -597,7 +601,7 @@ export function DashboardClient({
                     </span>
                   )}
                   {tier === "pro" ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700 ring-1 ring-orange-100 dark:bg-orange-900/30 dark:text-orange-300 dark:ring-orange-800/60">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--brand-primary-surface)] px-2.5 py-0.5 text-xs font-medium text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">
                       Salon Pro — €29/mo
                     </span>
                   ) : tier === "basic" ? (
@@ -864,7 +868,7 @@ export function DashboardClient({
                         <th className="px-3 py-2 text-center font-semibold text-[color:var(--brand-primary)]">
                           Basic
                         </th>
-                        <th className="px-3 py-2 text-center font-semibold text-orange-600 dark:text-orange-400">
+                        <th className="px-3 py-2 text-center font-semibold text-[color:var(--brand-primary)]">
                           Pro
                         </th>
                       </tr>
@@ -907,7 +911,7 @@ export function DashboardClient({
                     place_id={salonProfile.place_id}
                     tier="pro"
                     label="Upgrade to Salon Pro — €29/mo"
-                    className="mt-2 bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500"
+                    className="mt-2 bg-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary-hover)]"
                   />
                 )}
 
