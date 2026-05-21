@@ -49,6 +49,9 @@ type SalonVitrineResolvedRow = {
   drizzle_token: string | null;
   crumble_token: string | null;
   category: string | null;
+  is_exclusive: boolean;
+  is_brand_new: boolean;
+  is_vegan: boolean;
 };
 
 function mapVitrineResolvedToFlavour(row: SalonVitrineResolvedRow): VitrineFlavour {
@@ -66,6 +69,9 @@ function mapVitrineResolvedToFlavour(row: SalonVitrineResolvedRow): VitrineFlavo
       row.drizzle_token,
       row.crumble_token,
     ),
+    isExclusive: row.is_exclusive,
+    isBrandNew: row.is_brand_new,
+    isVegan: row.is_vegan,
   };
 }
 

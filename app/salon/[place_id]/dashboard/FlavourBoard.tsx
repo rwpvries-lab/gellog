@@ -19,6 +19,9 @@ export type VitrineFlavour = {
   is_visible: boolean;
   display_started_at: string | null;
   total_display_seconds: number | null;
+  is_exclusive: boolean;
+  is_brand_new: boolean;
+  is_vegan: boolean;
   created_at?: string;
 };
 
@@ -126,6 +129,19 @@ export function FlavourBoard({
   async function handleColourChange(id: string, colour: string) {
     setFlavours((prev) => prev.map((f) => (f.id === id ? { ...f, colour } : f)));
     await supabase.from("vitrine_flavours").update({ colour }).eq("id", id);
+  }
+
+  async function toggleModifier(
+    id: string,
+    field: "is_exclusive" | "is_brand_new" | "is_vegan",
+    current: boolean,
+  ) {
+    const next = !current;
+    setFlavours((prev) => prev.map((f) => (f.id === id ? { ...f, [field]: next } : f)));
+    const { error } = await supabase.from("vitrine_flavours").update({ [field]: next }).eq("id", id);
+    if (error) {
+      setFlavours((prev) => prev.map((f) => (f.id === id ? { ...f, [field]: current } : f)));
+    }
   }
 
   async function toggleVitrine(row: VitrineFlavour) {
@@ -330,6 +346,32 @@ export function FlavourBoard({
                   {f.name}
                 </button>
               )}
+            </div>
+
+            <div className="flex shrink-0 items-center gap-1">
+              {(
+                [
+                  { field: "is_exclusive", label: "Exclusive", title: "Only at this salon — not found elsewhere" },
+                  { field: "is_brand_new", label: "Brand New", title: "Recently added to the vitrine" },
+                  { field: "is_vegan",     label: "Vegan",     title: "Dairy-free / plant-based" },
+                ] as const
+              ).map(({ field, label, title }) => (
+                <button
+                  key={field}
+                  type="button"
+                  title={title}
+                  aria-label={`${label}: ${f[field] ? "on" : "off"}`}
+                  aria-pressed={f[field]}
+                  onClick={() => void toggleModifier(f.id, field, f[field])}
+                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium transition ${
+                    f[field]
+                      ? "border-[#A85530] bg-[#A85530] text-[#FBF5E8]"
+                      : "border-zinc-200 bg-[#FBF5E8] text-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-500"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
             <button
