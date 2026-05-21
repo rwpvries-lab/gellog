@@ -1,7 +1,6 @@
 import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
-import { createAdminClient } from "@/src/lib/supabase/admin";
 import {
   googlePeriodsToWeekHours,
   validateWeekHours,
@@ -45,9 +44,9 @@ export async function GET(
   { params }: { params: Promise<{ place_id: string }> },
 ) {
   const { place_id: placeId } = await params;
-  const admin = createAdminClient();
+  const supabase = await createClient();
 
-  const { data: profile } = await admin
+  const { data: profile } = await supabase
     .from("salon_profiles")
     .select("hours_override, hours_google, hours_fetched_at")
     .eq("place_id", placeId)
@@ -87,7 +86,7 @@ export async function GET(
   const fresh = await fetchGoogleHours(placeId);
 
   if (profile !== null && fresh) {
-    await admin
+    await supabase
       .from("salon_profiles")
       .update({
         hours_google: fresh,
@@ -127,8 +126,7 @@ export async function PUT(
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const admin = createAdminClient();
-  const { data: profile } = await admin
+  const { data: profile } = await supabase
     .from("salon_profiles")
     .select("owner_id")
     .eq("place_id", placeId)
@@ -150,7 +148,7 @@ export async function PUT(
     return NextResponse.json({ error: "invalid hours shape" }, { status: 400 });
   }
 
-  const { error } = await admin
+  const { error } = await supabase
     .from("salon_profiles")
     .update({ hours_override: hours })
     .eq("place_id", placeId);

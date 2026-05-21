@@ -1,5 +1,5 @@
 import "server-only";
-import { createAdminClient } from "@/src/lib/supabase/admin";
+import { createClient } from "@/src/lib/supabase/server";
 import type { DayKey, WeekHours } from "@/src/lib/opening-hours";
 
 export const PEAK_HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22] as const;
@@ -85,19 +85,19 @@ type ProfileRow = {
 export async function computeSalonPeakGrid(
   placeId: string,
 ): Promise<PeakGridPayload> {
-  const admin = createAdminClient();
+  const supabase = await createClient();
 
   const [densityResult, totalResult, profileResult] = await Promise.all([
-    admin
+    supabase
       .from("salon_hourly_density")
       .select("salon_place_id,dow,hour,log_count")
       .eq("salon_place_id", placeId),
-    admin
+    supabase
       .from("salon_total_logs_90d")
       .select("salon_place_id,total_count")
       .eq("salon_place_id", placeId)
       .maybeSingle(),
-    admin
+    supabase
       .from("salon_profiles")
       .select("salon_lat,salon_lng,hours_override,hours_google")
       .eq("place_id", placeId)

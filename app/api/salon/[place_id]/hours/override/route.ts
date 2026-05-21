@@ -1,7 +1,6 @@
 import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
-import { createAdminClient } from "@/src/lib/supabase/admin";
 
 export async function DELETE(
   _req: NextRequest,
@@ -17,8 +16,7 @@ export async function DELETE(
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  const admin = createAdminClient();
-  const { data: profile } = await admin
+  const { data: profile } = await supabase
     .from("salon_profiles")
     .select("owner_id")
     .eq("place_id", placeId)
@@ -28,7 +26,7 @@ export async function DELETE(
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
-  const { error } = await admin
+  const { error } = await supabase
     .from("salon_profiles")
     .update({ hours_override: null })
     .eq("place_id", placeId);
