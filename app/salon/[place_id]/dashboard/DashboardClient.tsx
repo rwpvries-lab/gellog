@@ -23,8 +23,10 @@ import {
   type WeatherStat,
   type WeeklyVisit,
 } from "./AnalyticsSection";
+import { PeakTimesCard } from "./PeakTimesCard";
 import { SalonDashboardWeatherCard } from "./SalonDashboardWeatherCard";
 import type { SalonDashboardWeatherPayload } from "@/src/lib/salonDashboardWeather";
+import type { PeakGridPayload } from "@/src/lib/salonPeakGrid";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
@@ -92,6 +94,7 @@ type Props = {
   flavourInsights: FlavourInsightRow[];
   dashboardWeather: SalonDashboardWeatherPayload | null;
   salonHasCoordinates: boolean;
+  peakGrid: PeakGridPayload | null;
 };
 
 const DASHBOARD_SECTION_IDS = [
@@ -163,6 +166,7 @@ export function DashboardClient({
   flavourInsights,
   dashboardWeather,
   salonHasCoordinates,
+  peakGrid,
 }: Props) {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<DashboardSectionId>("dashboard-overview");
@@ -649,6 +653,10 @@ export function DashboardClient({
               weatherStats={weatherStats}
               monthlyRatings={monthlyRatings}
             />
+
+            {peakGrid && (tier === "basic" || tier === "pro") && (
+              <PeakTimesCard peak={peakGrid} />
+            )}
 
             <FlavourInsightsCollapsibleSection
               tier={tier}

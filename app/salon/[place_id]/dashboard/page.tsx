@@ -1,4 +1,5 @@
 import { fetchSalonDashboardWeather } from "@/src/lib/salonDashboardWeather";
+import { computeSalonPeakGrid } from "@/src/lib/salonPeakGrid";
 import { createClient } from "@/src/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { DashboardClient, type OwnerSalonOption } from "./DashboardClient";
@@ -224,9 +225,11 @@ export default async function SalonDashboardPage({
       ? Number(salonProfile.salon_lng)
       : NaN;
   const salonHasCoordinates = Number.isFinite(lat) && Number.isFinite(lng);
-  const dashboardWeather = salonHasCoordinates
-    ? await fetchSalonDashboardWeather(lat, lng)
-    : null;
+
+  const [dashboardWeather, peakGrid] = await Promise.all([
+    salonHasCoordinates ? fetchSalonDashboardWeather(lat, lng) : Promise.resolve(null),
+    isBasicOrPro ? computeSalonPeakGrid(place_id) : Promise.resolve(null),
+  ]);
 
   return (
     <DashboardClient
@@ -245,6 +248,7 @@ export default async function SalonDashboardPage({
       flavourInsights={flavourInsightsRows}
       dashboardWeather={dashboardWeather}
       salonHasCoordinates={salonHasCoordinates}
+      peakGrid={peakGrid}
     />
   );
 }
