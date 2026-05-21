@@ -353,20 +353,36 @@ function LogDetailGelatoHero({ log }: { log: IceCreamLog }) {
     );
   }
 
+  const effectiveVessel = vessel ?? "cone";
+  const [first, ...rest] = flavours;
   return (
-    <div className="mb-4 flex w-full flex-wrap justify-center gap-x-5 gap-y-4">
-      {flavours.map((f) => (
-        <div key={f.id} className="flex flex-col items-center gap-1.5">
-          <Gelato
-            variant="scoop"
-            tokens={gelatoTokensFromLogFlavour(f)}
-            size={120}
-            seed={`${log.id}-${f.id}`}
-            className="flex justify-center"
-          />
-          <p className={`${labelClass} max-w-[140px]`}>{getFlavourDisplayLabel(f)}</p>
+    <div className="mb-4 flex flex-col items-center gap-5">
+      <div className="flex flex-col items-center gap-2">
+        <Gelato
+          variant={effectiveVessel}
+          tokens={gelatoTokensFromLogFlavour(first)}
+          size={240}
+          seed={log.id}
+          className="flex justify-center"
+        />
+        <p className={labelClass}>{getFlavourDisplayLabel(first)}</p>
+      </div>
+      {rest.length > 0 ? (
+        <div className="flex w-full flex-wrap justify-center gap-x-5 gap-y-4">
+          {rest.map((f) => (
+            <div key={f.id} className="flex flex-col items-center gap-1.5">
+              <Gelato
+                variant="scoop"
+                tokens={gelatoTokensFromLogFlavour(f)}
+                size={120}
+                seed={`${log.id}-${f.id}`}
+                className="flex justify-center"
+              />
+              <p className={`${labelClass} max-w-[140px]`}>{getFlavourDisplayLabel(f)}</p>
+            </div>
+          ))}
         </div>
-      ))}
+      ) : null}
     </div>
   );
 }
@@ -744,8 +760,15 @@ export function FeedCard({
                     return (
                     <span
                       key={flavour.id}
-                      className="inline-flex items-center gap-1 rounded-full border border-[color:var(--brand-primary)] bg-[color:var(--background-primary)] px-3 py-1.5 text-xs font-medium leading-none text-[color:var(--brand-primary)]"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--brand-primary)] bg-[color:var(--background-primary)] px-2.5 py-1.5 text-xs font-medium leading-none text-[color:var(--brand-primary)]"
                     >
+                      <Gelato
+                        variant="scoop"
+                        tokens={gelatoTokensFromLogFlavour(flavour)}
+                        size={18}
+                        seed={flavour.id}
+                        className="flex shrink-0"
+                      />
                       {getFlavourDisplayLabel(flavour)}
                       {badges.map(({ symbol, label }) => (
                         <span key={label} title={label} className="text-[11px] font-semibold text-[#A85530]">

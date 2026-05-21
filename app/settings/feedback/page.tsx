@@ -52,7 +52,7 @@ export default async function FeedbackPage() {
             lineHeight: 1.55,
           }}
         >
-          Tell Ruben what you love, what&apos;s broken, or what you wish existed.
+          Tell us what you love, what&apos;s broken, or what you wish existed.
         </p>
 
         <FeedbackFormClient userId={user?.id ?? null} />

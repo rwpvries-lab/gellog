@@ -706,12 +706,6 @@ export function MapClient({
                 <>
                   <Link
                     href={`/salon/${encodeURIComponent(selected.place_id)}`}
-                    className="mb-3 block w-full rounded-2xl bg-[color:var(--brand-primary-surface)] px-4 py-3 text-center text-sm font-medium text-[color:var(--text-primary)] transition hover:opacity-90"
-                  >
-                    No logs here yet — visit salon page
-                  </Link>
-                  <Link
-                    href={`/salon/${encodeURIComponent(selected.place_id)}`}
                     className="mb-3 block w-full rounded-2xl bg-[color:var(--brand-primary)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)]"
                   >
                     View salon page →

@@ -51,7 +51,7 @@ function TerracottaToast({ onDismiss }: { onDismiss: () => void }) {
         pointerEvents: "none",
       }}
     >
-      Thanks — that goes straight to Ruben.
+      Thanks — that goes straight to the team.
     </div>
   );
 }
@@ -186,7 +186,7 @@ export function FeedbackFormClient({ userId }: { userId: string | null }) {
                 lineHeight: 1.55,
               }}
             >
-              Thanks — that goes straight to Ruben.
+              Thanks — that goes straight to the team.
             </p>
           </div>
           <button
