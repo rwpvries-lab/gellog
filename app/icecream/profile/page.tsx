@@ -8,6 +8,7 @@ import { ProfileFeedClient } from "./ProfileFeedClient";
 import { MySalonProfileCard } from "@/app/components/MySalonOwnerAccess";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
+import { ProfileStatsGrid, type TopFlavour } from "./ProfileStatsGrid";
 import { ProfilePassportStrip } from "./ProfilePassportStrip";
 import type { ProfileSheetRankedFlavour } from "./ProfileSheet";
 import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
@@ -45,6 +46,7 @@ type IceCreamLog = {
   id: string;
   salon_name: string;
   salon_place_id: string | null;
+  salon_city: string | null;
   overall_rating: number;
   visited_at: string;
   price_cents: number | null;
@@ -99,6 +101,34 @@ function resolveSalonPlaceId(logs: IceCreamLog[], salonName: string): string | n
     }
   }
   return bestId;
+}
+
+function computeStreak(logs: IceCreamLog[]): number {
+  if (logs.length === 0) return 0;
+
+  const uniqueDates = Array.from(
+    new Set(logs.map((l) => l.visited_at.slice(0, 10))),
+  ).sort((a, b) => b.localeCompare(a));
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const mostRecent = new Date(uniqueDates[0] + "T00:00:00");
+  const daysSince = Math.floor(
+    (today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24),
+  );
+  if (daysSince > 7) return 0;
+
+  let streak = 1;
+  for (let i = 1; i < uniqueDates.length; i++) {
+    const prev = new Date(uniqueDates[i - 1] + "T00:00:00");
+    const curr = new Date(uniqueDates[i] + "T00:00:00");
+    const gap = Math.floor(
+      (prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    if (gap <= 7) streak++;
+    else break;
+  }
+  return streak;
 }
 
 function deriveStats(logs: IceCreamLog[]) {
@@ -235,6 +265,12 @@ function deriveStats(logs: IceCreamLog[]) {
         b.lastVisitedIso.localeCompare(a.lastVisitedIso),
     );
 
+  const citiesCount = new Set(
+    logs.map((l) => l.salon_city?.trim()).filter(Boolean),
+  ).size;
+
+  const currentStreak = computeStreak(logs);
+
   return {
     totalAllTime,
     totalThisYear,
@@ -247,6 +283,8 @@ function deriveStats(logs: IceCreamLog[]) {
     uniqueSalonCount: salonMap.size,
     flavoursRollup,
     salonsRollup,
+    citiesCount,
+    currentStreak,
   };
 }
 
@@ -279,7 +317,7 @@ export default async function IceCreamProfilePage() {
     supabase
       .from("ice_cream_logs")
       .select(
-        `id, salon_name, salon_place_id, overall_rating, visited_at, price_cents, weather_condition,
+        `id, salon_name, salon_place_id, salon_city, overall_rating, visited_at, price_cents, weather_condition,
 ${LOG_FLAVOURS_RESOLVED_SELECT}`,
       )
       .eq("user_id", user.id),
@@ -331,18 +369,22 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
     uniqueSalonCount,
     flavoursRollup,
     salonsRollup,
+    citiesCount,
+    currentStreak,
   } = deriveStats(logs);
 
   const logIds = logs.map((l) => l.id);
   let rankedFlavours: ProfileSheetRankedFlavour[] = [];
   let uncategorisedLogCount = 0;
   let uncategorisedInputNames: string[] = [];
+  let uniqueCanonicalFlavourCount = 0;
+  let topFlavour: TopFlavour | null = null;
 
   if (logIds.length > 0) {
     const { data: lfRows } = await supabase
       .from("log_flavours")
       .select(
-        "log_id, flavour_name, rating_stars, base_token, drizzle_token, crumble_token, canonical_name_en, canonical_name_nl, canonical_name_it",
+        "log_id, flavour_name, rating_stars, base_token, drizzle_token, crumble_token, canonical_name_en, canonical_name_nl, canonical_name_it, canonical_flavour_id",
       )
       .in("log_id", logIds);
 
@@ -350,6 +392,7 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
       log_id: string;
       flavour_name: string;
       rating_stars: number | null;
+      canonical_flavour_id?: string | null;
       base_token?: string | null;
       drizzle_token?: string | null;
       crumble_token?: string | null;
@@ -387,6 +430,35 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
     }));
     uncategorisedLogCount = uncLogs;
     uncategorisedInputNames = uncNames;
+
+    // Compute canonical flavour stats from lfRows
+    const canonicalFreq = new Map<
+      string,
+      { count: number; name: string; baseToken: string | null }
+    >();
+    for (const r of lfRows ?? []) {
+      const row = r as LfRow;
+      const cid = row.canonical_flavour_id;
+      if (!cid) continue;
+      const name =
+        row.canonical_name_en ??
+        row.canonical_name_nl ??
+        row.canonical_name_it ??
+        row.flavour_name ??
+        cid;
+      const existing = canonicalFreq.get(cid);
+      if (!existing) {
+        canonicalFreq.set(cid, { count: 1, name, baseToken: row.base_token ?? null });
+      } else {
+        existing.count += 1;
+        if (!existing.baseToken && row.base_token) existing.baseToken = row.base_token;
+      }
+    }
+    uniqueCanonicalFlavourCount = canonicalFreq.size;
+    if (canonicalFreq.size > 0) {
+      const best = Array.from(canonicalFreq.values()).sort((a, b) => b.count - a.count)[0];
+      topFlavour = { name: best.name, baseToken: best.baseToken };
+    }
   }
 
   const hasIceCreamPlus = profile?.subscription_tier === "premium";
@@ -439,6 +511,15 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
           salonCount={uniqueSalonCount}
           flavoursRollup={flavoursRollup}
           salonsRollup={salonsRollup}
+        />
+
+        <ProfileStatsGrid
+          totalVisits={totalAllTime}
+          avgRating={averageOverallRating}
+          citiesCount={citiesCount}
+          uniqueCanonicalFlavourCount={uniqueCanonicalFlavourCount}
+          topFlavour={topFlavour}
+          currentStreak={currentStreak}
         />
 
         {/* Quick access: stats / flavours / activity sheets; passport → full page (Ice Cream+ only) */}
