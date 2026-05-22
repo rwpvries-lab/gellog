@@ -598,7 +598,7 @@ export function SalonPageClient({ placeId }: Props) {
         );
       })()}
 
-      <div className="mb-5 rounded-3xl bg-white px-6 py-5 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
+      <div className="mb-5 rounded-3xl bg-[color:var(--surface-elevated)] px-6 py-5 shadow-sm ring-1 ring-[color:var(--border-default)]">
         <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
           Community stats
         </h2>
@@ -630,10 +630,10 @@ export function SalonPageClient({ placeId }: Props) {
               {topFlavours.map(([name, count]) => (
                 <span
                   key={name}
-                  className="rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                  className="rounded-full border border-[color:var(--brand-primary)] bg-[color:var(--brand-primary-surface)] px-3 py-1 text-xs font-medium text-[color:var(--brand-primary)]"
                 >
                   {name}{" "}
-                  <span className="text-zinc-400 dark:text-zinc-500">
+                  <span className="opacity-60">
                     ×{count}
                   </span>
                 </span>

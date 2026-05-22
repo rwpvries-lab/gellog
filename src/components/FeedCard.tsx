@@ -559,11 +559,9 @@ export function FeedCard({
   const retroDays = retroactiveDaysLater(log);
 
   const ratingBorderClass =
-    log.overall_rating >= 4
+    log.overall_rating >= 3
       ? "border-l-4 border-l-[color:var(--brand-primary)]"
-      : log.overall_rating >= 3
-        ? "border-l-4 border-l-[color:var(--brand-secondary)]"
-        : "border-l-4 border-l-[color:var(--border-default)]";
+      : "border-l-4 border-l-[color:var(--border-default)]";
 
   const numericFlavourRatings = log.log_flavours
     .map((f) => (typeof f.rating === "number" ? f.rating : null))
@@ -1176,7 +1174,7 @@ export function FeedCard({
                       e.stopPropagation();
                       setShowDirections(true);
                     }}
-                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--brand-secondary-bg)] px-3 py-1.5 text-xs font-medium text-[color:var(--brand-secondary)] ring-1 ring-[color:color-mix(in_srgb,var(--brand-secondary)_35%,var(--border-default))] transition hover:brightness-95 dark:hover:brightness-110"
+                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--text-primary)] px-3 py-1.5 text-xs font-medium text-[color:var(--text-inverse)] transition hover:brightness-110"
                   >
                     <svg
                       width="11"
@@ -1202,7 +1200,7 @@ export function FeedCard({
                   <button
                     type="button"
                     onClick={(e) => void handleShare(e)}
-                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--surface-elevated-alt)] px-3 py-1.5 text-xs font-medium text-[color:var(--text-primary)] ring-1 ring-[color:var(--border-default)] transition hover:brightness-95 dark:hover:brightness-110"
+                    className="flex items-center gap-1.5 rounded-full bg-[color:var(--text-primary)] px-3 py-1.5 text-xs font-medium text-[color:var(--text-inverse)] transition hover:brightness-110"
                     aria-label="Share"
                   >
                     <svg
