@@ -226,7 +226,7 @@ export function LogStepWrapper({
               <div
                 key={n}
                 className={`h-1.5 flex-1 rounded-full transition-colors duration-300 ease-out ${
-                  step >= n ? "bg-[color:var(--brand-primary)]" : "bg-[color:var(--brand-primary-muted)]"
+                  step >= n ? "bg-[#A85530]" : "bg-[color:var(--brand-primary-muted)]"
                 }`}
               />
             ))}
@@ -274,7 +274,7 @@ export function LogStepWrapper({
         ) : null}
       </div>
 
-      <div className="sticky bottom-0 -mx-1 mt-auto bg-[color:var(--background-primary)] pb-[env(safe-area-inset-bottom)] pt-2">
+      <div className="sticky bottom-0 -mx-1 mt-auto bg-[color:var(--background-primary)] pt-2">
         {state.currentStep === 1 && step1DateError ? (
           <p className="mb-2 rounded-xl px-3 py-2 font-sans text-[13px] text-[color:var(--state-error)] ring-1 ring-[color:var(--state-error)]"
             style={{ background: "color-mix(in srgb, var(--state-error) 8%, var(--background-secondary))" }}
@@ -311,6 +311,8 @@ export function LogStepWrapper({
             )}
           </button>
         )}
+        {/* Safe-area fill: prevents the terracotta button background from bleeding into the iOS home-indicator zone */}
+        <div aria-hidden className="w-full bg-[color:var(--background-primary)]" style={{ height: "env(safe-area-inset-bottom, 0px)" }} />
       </div>
 
       {discardOpen ? (

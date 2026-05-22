@@ -110,6 +110,10 @@ function FlavourNameInput({
         onFocus={() => { if (items.length > 0) setOpen(true); }}
         placeholder="Flavour name"
         autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
+        data-form-type="other"
         className="w-full border-none bg-transparent font-serif text-[18px] font-medium text-[color:var(--text-primary)] placeholder:text-[color:var(--text-tertiary)] focus:outline-none focus:ring-0 disabled:opacity-50"
       />
       {open && items.length > 0 ? (

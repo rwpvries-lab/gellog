@@ -220,15 +220,21 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
 
   if (flavours.length === 0) {
     return (
-      <div className={className} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-        <div style={{ ...gridStyle, width: "100%", maxWidth: 365 }}>
-          <div style={{ display: "flex", minWidth: 0, flexDirection: "column" }}>
-            <PlaceholderTub />
-          </div>
-          <div style={{ display: "flex", minWidth: 0, flexDirection: "column" }}>
-            <PlaceholderTub />
-          </div>
-        </div>
+      <div
+        className={className}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          maxHeight: 120,
+          gap: 6,
+        }}
+      >
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true" style={{ opacity: 0.35 }}>
+          <circle cx="12" cy="9" r="6" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M8 15l4 7 4-7" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        </svg>
         <p style={emptyCaptionStyle}>No flavours yet</p>
       </div>
     );
