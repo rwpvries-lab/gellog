@@ -59,12 +59,6 @@ function todayLocalStr(): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function sevenDaysAgoStr(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 7);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
 /** Returns 8 dates: today first, then 1–7 days ago. */
 function last8Days(): string[] {
   const out: string[] = [];
@@ -107,8 +101,10 @@ export function Step1_SalonDate({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userLocationRef = useRef<{ lat: number; lng: number } | null>(null);
   const [timeOpen, setTimeOpen] = useState(false);
+  const [customMode, setCustomMode] = useState(
+    () => !last8Days().includes(state.step1.date),
+  );
   const todayStr = todayLocalStr();
-  const minDateStr = sevenDaysAgoStr();
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -321,9 +317,12 @@ export function Step1_SalonDate({
                 key={dateStr}
                 type="button"
                 title={chipTitle(dateStr)}
-                onClick={() => dispatch({ type: "SET_DATE", date: dateStr })}
+                onClick={() => {
+                  dispatch({ type: "SET_DATE", date: dateStr });
+                  setCustomMode(false);
+                }}
                 className={`h-9 shrink-0 rounded-full border px-3 font-sans text-[13px] font-medium tabular-nums transition-colors ${
-                  selected
+                  selected && !customMode
                     ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-primary)] text-[color:var(--text-inverse)]"
                     : "border-[color:var(--border-default)] bg-[color:var(--background-secondary)] text-[color:var(--text-primary)]"
                 }`}
@@ -332,20 +331,34 @@ export function Step1_SalonDate({
               </button>
             );
           })}
+          <button
+            key="custom"
+            type="button"
+            title="Pick an earlier date"
+            onClick={() => setCustomMode(true)}
+            className={`h-9 shrink-0 rounded-full border px-3 font-sans text-[13px] font-medium tabular-nums transition-colors ${
+              customMode
+                ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-primary)] text-[color:var(--text-inverse)]"
+                : "border-[color:var(--border-default)] bg-[color:var(--background-secondary)] text-[color:var(--text-primary)]"
+            }`}
+          >
+            Custom…
+          </button>
         </div>
 
-        <div className="mt-1">
-          <input
-            type="date"
-            min={minDateStr}
-            max={todayStr}
-            value={state.step1.date}
-            onChange={(e) => {
-              if (e.target.value) dispatch({ type: "SET_DATE", date: e.target.value });
-            }}
-            className="h-9 w-full rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] px-3 font-sans text-sm text-[color:var(--text-primary)] focus:border-[color:var(--border-focus)] focus:outline-none"
-          />
-        </div>
+        {customMode ? (
+          <div className="mt-1">
+            <input
+              type="date"
+              max={todayStr}
+              value={state.step1.date}
+              onChange={(e) => {
+                if (e.target.value) dispatch({ type: "SET_DATE", date: e.target.value });
+              }}
+              className="h-9 w-full rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] px-3 font-sans text-sm text-[color:var(--text-primary)] focus:border-[color:var(--border-focus)] focus:outline-none"
+            />
+          </div>
+        ) : null}
       </div>
 
       {isRetroactive ? (
