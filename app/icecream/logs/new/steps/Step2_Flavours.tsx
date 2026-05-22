@@ -31,9 +31,9 @@ const FALLBACK_TOKENS = { base: "cream" as BaseToken, drizzle: "none" as Drizzle
 
 function rowDisplayName(row: VitrineRow): string {
   return (
-    row.canonical_name_nl?.trim() ||
     row.canonical_name_en?.trim() ||
     row.input_name.trim() ||
+    row.canonical_name_nl?.trim() ||
     "Flavour"
   );
 }
