@@ -268,7 +268,7 @@ export function AnalyticsSection({
             <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Rating trend</p>
             <p className="text-xs text-zinc-400 dark:text-zinc-500">Pro plan only</p>
           </div>
-          <SalonUpgradeButtonInline place_id={placeId} tier="pro" label="Upgrade to Pro" className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500" />
+          <SalonUpgradeButtonInline place_id={placeId} tier="pro" label="Upgrade to Pro" className="bg-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary-hover)]" />
         </div>
       )}
     </div>
@@ -346,7 +346,7 @@ export function FlavourInsightsCollapsibleSection({
                           <div className="min-w-0 flex-1 sm:min-w-[6rem]">
                             <div className="mb-1 h-2 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                               <div
-                                className="h-full rounded-full bg-orange-400 transition-[width] dark:bg-orange-500"
+                                className="h-full rounded-full bg-[color:var(--brand-primary)] transition-[width]"
                                 style={{ width: `${Math.min(100, d)}%` }}
                               />
                             </div>
@@ -366,7 +366,7 @@ export function FlavourInsightsCollapsibleSection({
             ) : (
               <div className="flex flex-col gap-3 rounded-2xl bg-zinc-50 px-4 py-3 dark:bg-zinc-800/60 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex gap-2">
-                  <ProLockIcon className="shrink-0 text-orange-500 dark:text-orange-400" />
+                  <ProLockIcon className="shrink-0 text-[color:var(--brand-primary)]" />
                   <div>
                     <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
                       Flavour Insights
@@ -381,11 +381,11 @@ export function FlavourInsightsCollapsibleSection({
                     place_id={placeId}
                     tier="pro"
                     label="Upgrade to Pro"
-                    className="bg-orange-500 hover:bg-orange-600 dark:bg-orange-600 dark:hover:bg-orange-500"
+                    className="bg-[color:var(--brand-primary)] hover:bg-[color:var(--brand-primary-hover)]"
                   />
                   <a
                     href="#billing"
-                    className="text-center text-[11px] font-medium text-orange-600 hover:underline dark:text-orange-400 sm:text-right"
+                    className="text-center text-[11px] font-medium text-[color:var(--brand-primary)] hover:underline sm:text-right"
                   >
                     View billing & plans
                   </a>

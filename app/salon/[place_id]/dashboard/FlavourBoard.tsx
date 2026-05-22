@@ -87,6 +87,7 @@ export function FlavourBoard({
   const [editingNameValue, setEditingNameValue] = useState("");
   const [colourPickerOpenId, setColourPickerOpenId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const [addingNew, setAddingNew] = useState(false);
   const [newName, setNewName] = useState("");
@@ -308,113 +309,240 @@ export function FlavourBoard({
 
       {flavours.map((f, idx) => (
         <div key={f.id}>
-          <div
-            className={`flex items-center gap-3 rounded-2xl px-3 py-2.5 transition ${
-              !f.is_visible ? "opacity-50" : ""
-            } bg-zinc-50 dark:bg-zinc-800/50`}
-          >
-            <button
-              type="button"
-              onClick={() => setColourPickerOpenId(colourPickerOpenId === f.id ? null : f.id)}
-              className="h-6 w-6 flex-shrink-0 rounded-full ring-1 ring-black/10 transition hover:scale-110"
-              style={{ backgroundColor: f.colour || DEFAULT_HEX }}
-              title="Change colour"
-            />
+          {/* Unified card: row header + inline expansion share the same rounded surface */}
+          <div className="overflow-hidden rounded-2xl bg-zinc-50 transition dark:bg-zinc-800/50">
+            {/* Row header — full-row tap target on mobile */}
+            <div
+              className={`flex min-h-[56px] cursor-pointer items-center gap-2.5 px-3 py-2 transition md:cursor-default ${
+                !f.is_visible ? "opacity-50" : ""
+              }`}
+              onClick={() => setExpandedId(expandedId === f.id ? null : f.id)}
+            >
+              {/* Colour dot */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setColourPickerOpenId(colourPickerOpenId === f.id ? null : f.id); }}
+                className="h-6 w-6 flex-shrink-0 rounded-full ring-1 ring-black/10 transition hover:scale-110"
+                style={{ backgroundColor: f.colour || DEFAULT_HEX }}
+                title="Change colour"
+              />
 
-            <div className="min-w-0 flex-1">
-              {editingNameId === f.id ? (
-                <input
-                  autoFocus
-                  value={editingNameValue}
-                  onChange={(e) => setEditingNameValue(e.target.value)}
-                  onBlur={() => void saveName(f.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") void saveName(f.id);
-                    if (e.key === "Escape") setEditingNameId(null);
-                  }}
-                  className="w-full rounded-lg border border-[color:var(--border-default)] bg-white px-2 py-0.5 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-                />
+              {/* Name */}
+              <div className="min-w-0 flex-1">
+                {editingNameId === f.id ? (
+                  <input
+                    autoFocus
+                    value={editingNameValue}
+                    onChange={(e) => setEditingNameValue(e.target.value)}
+                    onBlur={() => void saveName(f.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void saveName(f.id);
+                      if (e.key === "Escape") setEditingNameId(null);
+                    }}
+                    className="w-full rounded-lg border border-[color:var(--border-default)] bg-white px-2 py-0.5 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+                  />
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setEditingNameId(f.id); setEditingNameValue(f.name); }}
+                      className="hidden w-full truncate text-left text-sm text-zinc-800 hover:text-zinc-900 dark:text-zinc-200 dark:hover:text-zinc-50 md:block"
+                    >
+                      {f.name}
+                    </button>
+                    <span className="block truncate text-sm text-zinc-800 dark:text-zinc-200 md:hidden">
+                      {f.name}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Mobile: E / N / V letter glyphs for active modifiers */}
+              <div className="flex shrink-0 items-center gap-1 md:hidden">
+                {f.is_exclusive && (
+                  <span className="rounded-full bg-[color:var(--brand-primary-surface)] px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">E</span>
+                )}
+                {f.is_brand_new && (
+                  <span className="rounded-full bg-[color:var(--brand-primary-surface)] px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">N</span>
+                )}
+                {f.is_vegan && (
+                  <span className="rounded-full bg-[color:var(--brand-primary-surface)] px-1.5 py-0.5 text-[10px] font-semibold text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]">V</span>
+                )}
+              </div>
+
+              {/* Desktop: modifier chips */}
+              <div className="hidden shrink-0 items-center gap-1 md:flex">
+                {(
+                  [
+                    { field: "is_exclusive", label: "Exclusive", title: "Only at this salon — not found elsewhere" },
+                    { field: "is_brand_new", label: "Brand New", title: "Recently added to the vitrine" },
+                    { field: "is_vegan",     label: "Vegan",     title: "Dairy-free / plant-based" },
+                  ] as const
+                ).map(({ field, label, title }) => (
+                  <button
+                    key={field}
+                    type="button"
+                    title={title}
+                    aria-label={`${label}: ${f[field] ? "on" : "off"}`}
+                    aria-pressed={f[field]}
+                    onClick={(e) => { e.stopPropagation(); void toggleModifier(f.id, field, f[field]); }}
+                    className={`rounded-full border px-2 py-0.5 text-[11px] font-medium transition ${
+                      f[field]
+                        ? "border-[#A85530] bg-[#A85530] text-[#FBF5E8]"
+                        : "border-zinc-200 bg-[#FBF5E8] text-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-500"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Desktop: eye toggle */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); void toggleVitrine(f); }}
+                className={`hidden shrink-0 items-center justify-center rounded-full p-1.5 transition md:flex ${
+                  f.is_visible
+                    ? "text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]"
+                    : "text-zinc-400 ring-1 ring-zinc-200 dark:text-zinc-500 dark:ring-zinc-700"
+                }`}
+                title={f.is_visible ? "On vitrine — tap to hide" : "Off vitrine — tap to show"}
+                aria-label={f.is_visible ? "On vitrine" : "Off vitrine"}
+                aria-pressed={f.is_visible}
+              >
+                {f.is_visible ? <EyeOpenIcon className="h-5 w-5" /> : <EyeClosedIcon className="h-5 w-5" />}
+              </button>
+
+              {/* Desktop: delete / confirm */}
+              {confirmDeleteId === f.id ? (
+                <div className="hidden shrink-0 items-center gap-1 md:flex">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); void deleteFlavour(f.id); }}
+                    className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 ring-1 ring-red-100 dark:bg-red-950/30 dark:text-red-400 dark:ring-red-900"
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                    className="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500"
+                  >
+                    Cancel
+                  </button>
+                </div>
               ) : (
                 <button
                   type="button"
-                  onClick={() => {
-                    setEditingNameId(f.id);
-                    setEditingNameValue(f.name);
-                  }}
-                  className="truncate text-left text-sm text-zinc-800 hover:text-zinc-900 dark:text-zinc-200 dark:hover:text-zinc-50"
+                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(f.id); }}
+                  className="hidden shrink-0 text-zinc-300 transition hover:text-red-400 dark:text-zinc-600 dark:hover:text-red-500 md:block"
+                  aria-label="Delete flavour"
                 >
-                  {f.name}
+                  ✕
                 </button>
               )}
-            </div>
 
-            <div className="flex shrink-0 items-center gap-1">
-              {(
-                [
-                  { field: "is_exclusive", label: "Exclusive", title: "Only at this salon — not found elsewhere" },
-                  { field: "is_brand_new", label: "Brand New", title: "Recently added to the vitrine" },
-                  { field: "is_vegan",     label: "Vegan",     title: "Dairy-free / plant-based" },
-                ] as const
-              ).map(({ field, label, title }) => (
-                <button
-                  key={field}
-                  type="button"
-                  title={title}
-                  aria-label={`${label}: ${f[field] ? "on" : "off"}`}
-                  aria-pressed={f[field]}
-                  onClick={() => void toggleModifier(f.id, field, f[field])}
-                  className={`rounded-full border px-2 py-0.5 text-[11px] font-medium transition ${
-                    f[field]
-                      ? "border-[#A85530] bg-[#A85530] text-[#FBF5E8]"
-                      : "border-zinc-200 bg-[#FBF5E8] text-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-500"
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => void toggleVitrine(f)}
-              className={`flex shrink-0 items-center justify-center rounded-full p-1.5 transition ${
-                f.is_visible
-                  ? "text-[color:var(--brand-primary)] ring-1 ring-[color:var(--brand-primary-muted)]"
-                  : "text-zinc-400 ring-1 ring-zinc-200 dark:text-zinc-500 dark:ring-zinc-700"
-              }`}
-              title={f.is_visible ? "On vitrine — tap to hide from public page" : "Off vitrine — tap to show on public page"}
-              aria-label={f.is_visible ? "On vitrine" : "Off vitrine"}
-              aria-pressed={f.is_visible}
-            >
-              {f.is_visible ? <EyeOpenIcon className="h-5 w-5" /> : <EyeClosedIcon className="h-5 w-5" />}
-            </button>
-
-            {confirmDeleteId === f.id ? (
-              <div className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => void deleteFlavour(f.id)}
-                  className="rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-600 ring-1 ring-red-100 dark:bg-red-950/30 dark:text-red-400 dark:ring-red-900"
-                >
-                  Confirm
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmDeleteId(null)}
-                  className="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500"
-                >
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setConfirmDeleteId(f.id)}
-                className="shrink-0 text-zinc-300 transition hover:text-red-400 dark:text-zinc-600 dark:hover:text-red-500"
-                aria-label="Delete flavour"
+              {/* Mobile: chevron affordance — visual only, not a separate button */}
+              <span
+                aria-hidden
+                className={`shrink-0 text-xl leading-none text-zinc-300 transition-transform duration-200 dark:text-zinc-600 md:hidden ${
+                  expandedId === f.id ? "rotate-90" : ""
+                }`}
               >
-                ✕
-              </button>
+                ›
+              </span>
+            </div>
+
+            {/* Mobile: inline expansion — same card grows downward, no gap */}
+            {expandedId === f.id && (
+              <div className="px-3 pb-3 md:hidden">
+                <div className="border-t border-zinc-200/60 pt-3 dark:border-zinc-700/60">
+                  {confirmDeleteId === f.id ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); void deleteFlavour(f.id); }}
+                        className="rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-600 ring-1 ring-red-100 dark:bg-red-950/30 dark:text-red-400 dark:ring-red-900"
+                      >
+                        Confirm delete
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }}
+                        className="text-xs text-zinc-400 hover:text-zinc-600 dark:text-zinc-500"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Modifier toggle chips */}
+                      <div className="flex flex-wrap gap-2">
+                        {(
+                          [
+                            { field: "is_exclusive", label: "Exclusive", title: "Only at this salon — not found elsewhere" },
+                            { field: "is_brand_new", label: "Brand New", title: "Recently added to the vitrine" },
+                            { field: "is_vegan",     label: "Vegan",     title: "Dairy-free / plant-based" },
+                          ] as const
+                        ).map(({ field, label, title }) => (
+                          <button
+                            key={field}
+                            type="button"
+                            title={title}
+                            aria-label={`${label}: ${f[field] ? "on" : "off"}`}
+                            aria-pressed={f[field]}
+                            onClick={(e) => { e.stopPropagation(); void toggleModifier(f.id, field, f[field]); }}
+                            className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+                              f[field]
+                                ? "border-[#A85530] bg-[#A85530] text-[#FBF5E8]"
+                                : "border-zinc-300 bg-white text-zinc-500 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-400"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="my-3 h-px bg-zinc-200/60 dark:bg-zinc-700/60" />
+
+                      {/* Visible on board toggle */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {f.is_visible
+                            ? <EyeOpenIcon className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+                            : <EyeClosedIcon className="h-4 w-4 text-zinc-500 dark:text-zinc-400" />
+                          }
+                          <span className="text-sm text-zinc-700 dark:text-zinc-300">Visible on board</span>
+                        </div>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={f.is_visible}
+                          onClick={(e) => { e.stopPropagation(); void toggleVitrine(f); }}
+                          className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                            f.is_visible ? "bg-[#1B5E52]" : "bg-zinc-300 dark:bg-zinc-600"
+                          }`}
+                        >
+                          <span
+                            className="inline-block h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ease-in-out"
+                            style={{ transform: f.is_visible ? "translateX(20px)" : "translateX(0)" }}
+                          />
+                        </button>
+                      </div>
+
+                      {/* Delete */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(f.id); }}
+                        className="mt-3 text-[12px] font-medium text-red-500 hover:text-red-600"
+                      >
+                        Delete flavour
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
             )}
           </div>
 
