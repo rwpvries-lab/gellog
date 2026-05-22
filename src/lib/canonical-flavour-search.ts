@@ -45,8 +45,8 @@ export async function searchCanonicalFlavours(
   const map = new Map<string, CanonicalFlavourPick>();
   function add(row: { id: string; name_en?: string | null; name_nl?: string | null; name_it?: string | null }) {
     const label =
-      row.name_nl?.trim() ||
       row.name_en?.trim() ||
+      row.name_nl?.trim() ||
       row.name_it?.trim() ||
       "Flavour";
     if (!map.has(row.id)) {

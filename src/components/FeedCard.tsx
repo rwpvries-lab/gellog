@@ -19,12 +19,12 @@ const DIETARY_TAG_SET = new Set(["Sugar-free", "Dairy-free", "Vegan", "Nut-free"
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 
 export function getFlavourDisplayLabel(flavour: LogFlavour): string {
-  const nl = flavour.canonical_name_nl?.trim();
-  if (nl) return nl;
   const en = flavour.canonical_name_en?.trim();
   if (en) return en;
   const input = flavour.input_name?.trim();
   if (input) return input;
+  const nl = flavour.canonical_name_nl?.trim();
+  if (nl) return nl;
   return flavour.flavour_name?.trim() || "Flavour";
 }
 

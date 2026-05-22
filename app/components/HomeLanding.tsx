@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { GellogLogo } from "./GellogLogo";
-import { BookMarked, Map, UsersRound } from "lucide-react";
 
 const brandOrange = "#D97706";
-/** Forest secondary — aligns with cup / logo palette. */
 const brandForest = "#1B5E52";
+const terracotta = "#A85530";
 
 const steps = [
   { title: "Log your gelato", description: "Capture flavours, spots, and moments in one place." },
@@ -16,20 +15,17 @@ const featureCards = [
   {
     title: "Your gelato diary",
     description: "A calm log for every scoop — notes, places, and photos that stay organized.",
-    icon: BookMarked,
-    gradient: `linear-gradient(145deg, color-mix(in srgb, ${brandForest} 18%, transparent), color-mix(in srgb, ${brandOrange} 12%, transparent))`,
+    screenshot: "/screenshot-vitrine.png",
   },
   {
     title: "Salons on the map",
     description: "Browse salons, see activity, and save the ones you want to visit next.",
-    icon: Map,
-    gradient: `linear-gradient(145deg, color-mix(in srgb, ${brandOrange} 16%, transparent), color-mix(in srgb, ${brandForest} 14%, transparent))`,
+    screenshot: "/screenshot-map.png",
   },
   {
     title: "Social by design",
     description: "Follow friends, compare tastes, and discover flavours through people you trust.",
-    icon: UsersRound,
-    gradient: `linear-gradient(145deg, color-mix(in srgb, ${brandForest} 14%, transparent), color-mix(in srgb, ${brandOrange} 14%, transparent))`,
+    screenshot: "/screenshot-feed.png",
   },
 ] as const;
 
@@ -43,7 +39,7 @@ export function HomeLanding() {
           </Link>
           <Link
             href="/login"
-            className="text-sm font-medium text-[color:var(--color-text-secondary)] transition-colors hover:text-[#1B5E52]"
+            className="text-sm font-medium text-[color:var(--color-text-secondary)] transition-colors hover:text-[#A85530]"
           >
             Log in
           </Link>
@@ -70,8 +66,8 @@ export function HomeLanding() {
             <div className="mt-10 flex justify-center">
               <Link
                 href="/signup"
-                className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-full px-10 text-base font-semibold text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1B5E52] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
-                style={{ backgroundColor: brandForest }}
+                className="inline-flex h-12 min-w-[200px] items-center justify-center rounded-full px-10 text-base font-semibold text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A85530] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+                style={{ backgroundColor: terracotta }}
               >
                 Start logging
               </Link>
@@ -97,14 +93,7 @@ export function HomeLanding() {
                 <li key={step.title} className="relative flex flex-col items-center text-center">
                   <div
                     className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-bold text-white shadow-md"
-                    style={{
-                      background:
-                        i === 1
-                          ? `linear-gradient(135deg, ${brandOrange}, color-mix(in srgb, ${brandOrange} 65%, ${brandForest}))`
-                          : i === 0
-                            ? brandForest
-                            : `linear-gradient(135deg, ${brandForest}, color-mix(in srgb, ${brandForest} 70%, ${brandOrange}))`,
-                    }}
+                    style={{ background: terracotta }}
                   >
                     {i + 1}
                   </div>
@@ -126,39 +115,27 @@ export function HomeLanding() {
             Built to feel light, intentional, and a little premium.
           </p>
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
-            {featureCards.map((card) => {
-              const Icon = card.icon;
-              return (
-                <article
-                  key={card.title}
-                  className="flex flex-col overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--background)] shadow-sm"
-                >
-                  <div
-                    className="relative aspect-[4/3] w-full"
-                    style={{ background: card.gradient }}
-                  >
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div
-                        className="rounded-2xl border border-white/40 bg-[color-mix(in_srgb,var(--background)_82%,transparent)] p-6 shadow-md backdrop-blur-sm dark:border-white/10"
-                        aria-hidden
-                      >
-                        <Icon
-                          className="h-14 w-14 sm:h-16 sm:w-16"
-                          strokeWidth={1.25}
-                          style={{ color: brandForest }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-1 flex-col p-5 sm:p-6">
-                    <h3 className="text-lg font-semibold">{card.title}</h3>
-                    <p className="mt-2 flex-1 text-sm leading-relaxed text-[color:var(--color-text-secondary)]">
-                      {card.description}
-                    </p>
-                  </div>
-                </article>
-              );
-            })}
+            {featureCards.map((card) => (
+              <article
+                key={card.title}
+                className="flex flex-col overflow-hidden rounded-2xl border border-[color:var(--color-border)] bg-[color:var(--background)] shadow-sm"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={card.screenshot}
+                    alt={card.title}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="flex flex-1 flex-col p-5 sm:p-6">
+                  <h3 className="text-lg font-semibold">{card.title}</h3>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-[color:var(--color-text-secondary)]">
+                    {card.description}
+                  </p>
+                </div>
+              </article>
+            ))}
           </div>
         </section>
 
@@ -179,8 +156,8 @@ export function HomeLanding() {
             <div className="mt-8">
               <Link
                 href="/search"
-                className="inline-flex h-11 items-center justify-center rounded-full border-2 bg-[color:var(--background)] px-8 text-sm font-semibold transition-colors hover:bg-[color:var(--color-surface-alt)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1B5E52] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
-                style={{ borderColor: brandForest, color: brandForest }}
+                className="inline-flex h-11 items-center justify-center rounded-full border-2 bg-[color:var(--background)] px-8 text-sm font-semibold transition-colors hover:bg-[color:var(--color-surface-alt)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#A85530] focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+                style={{ borderColor: terracotta, color: terracotta }}
               >
                 Find your salon
               </Link>
@@ -194,19 +171,19 @@ export function HomeLanding() {
           <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm">
             <Link
               href="/privacy"
-              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#1B5E52]"
+              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#A85530]"
             >
               Privacy Policy
             </Link>
             <Link
               href="/terms"
-              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#1B5E52]"
+              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#A85530]"
             >
               Terms of Service
             </Link>
             <a
               href="mailto:support@gellog.app"
-              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#1B5E52]"
+              className="text-[color:var(--color-text-secondary)] transition-colors hover:text-[#A85530]"
             >
               support@gellog.app
             </a>
