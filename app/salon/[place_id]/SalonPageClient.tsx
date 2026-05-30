@@ -408,8 +408,8 @@ export function SalonPageClient({ placeId }: Props) {
             </h2>
             <Vitrine
               flavours={vitrineFlavours}
-              onTabClick={handleVitrineTubClick}
               seed={placeId}
+              narrow
             />
           </div>
         ) : null}
@@ -569,8 +569,8 @@ export function SalonPageClient({ placeId }: Props) {
           </h2>
           <Vitrine
             flavours={vitrineFlavours}
-            onTabClick={handleVitrineTubClick}
             seed={placeId}
+            narrow
           />
         </div>
       ) : null}
@@ -641,6 +641,22 @@ export function SalonPageClient({ placeId }: Props) {
             </div>
           </>
         )}
+      </div>
+
+      <div className="mb-5 flex items-center justify-between gap-3 rounded-2xl bg-[color:var(--brand-primary-surface)] px-5 py-3.5 ring-1 ring-[color:var(--brand-primary-muted)]">
+        <span className="text-sm font-medium text-[color:var(--text-primary)]">
+          Been here?
+        </span>
+        <Link
+          href={
+            userId
+              ? `/icecream/logs/new?place_id=${encodeURIComponent(placeId)}&salon_name=${encodeURIComponent(displayName)}`
+              : `/signup`
+          }
+          className="rounded-2xl bg-[color:var(--brand-primary)] px-4 py-2 text-sm font-semibold text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)]"
+        >
+          Log a gelato here →
+        </Link>
       </div>
 
       <h2 className="mb-3 px-1 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">

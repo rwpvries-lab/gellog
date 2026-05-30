@@ -2,7 +2,7 @@
 
 import type { SalonData } from "@/src/components/SalonInput";
 import { ICE_CREAM_AUTOCOMPLETE_DESCRIPTION_TERMS } from "@/src/lib/looksLikeIceCreamSalon";
-import { ChevronDown, ChevronRight, MapPin, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, MapPin, Navigation2, Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -90,10 +90,12 @@ export function Step1_SalonDate({
   state,
   dispatch,
   userId: _userId,
+  onOpenMap,
 }: {
   state: LogFlowState;
   dispatch: React.Dispatch<LogFlowAction>;
   userId: string;
+  onOpenMap?: () => void;
 }) {
   void _userId;
   const [focused, setFocused] = useState(false);
@@ -243,6 +245,21 @@ export function Step1_SalonDate({
           autoComplete="off"
           className="min-w-0 flex-1 bg-transparent font-sans text-base text-[color:var(--text-primary)] placeholder:text-[color:var(--text-tertiary)] focus:outline-none"
         />
+        {onOpenMap && (
+          <button
+            type="button"
+            onClick={onOpenMap}
+            aria-label="Find salon on map"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition hover:brightness-110 active:brightness-95"
+            style={{
+              background: "var(--color-teal)",
+              color: "var(--color-on-brand)",
+              boxShadow: "0 2px 8px color-mix(in srgb, var(--color-teal) 40%, transparent)",
+            }}
+          >
+            <Navigation2 size={16} strokeWidth={2.5} aria-hidden />
+          </button>
+        )}
       </div>
 
       {predictions.length > 0 ? (

@@ -34,6 +34,8 @@ export type VitrineProps = {
   onToggle?: (id: string) => void;
   /** Maximum simultaneous selections; unselected scoops beyond cap render at 50% opacity. */
   maxSelections?: number;
+  /** Use the compact scroll layout (88 px tubs, 8 px gap) without interactive select behaviour. */
+  narrow?: boolean;
 };
 
 type LegacyVitrineProps = {
@@ -203,6 +205,7 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
   const className = props.className;
   const legacyMaxWidth = isLegacyProps(props) ? props.size : undefined;
 
+  const narrow = isLegacyProps(props) ? false : (props.narrow ?? false);
   const selectedCount = selectedFlavourIds?.length ?? 0;
   const atCap = maxSelections != null && selectedCount >= maxSelections;
 
@@ -475,6 +478,30 @@ export function Vitrine(props: VitrineProps | LegacyVitrineProps) {
             Max {maxSelections} flavours
           </p>
         )}
+      </div>
+    );
+  }
+
+  // ── Display mode: narrow scroll layout (matches select-mode proportions, no interaction) ──
+  if (narrow) {
+    const needsFade = flavours.length > 5;
+    return (
+      <div
+        style={{
+          overflowX: "auto",
+          WebkitOverflowScrolling: "touch" as CSSProperties["WebkitOverflowScrolling"],
+          scrollbarWidth: "none" as CSSProperties["scrollbarWidth"],
+          ...(needsFade
+            ? {
+                maskImage: "linear-gradient(to right, black 0%, black 82%, transparent 100%)",
+                WebkitMaskImage: "linear-gradient(to right, black 0%, black 82%, transparent 100%)",
+              }
+            : {}),
+        }}
+      >
+        <div className={className} style={{ ...selectGridStyle, minWidth: "max-content", paddingBottom: 4 }}>
+          {cells}
+        </div>
       </div>
     );
   }

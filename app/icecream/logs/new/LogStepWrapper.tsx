@@ -247,7 +247,12 @@ export function LogStepWrapper({
 
       <div className="mt-6 flex min-h-0 flex-1 flex-col gap-4 pb-4">
         {state.currentStep === 1 ? (
-          <Step1_SalonDate state={state} dispatch={dispatch} userId={userId} />
+          <Step1_SalonDate
+            state={state}
+            dispatch={dispatch}
+            userId={userId}
+            onOpenMap={() => requestLeave({ kind: "href", href: "/map?returnTo=/icecream/logs/new" })}
+          />
         ) : null}
         {state.currentStep === 2 ? <Step2_Flavours state={state} dispatch={dispatch} /> : null}
         {state.currentStep === 3 ? <Step3_Details state={state} dispatch={dispatch} /> : null}
