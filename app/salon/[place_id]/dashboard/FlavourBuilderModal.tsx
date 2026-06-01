@@ -286,7 +286,7 @@ function PreviewStrip({
 
 // ── Main modal ────────────────────────────────────────────────────
 
-type SuggestionSource = "catalogue" | "compound" | null;
+type SuggestionSource = "community" | "catalogue" | "compound" | null;
 
 export type FlavourBuilderModalProps = {
   placeId: string;
@@ -395,6 +395,7 @@ export function FlavourBuilderModal({
       base_token: string;
       drizzle_token: string | null;
       crumble_token: string | null;
+      source: string | null;
     };
 
     if (row.base_token && row.base_token !== "cream" && row.base_token in BASE_TOKENS) {
@@ -407,7 +408,13 @@ export function FlavourBuilderModal({
       setCustomColour(BASE_TOKENS[bt].hex);
       setDrizzleHex(drizzleTokenToHex(dt));
       setCrumbleHex(crumbleTokenToHex(ct));
-      setSuggestionSource(row.flavour_id ? "catalogue" : "compound");
+      setSuggestionSource(
+        row.source === "owner_defined"
+          ? "community"
+          : row.flavour_id
+            ? "catalogue"
+            : "compound",
+      );
       lastResolvedRef.current = trimmed;
     }
   }
@@ -514,6 +521,15 @@ export function FlavourBuilderModal({
     if (saveError) {
       setError(userFacingSaveError(saveError, "Could not save. Please try again."));
     } else if (data) {
+      // Smart-save: promote these tokens to the global catalogue keyed by name, so the
+      // next owner who adds the same flavour gets them pre-filled. The conflict rule
+      // lives in the RPC; a failure here must not block the salon-row save.
+      void supabase.rpc("upsert_owner_flavour_catalogue", {
+        p_name: trimmed,
+        p_base_token: baseToken,
+        p_drizzle_token: drizzleToken,
+        p_crumble_token: crumbleToken,
+      });
       onSave(data);
     } else {
       setError("Could not save. Please refresh and try again.");
@@ -597,9 +613,11 @@ export function FlavourBuilderModal({
               {suggestionSource && (
                 <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#A85530]">
                   <span aria-hidden>✦</span>
-                  {suggestionSource === "catalogue"
-                    ? "Matched from the gelato catalogue — adjust freely"
-                    : "Parsed from compound name — adjust freely"}
+                  {suggestionSource === "community"
+                    ? "Suggested from community — adjust freely"
+                    : suggestionSource === "catalogue"
+                      ? "Matched from the gelato catalogue — adjust freely"
+                      : "Parsed from compound name — adjust freely"}
                 </p>
               )}
             </div>
