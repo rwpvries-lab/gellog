@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Component, useEffect, useRef, useState, type ReactNode } from "react";
 import { createClient } from "@/src/lib/supabase/client";
 import { Gelato } from "@/src/components/Gelato/Gelato";
+import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import {
   BASE_TOKENS,
   DRIZZLE_TOKENS,
@@ -33,6 +34,34 @@ function colorDistance(a: string, b: string): number {
   const rb = hexToRgb(b);
   if (!ra || !rb) return Infinity;
   return (ra[0] - rb[0]) ** 2 + (ra[1] - rb[1]) ** 2 + (ra[2] - rb[2]) ** 2;
+}
+
+// The cream surface the vitrine scoops sit on.
+const CREAM_SURFACE = "#FBF5E8";
+// Below this WCAG contrast ratio against cream, a base reads as "faint".
+const FAINT_CONTRAST_RATIO = 1.3;
+
+function relativeLuminance(hex: string): number {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 1;
+  const [r, g, b] = rgb.map((v) => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+function contrastRatio(a: string, b: string): number {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  const hi = Math.max(la, lb);
+  const lo = Math.min(la, lb);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/** True when a base colour is too light to read against the cream vitrine. */
+function isFaintOnCream(hex: string): boolean {
+  return isValidHex(hex) && contrastRatio(hex, CREAM_SURFACE) < FAINT_CONTRAST_RATIO;
 }
 
 function nearestBaseToken(hex: string): BaseToken {
@@ -222,33 +251,43 @@ function HexInput({
   dotColor,
   label,
   onChange,
+  error,
 }: {
   value: string;
   dotColor: string;
   label: string;
   onChange: (hex: string) => void;
+  error?: string;
 }) {
   const showDot = isValidHex(dotColor);
   return (
-    <div className="flex items-center gap-2.5">
-      <div
-        className="h-5 w-5 flex-shrink-0 rounded-full ring-1 ring-black/10"
-        style={
-          showDot
-            ? { backgroundColor: dotColor }
-            : { border: "2px dashed #D1D5DB" }
-        }
-      />
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        maxLength={7}
-        placeholder="#RRGGBB"
-        aria-label={label}
-        className="w-24 rounded-lg border border-zinc-200 bg-white px-2.5 py-1 font-mono text-xs text-zinc-700 focus:border-[#A85530] focus:outline-none focus:ring-1 focus:ring-[#A85530]/20"
-      />
-      <span className="text-xs text-zinc-400">{label}</span>
+    <div>
+      <div className="flex items-center gap-2.5">
+        <div
+          className="h-5 w-5 flex-shrink-0 rounded-full ring-1 ring-black/10"
+          style={
+            showDot
+              ? { backgroundColor: dotColor }
+              : { border: "2px dashed #D1D5DB" }
+          }
+        />
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          maxLength={7}
+          placeholder="#RRGGBB"
+          aria-label={label}
+          aria-invalid={!!error}
+          className={`w-24 rounded-lg border bg-white px-2.5 py-1 font-mono text-xs text-zinc-700 focus:outline-none focus:ring-1 ${
+            error
+              ? "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+              : "border-zinc-200 focus:border-[#A85530] focus:ring-[#A85530]/20"
+          }`}
+        />
+        <span className="text-xs text-zinc-400">{label}</span>
+      </div>
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }
@@ -281,6 +320,76 @@ function PreviewStrip({
         </p>
       )}
     </div>
+  );
+}
+
+// Catches render failures from the <Gelato> preview so the modal stays usable.
+class PreviewErrorBoundary extends Component<
+  { children: ReactNode; fallback: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children;
+  }
+}
+
+// ── Preview area with empty / loading / error states ───────────────
+
+function PreviewArea({
+  tokens,
+  name,
+  compact,
+  loading,
+  empty,
+}: {
+  tokens: GelatoTokens;
+  name: string;
+  compact: boolean;
+  loading: boolean;
+  empty: boolean;
+}) {
+  const placeholderSize = compact ? 56 : 72;
+
+  if (empty) {
+    return (
+      <div
+        className={`flex items-center text-center ${
+          compact ? "flex-row gap-3" : "flex-col gap-3"
+        }`}
+      >
+        <PlaceholderScoop size={placeholderSize} className="opacity-40" />
+        <p className="max-w-[140px] text-xs text-zinc-400">
+          Name your flavour and pick colours to see a live preview.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <PreviewErrorBoundary
+      key={`${tokens.base}-${tokens.drizzle}-${tokens.crumble}`}
+      fallback={
+        <div className="flex flex-col items-center gap-2 text-center">
+          <PlaceholderScoop size={placeholderSize} className="opacity-40" />
+          <p className="max-w-[140px] text-xs text-red-500">
+            Couldn&rsquo;t render this preview.
+          </p>
+        </div>
+      }
+    >
+      <div className="relative">
+        <PreviewStrip tokens={tokens} name={name} compact={compact} />
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-[#FBF5E8]/55 backdrop-blur-[1px]">
+            <span className="inline-block h-5 w-5 animate-spin rounded-full border-2 border-[#A85530] border-t-transparent" />
+          </div>
+        )}
+      </div>
+    </PreviewErrorBoundary>
   );
 }
 
@@ -357,16 +466,41 @@ export function FlavourBuilderModal({
   const [resolving, setResolving] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resolveError, setResolveError] = useState<string | null>(null);
+  const [attemptedSave, setAttemptedSave] = useState(false);
+
+  // ── Validation ─────────────────────────────────────────────────────
+  // A blank drizzle/crumble hex is valid — it means the "None" layer.
+  const nameValid = name.trim().length > 0;
+  const baseHexValid = isValidHex(customColour);
+  const drizzleHexValid = drizzleHex.trim() === "" || isValidHex(drizzleHex);
+  const crumbleHexValid = crumbleHex.trim() === "" || isValidHex(crumbleHex);
+  const formValid = nameValid && baseHexValid && drizzleHexValid && crumbleHexValid;
+
+  // Contrast guard — warn (don't block) when the base reads faint on cream.
+  const baseHexForContrast = isValidHex(customColour)
+    ? customColour
+    : BASE_TOKENS[baseToken].hex;
+  const baseFaint = isFaintOnCream(baseHexForContrast);
 
   const lastResolvedRef = useRef("");
   const supabase = createClient();
 
   const tokens: GelatoTokens = { base: baseToken, drizzle: drizzleToken, crumble: crumbleToken };
 
+  // Empty state: a fresh "Add" before any name/colour choice. Editing or any
+  // edit immediately shows the live scoop.
+  const previewEmpty =
+    !existing &&
+    !name.trim() &&
+    baseToken === "cream" &&
+    drizzleToken === "none" &&
+    crumbleToken === "none";
+
   // Auto-resolve for legacy edit (no stored tokens)
   useEffect(() => {
     if (existing && !existing.base_token) {
-      void resolveFromName(existing.name, true);
+      void resolveFromName(existing.name, { silent: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -380,16 +514,38 @@ export function FlavourBuilderModal({
     return () => document.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  async function resolveFromName(inputName: string, silent = false) {
+  async function resolveFromName(
+    inputName: string,
+    { silent = false, force = false }: { silent?: boolean; force?: boolean } = {},
+  ) {
     const trimmed = inputName.trim();
-    if (!trimmed || trimmed === lastResolvedRef.current) return;
-    if (!silent) setResolving(true);
+    if (!trimmed) return;
+    // Skip the auto-resolve dedupe when the owner explicitly asks for a reset.
+    if (!force && trimmed === lastResolvedRef.current) return;
+    if (!silent) {
+      setResolving(true);
+      setResolveError(null);
+    }
 
-    const { data } = await supabase.rpc("resolve_flavour_tokens", { input: trimmed });
+    let data: unknown;
+    try {
+      const res = await supabase.rpc("resolve_flavour_tokens", { input: trimmed });
+      if (res.error) throw res.error;
+      data = res.data;
+    } catch {
+      if (!silent) {
+        setResolving(false);
+        setResolveError("Couldn't fetch a suggestion. Please try again.");
+      }
+      return;
+    }
 
     if (!silent) setResolving(false);
 
-    if (!Array.isArray(data) || data.length === 0) return;
+    if (!Array.isArray(data) || data.length === 0) {
+      if (force) setResolveError("No suggestion found for that name.");
+      return;
+    }
     const row = data[0] as {
       flavour_id: string | null;
       base_token: string;
@@ -398,7 +554,14 @@ export function FlavourBuilderModal({
       source: string | null;
     };
 
-    if (row.base_token && row.base_token !== "cream" && row.base_token in BASE_TOKENS) {
+    // On an explicit reset we accept a cream suggestion too; auto-resolve keeps
+    // the owner's existing colours rather than clobbering with a bland default.
+    const usable =
+      row.base_token &&
+      row.base_token in BASE_TOKENS &&
+      (force || row.base_token !== "cream");
+
+    if (usable) {
       const bt = row.base_token as BaseToken;
       const dt = (row.drizzle_token ?? "none") as DrizzleToken;
       const ct = (row.crumble_token ?? "none") as CrumbleToken;
@@ -416,6 +579,8 @@ export function FlavourBuilderModal({
             : "compound",
       );
       lastResolvedRef.current = trimmed;
+    } else if (force) {
+      setResolveError("No suggestion found for that name.");
     }
   }
 
@@ -489,8 +654,9 @@ export function FlavourBuilderModal({
   // ── Save ─────────────────────────────────────────────────────────
 
   async function handleSave() {
+    setAttemptedSave(true);
+    if (!formValid) return;
     const trimmed = name.trim();
-    if (!trimmed) return;
     setSaving(true);
     setError(null);
 
@@ -573,10 +739,22 @@ export function FlavourBuilderModal({
               Preview
             </p>
             <div className="lg:hidden">
-              <PreviewStrip tokens={tokens} name={name} compact />
+              <PreviewArea
+                tokens={tokens}
+                name={name}
+                compact
+                loading={resolving}
+                empty={previewEmpty}
+              />
             </div>
             <div className="hidden lg:block">
-              <PreviewStrip tokens={tokens} name={name} compact={false} />
+              <PreviewArea
+                tokens={tokens}
+                name={name}
+                compact={false}
+                loading={resolving}
+                empty={previewEmpty}
+              />
             </div>
           </div>
 
@@ -602,7 +780,12 @@ export function FlavourBuilderModal({
                   }}
                   onBlur={() => void resolveFromName(name)}
                   placeholder="e.g. Mango Yogurt"
-                  className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-[#A85530] focus:outline-none focus:ring-2 focus:ring-[#A85530]/20"
+                  aria-invalid={attemptedSave && !nameValid}
+                  className={`w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 ${
+                    attemptedSave && !nameValid
+                      ? "border-red-400 focus:border-red-400 focus:ring-red-400/20"
+                      : "border-zinc-200 focus:border-[#A85530] focus:ring-[#A85530]/20"
+                  }`}
                 />
                 {resolving && (
                   <span className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -610,6 +793,11 @@ export function FlavourBuilderModal({
                   </span>
                 )}
               </div>
+              {attemptedSave && !nameValid && (
+                <p className="mt-1.5 text-xs text-red-600">
+                  Please enter a flavour name.
+                </p>
+              )}
               {suggestionSource && (
                 <p className="mt-1.5 flex items-center gap-1.5 text-xs text-[#A85530]">
                   <span aria-hidden>✦</span>
@@ -620,6 +808,24 @@ export function FlavourBuilderModal({
                       : "Parsed from compound name — adjust freely"}
                 </p>
               )}
+              <div className="mt-2 flex items-center justify-between gap-2">
+                {resolveError ? (
+                  <p className="text-xs text-amber-600">{resolveError}</p>
+                ) : (
+                  <span />
+                )}
+                {name.trim() && (
+                  <button
+                    type="button"
+                    onClick={() => void resolveFromName(name, { force: true })}
+                    disabled={resolving}
+                    className="inline-flex items-center gap-1 rounded-full border border-zinc-200 bg-white px-3 py-1 text-xs font-medium text-zinc-500 transition hover:border-[#A85530] hover:text-[#A85530] disabled:opacity-50"
+                    title="Re-run the suggestion and restore the suggested colours"
+                  >
+                    <span aria-hidden>↺</span> Reset to suggested
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="h-px bg-zinc-200/60" />
@@ -638,7 +844,17 @@ export function FlavourBuilderModal({
               dotColor={customColour}
               label="Custom hex (affects sidebar dot)"
               onChange={handleBaseHexInput}
+              error={
+                attemptedSave && !baseHexValid
+                  ? "Enter a valid colour like #A85530"
+                  : undefined
+              }
             />
+            {baseFaint && baseHexValid && (
+              <p className="flex items-center gap-1.5 text-xs text-amber-600">
+                <span aria-hidden>⚠</span> This may look faint in the vitrine.
+              </p>
+            )}
 
             <div className="h-px bg-zinc-200/60" />
 
@@ -656,6 +872,11 @@ export function FlavourBuilderModal({
               dotColor={drizzleHex}
               label="Custom hex (selects nearest drizzle)"
               onChange={handleDrizzleHexInput}
+              error={
+                attemptedSave && !drizzleHexValid
+                  ? "Enter a valid colour like #A85530, or clear it for none"
+                  : undefined
+              }
             />
 
             <div className="h-px bg-zinc-200/60" />
@@ -674,6 +895,11 @@ export function FlavourBuilderModal({
               dotColor={crumbleHex}
               label="Custom hex (selects nearest crumble)"
               onChange={handleCrumbleHexInput}
+              error={
+                attemptedSave && !crumbleHexValid
+                  ? "Enter a valid colour like #A85530, or clear it for none"
+                  : undefined
+              }
             />
 
             <div className="h-px bg-zinc-200/60" />
@@ -741,7 +967,8 @@ export function FlavourBuilderModal({
           <button
             type="button"
             onClick={() => void handleSave()}
-            disabled={saving || !name.trim()}
+            disabled={saving}
+            aria-disabled={attemptedSave && !formValid}
             className="inline-flex items-center gap-2 rounded-full bg-[#A85530] px-6 py-2.5 text-sm font-semibold text-[#FBF5E8] shadow-sm transition hover:brightness-110 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[#A85530]/30 focus:ring-offset-2"
           >
             {saving && (
