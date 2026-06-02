@@ -689,7 +689,7 @@ export function MapClient({
                   <div className="flex gap-3">
                     <Link
                       href={`/salon/${encodeURIComponent(selected.place_id)}`}
-                      className="flex-1 rounded-2xl bg-[color:var(--brand-primary)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--text-inverse)]"
+                      className="flex-1 rounded-2xl bg-zinc-100 px-4 py-3 text-center text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
                     >
                       View salon page →
                     </Link>
@@ -701,15 +701,33 @@ export function MapClient({
                       Get directions
                     </button>
                   </div>
+                  {!pickerReturnTo && (
+                    <Link
+                      href={`/icecream/logs/new?place_id=${encodeURIComponent(selected.place_id)}&salon_name=${encodeURIComponent(selected.name)}`}
+                      className="mt-3 block w-full rounded-2xl px-4 py-3 text-center text-sm font-semibold text-white transition hover:brightness-110"
+                      style={{ background: "var(--brand-primary)" }}
+                    >
+                      Log a gelato here
+                    </Link>
+                  )}
                 </>
               ) : (
                 <>
                   <Link
                     href={`/salon/${encodeURIComponent(selected.place_id)}`}
-                    className="mb-3 block w-full rounded-2xl bg-[color:var(--brand-primary)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)]"
+                    className="mb-3 block w-full rounded-2xl bg-zinc-100 px-4 py-3 text-center text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 transition"
                   >
                     View salon page →
                   </Link>
+                  {!pickerReturnTo && (
+                    <Link
+                      href={`/icecream/logs/new?place_id=${encodeURIComponent(selected.place_id)}&salon_name=${encodeURIComponent(selected.name)}`}
+                      className="mb-3 block w-full rounded-2xl px-4 py-3 text-center text-sm font-semibold text-white transition hover:brightness-110"
+                      style={{ background: "var(--brand-primary)" }}
+                    >
+                      Log a gelato here
+                    </Link>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowDirections((v) => !v)}
