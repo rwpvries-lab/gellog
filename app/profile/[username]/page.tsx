@@ -111,7 +111,7 @@ export default async function UserProfilePage({
 
   return (
     <main
-      className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-teal-50 px-4 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-teal-950/40"
+      className="min-h-screen bg-gradient-to-b from-[#FBF5E8] via-white to-[#FBF5E8] px-4 pt-6 dark:from-zinc-950 dark:via-zinc-950 dark:to-zinc-950"
       style={{
         paddingBottom: user ? "6rem" : `calc(6rem + ${PUBLIC_BANNER_LAYOUT_PX}px)`,
       }}

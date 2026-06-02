@@ -740,7 +740,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
             <button
               type="button"
               onClick={handleAddFlavour}
-              className="inline-flex items-center justify-center rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]"
+              className="inline-flex items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-3 py-1 text-xs font-medium text-white shadow-sm transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)]"
             >
               + Add flavour
             </button>
@@ -778,7 +778,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
                     }
                     setShowFlavourPrompt(false);
                   }}
-                  className="rounded-full bg-orange-600 px-3 py-1 text-xs font-medium text-white transition hover:bg-orange-700"
+                  className="rounded-full bg-[color:var(--brand-primary)] px-3 py-1 text-xs font-medium text-white transition hover:bg-[color:var(--brand-primary-hover)]"
                 >
                   Yes, add it
                 </button>
@@ -1050,7 +1050,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex h-11 w-full items-center justify-center rounded-full bg-orange-600 px-6 text-sm font-semibold text-white transition hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-60"
+        className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-6 text-sm font-semibold text-white transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-60"
       >
         {submitting ? "Saving…" : "Save changes"}
       </button>
