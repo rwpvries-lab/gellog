@@ -4,6 +4,7 @@ import { FlavorColorPicker } from "@/src/components/FlavorColorPicker";
 import { createClient } from "@/src/lib/supabase/client";
 import { userFacingSaveError } from "@/src/lib/userFacingError";
 import { useEffect, useState } from "react";
+import { FlavourBuilderModal } from "./FlavourBuilderModal";
 
 const DEFAULT_HEX = "#A8C5A0";
 
@@ -23,6 +24,10 @@ export type VitrineFlavour = {
   is_brand_new: boolean;
   is_vegan: boolean;
   created_at?: string;
+  // Token layer columns — present after going through the Flavour Builder
+  base_token?: string | null;
+  drizzle_token?: string | null;
+  crumble_token?: string | null;
 };
 
 export type VitrineVisibilityLogRow = {
@@ -96,7 +101,22 @@ export function FlavourBoard({
   const [addSaving, setAddSaving] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
+  // Flavour Builder modal
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [builderFlavour, setBuilderFlavour] = useState<VitrineFlavour | null>(null);
+
   const supabase = createClient();
+
+  async function handleBuilderSave(saved: VitrineFlavour) {
+    setBuilderOpen(false);
+    if (builderFlavour) {
+      setFlavours((prev) => prev.map((f) => (f.id === saved.id ? saved : f)));
+    } else {
+      setFlavours((prev) => [...prev, saved]);
+      await appendLog(saved.id, true);
+    }
+    setBuilderFlavour(null);
+  }
 
   useEffect(() => {
     onFlavoursSnapshot?.(flavours.map((f) => ({ id: f.id, name: f.name })));
@@ -290,15 +310,13 @@ export function FlavourBoard({
             not delete it.
           </p>
         </div>
-        {!addingNew ? (
-          <button
-            type="button"
-            onClick={() => setAddingNew(true)}
-            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#1B5E52] px-4 py-2 text-xs font-semibold text-[#FBF5E8] shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#1B5E52]/30 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950"
-          >
-            <span className="text-base leading-none">+</span> Add flavour
-          </button>
-        ) : null}
+        <button
+          type="button"
+          onClick={() => { setBuilderFlavour(null); setBuilderOpen(true); }}
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-[#A85530] px-4 py-2 text-xs font-semibold text-[#FBF5E8] shadow-sm transition hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-[#A85530]/30 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-950"
+        >
+          <span className="text-base leading-none">+</span> Add flavour
+        </button>
       </div>
 
       {flavours.length === 0 && !addingNew && (
@@ -412,6 +430,16 @@ export function FlavourBoard({
                 aria-pressed={f.is_visible}
               >
                 {f.is_visible ? <EyeOpenIcon className="h-5 w-5" /> : <EyeClosedIcon className="h-5 w-5" />}
+              </button>
+
+              {/* Desktop: edit in builder */}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setBuilderFlavour(f); setBuilderOpen(true); }}
+                className="hidden shrink-0 rounded-full border border-zinc-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-zinc-500 transition hover:border-[#A85530] hover:text-[#A85530] md:block"
+                title="Edit colours in Flavour Builder"
+              >
+                Edit
               </button>
 
               {/* Desktop: delete / confirm */}
@@ -531,11 +559,20 @@ export function FlavourBoard({
                         </button>
                       </div>
 
+                      {/* Edit in builder */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setBuilderFlavour(f); setBuilderOpen(true); }}
+                        className="mt-3 text-[12px] font-medium text-[#A85530] hover:text-[#A85530]/80"
+                      >
+                        Edit colours in builder →
+                      </button>
+
                       {/* Delete */}
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(f.id); }}
-                        className="mt-3 text-[12px] font-medium text-red-500 hover:text-red-600"
+                        className="mt-2 text-[12px] font-medium text-red-500 hover:text-red-600"
                       >
                         Delete flavour
                       </button>
@@ -629,6 +666,15 @@ export function FlavourBoard({
       )}
 
       {addError && <p className="text-xs text-red-600 dark:text-red-400">{addError}</p>}
+
+      {builderOpen && (
+        <FlavourBuilderModal
+          placeId={placeId}
+          existingFlavour={builderFlavour}
+          onSave={(saved) => void handleBuilderSave(saved)}
+          onClose={() => { setBuilderOpen(false); setBuilderFlavour(null); }}
+        />
+      )}
 
       {suggestions.length > 0 && (
         <div className="mt-4">
