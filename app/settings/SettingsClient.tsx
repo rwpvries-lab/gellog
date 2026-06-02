@@ -1230,7 +1230,7 @@ export function SettingsClient({
                   style={{ background: "none", border: "none", cursor: avatarUploading ? "not-allowed" : "pointer", padding: 0 }}
                 >
                   <div
-                    className="relative overflow-hidden rounded-full bg-gradient-to-br from-orange-400 to-teal-500"
+                    className="relative overflow-hidden rounded-full bg-gradient-to-br from-[color:var(--brand-primary)] to-[color:var(--brand-secondary)]"
                     style={{ width: 72, height: 72, opacity: avatarUploading ? 0.6 : 1 }}
                   >
                     {editAvatarUrl && !editAvatarImgError ? (
