@@ -39,7 +39,7 @@ function makePinSvg(
   pinKind: "logged" | "unlogged" | "user_submitted" = "logged",
 ): string {
   let color: string;
-  if (highlighted) color = "#f97316";
+  if (highlighted) color = "#A85530";
   else if (pinKind === "unlogged") color = "#9CA3AF";
   else color = "#0d9488";
   const h = Math.round(size * 1.22);

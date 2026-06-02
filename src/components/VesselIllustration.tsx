@@ -246,7 +246,7 @@ function CupIllustration({ scoopColors, showScoops = true }: { scoopColors: stri
       <g clipPath="url(#cup-clip)" opacity="0.18">
         {[54, 61, 68, 75].map((y) =>
           [16, 23, 30, 37, 44].map((x) => (
-            <circle key={`${x}-${y}`} cx={x} cy={y} r="1.2" fill="var(--brand-primary, #F97316)" />
+            <circle key={`${x}-${y}`} cx={x} cy={y} r="1.2" fill="var(--brand-primary, #A85530)" />
           ))
         )}
       </g>
@@ -303,7 +303,7 @@ export function VesselIllustration({
         justifyContent: "center",
         borderRadius: 16,
         border: selected
-          ? "2px solid var(--brand-primary, #F97316)"
+          ? "2px solid var(--brand-primary, #A85530)"
           : "2px solid var(--border-default, #E4E4E7)",
         transform: selected ? "scale(1.02)" : "scale(1)",
         transition: "transform 0.2s ease, border-color 0.2s ease",

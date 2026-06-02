@@ -69,7 +69,7 @@ export function FollowButton({ currentUserId, targetUserId, initialIsFollowing }
       type="button"
       onClick={() => void follow()}
       disabled={loading}
-      className="inline-flex h-8 items-center justify-center rounded-full bg-orange-500 px-4 text-xs font-semibold text-white shadow-sm transition hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 disabled:opacity-60 dark:focus:ring-offset-zinc-950"
+      className="inline-flex h-8 items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-4 text-xs font-semibold text-[color:var(--text-inverse)] shadow-sm transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-60 dark:focus:ring-offset-zinc-950"
     >
       {loading ? "…" : "Follow"}
     </button>
