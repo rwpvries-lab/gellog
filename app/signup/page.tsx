@@ -3,6 +3,12 @@
 import { GellogLogo } from "@/app/components/GellogLogo";
 import { createClient } from "@/src/lib/supabase/client";
 import { userFacingAuthMessage } from "@/src/lib/userFacingError";
+import { useRouter } from "next/navigation";
+import {
+  isAppleSignInAvailable,
+  signInWithApple,
+} from "@/src/lib/apple-signin";
+import { AppleSignInButton } from "@/app/components/AppleSignInButton";
 import { Toast, useToast } from "@/src/components/Toast";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -142,6 +148,27 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [verificationSent, setVerificationSent] = useState(false);
   const supabase = createClient();
+  const router = useRouter();
+
+  async function handleApple() {
+    setError(null);
+    try {
+      const { profile } = await signInWithApple(supabase);
+      // Apple only returns name on the FIRST sign-in — persist it now or lose it.
+      const fullName = [profile.givenName, profile.familyName]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      if (fullName) {
+        // TODO(Day 3): mirror into the `profiles` row (check columns via list_tables).
+        await supabase.auth.updateUser({ data: { full_name: fullName } });
+      }
+      router.push("/");
+      router.refresh();
+    } catch {
+      setError("We couldn't sign you in with Apple. Please try again.");
+    }
+  }
 
   async function handleGoogle() {
     await supabase.auth.signInWithOAuth({
@@ -203,6 +230,11 @@ export default function SignupPage() {
                 <GoogleIcon />
                 Continue with Google
               </button>
+
+              {/* Apple — native iOS only (App Store guideline 4.8) */}
+              {isAppleSignInAvailable() && (
+                <AppleSignInButton onClick={handleApple} />
+              )}
 
               {/* Divider */}
               <div className="flex items-center gap-3">
