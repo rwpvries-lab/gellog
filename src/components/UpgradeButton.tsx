@@ -1,9 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { useIsNative } from "@/src/lib/useIsNative";
 
 export function UpgradeButton() {
   const [loading, setLoading] = useState(false);
+  // Consumer Stripe checkout is web-only; never expose it inside the native iOS app.
+  const isNative = useIsNative();
 
   async function handleClick() {
     setLoading(true);
@@ -21,6 +24,8 @@ export function UpgradeButton() {
       setLoading(false);
     }
   }
+
+  if (isNative) return null;
 
   return (
     <button

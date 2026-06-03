@@ -7,6 +7,7 @@ import {
   LOCATION_DENIED_TROUBLESHOOT_HINT,
 } from "@/src/lib/locationMessages";
 import { userFacingPushError } from "@/src/lib/userFacingError";
+import { useIsNative } from "@/src/lib/useIsNative";
 import { useThemeToggle } from "@/src/app/ThemeProvider";
 import { type Visibility } from "@/src/components/VisibilityPicker";
 import Image from "next/image";
@@ -167,6 +168,10 @@ export function SettingsClient({
 
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
+
+  // On the native iOS app, consumer billing is web-only (no in-app Stripe
+  // checkout/portal). We keep plan status and link out to Safari instead.
+  const isNative = useIsNative();
 
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -621,22 +626,76 @@ export function SettingsClient({
                 Renews {expiresLabel}
               </p>
             )}
-            <button
-              type="button"
-              onClick={() => void handleManageSubscription()}
+            {isNative ? (
+              <a
+                href="https://www.gellog.app/settings"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  color: "var(--color-teal)",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  textAlign: "left",
+                  textDecoration: "none",
+                }}
+              >
+                Manage subscription at gellog.app →
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void handleManageSubscription()}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  color: "var(--color-teal)",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+              >
+                Manage subscription →
+              </button>
+            )}
+          </div>
+        ) : isNative ? (
+          /* Native iOS: consumer billing is web-only — status + Safari link, no in-app checkout */
+          <div
+            style={{
+              ...CARD,
+              padding: "20px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
+            <p
               style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                color: "var(--color-teal)",
-                fontSize: 14,
-                fontWeight: 500,
-                cursor: "pointer",
-                textAlign: "left",
+                color: "var(--color-text-primary)",
+                fontSize: 16,
+                fontWeight: 700,
               }}
             >
-              Manage subscription →
-            </button>
+              You&apos;re on the free plan
+            </p>
+            <p style={{ color: "var(--color-text-secondary)", fontSize: 13 }}>
+              Ice Cream+ is available on the web.
+            </p>
+            <a
+              href="https://www.gellog.app/pricing"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                color: "var(--color-orange)",
+                fontSize: 14,
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              See plans at gellog.app →
+            </a>
           </div>
         ) : (
           /* Upgrade card */
