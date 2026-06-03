@@ -1,7 +1,7 @@
 "use client";
 
-import { Capacitor } from "@capacitor/core";
 import { useSyncExternalStore } from "react";
+import { isNativePlatform } from "@/src/lib/platform";
 
 /**
  * True only inside the native Capacitor shell (iOS app), false on web/PWA.
@@ -16,7 +16,7 @@ import { useSyncExternalStore } from "react";
  * subscribe callback is a no-op.
  */
 const subscribe = () => () => {};
-const getSnapshot = () => Capacitor.isNativePlatform();
+const getSnapshot = () => isNativePlatform();
 const getServerSnapshot = () => false;
 
 export function useIsNative(): boolean {

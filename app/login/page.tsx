@@ -10,6 +10,7 @@ import {
   isAppleSignInAvailable,
   signInWithApple,
 } from "@/src/lib/apple-signin";
+import { registerPushNotifications } from "@/src/lib/native-push";
 import { AppleSignInButton } from "@/app/components/AppleSignInButton";
 
 function GoogleIcon() {
@@ -48,6 +49,8 @@ export default function LoginPage() {
     try {
       // Establishes the Supabase session and persists Apple's first-sign-in name.
       await signInWithApple(supabase);
+      // Native iOS: prompt for push + register the device (no-op on web).
+      void registerPushNotifications(supabase);
       const next = searchParams.get("next") || "/";
       router.push(next);
       router.refresh();
@@ -70,6 +73,8 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
+      // Native iOS: prompt for push + register the device (no-op on web).
+      void registerPushNotifications(supabase);
       const next = searchParams.get("next") || "/";
       router.push(next);
       router.refresh();

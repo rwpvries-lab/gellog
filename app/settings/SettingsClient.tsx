@@ -7,6 +7,7 @@ import {
   LOCATION_DENIED_TROUBLESHOOT_HINT,
 } from "@/src/lib/locationMessages";
 import { userFacingPushError } from "@/src/lib/userFacingError";
+import { getCurrentPosition } from "@/src/lib/geolocation";
 import { useIsNative } from "@/src/lib/useIsNative";
 import { useThemeToggle } from "@/src/app/ThemeProvider";
 import { type Visibility } from "@/src/components/VisibilityPicker";
@@ -245,7 +246,7 @@ export function SettingsClient({
      * a real request can still succeed.
      */
     setGeoRequesting(true);
-    navigator.geolocation.getCurrentPosition(
+    getCurrentPosition(
       async () => {
         setGeoRequesting(false);
         setGeoHint(null);

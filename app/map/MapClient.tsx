@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { shouldShowIceCreamMapMarker } from "@/src/lib/looksLikeIceCreamSalon";
+import { getCurrentPosition } from "@/src/lib/geolocation";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -488,7 +489,7 @@ export function MapClient({
     }
 
     setLocatingUser(true);
-    navigator.geolocation.getCurrentPosition(
+    getCurrentPosition(
       (pos) => {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(loc);

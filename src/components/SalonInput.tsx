@@ -2,6 +2,7 @@
 
 import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { createClient } from "@/src/lib/supabase/client";
+import { getCurrentPosition } from "@/src/lib/geolocation";
 import { LocationPermissionBanner } from "@/src/components/LocationPermissionBanner";
 import { ICE_CREAM_AUTOCOMPLETE_DESCRIPTION_TERMS } from "@/src/lib/looksLikeIceCreamSalon";
 import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
@@ -256,7 +257,7 @@ export function SalonInput({ value, onPlaceSelect, userId, onOpenMap }: SalonInp
     setLocatingMe(true);
     try {
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
+        getCurrentPosition(resolve, reject, {
           timeout: 8000,
           maximumAge: 0,
         }),
