@@ -56,8 +56,6 @@ const DRIZZLE_PATHS = [
   "M71.5 422.5C50 471 67.5 508.5 110.5 508.5",
 ] as const;
 
-const PLACEHOLDER_GELATO = "#C4C4C4";
-
 /** Vitrine tub shell (warm stainless + recessed shadow). */
 const VITRINE_TRAY_OUTER = "#A8A895";
 const VITRINE_TRAY_INNER = "#C9C2B5";
@@ -143,25 +141,6 @@ function VitrineTubSvg({
             />
           ))
         : null}
-    </svg>
-  );
-}
-
-function PlaceholderTub() {
-  return (
-    <svg viewBox={SVG_VIEWBOX} width="100%" aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-      <rect x="0" y="0" width="365" height="690" rx="57" fill={VITRINE_TRAY_OUTER} />
-      <rect x="18" y="17" width="330" height="655" rx="57" fill={VITRINE_TRAY_INNER} />
-      <rect
-        x="24"
-        y="24"
-        width="317"
-        height="642"
-        rx="57"
-        fill={PLACEHOLDER_GELATO}
-        stroke="var(--gelato-edge, transparent)"
-        strokeWidth={4}
-      />
     </svg>
   );
 }
