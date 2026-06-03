@@ -6,6 +6,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { userFacingAuthMessage } from "@/src/lib/userFacingError";
+import {
+  isAppleSignInAvailable,
+  signInWithApple,
+} from "@/src/lib/apple-signin";
+import { AppleSignInButton } from "@/app/components/AppleSignInButton";
 
 function GoogleIcon() {
   return (
@@ -36,6 +41,27 @@ export default function LoginPage() {
         queryParams: { access_type: "offline", prompt: "consent" },
       },
     });
+  }
+
+  async function handleApple() {
+    setError(null);
+    try {
+      const { profile } = await signInWithApple(supabase);
+      // Apple only returns name on the FIRST sign-in — persist it now or lose it.
+      const fullName = [profile.givenName, profile.familyName]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      if (fullName) {
+        // TODO(Day 3): mirror into the `profiles` row (check columns via list_tables).
+        await supabase.auth.updateUser({ data: { full_name: fullName } });
+      }
+      const next = searchParams.get("next") || "/";
+      router.push(next);
+      router.refresh();
+    } catch {
+      setError("We couldn't sign you in with Apple. Please try again.");
+    }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -83,6 +109,11 @@ export default function LoginPage() {
             <GoogleIcon />
             Continue with Google
           </button>
+
+          {/* Apple — native iOS only (App Store guideline 4.8) */}
+          {isAppleSignInAvailable() && (
+            <AppleSignInButton onClick={handleApple} />
+          )}
 
           {/* Divider */}
           <div className="flex items-center gap-3">
