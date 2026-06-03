@@ -9,14 +9,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * shell; on web/PWA `isAppleSignInAvailable()` returns false and the button is
  * never shown.
  *
- * Flow (see plan): generate a raw nonce, hand Apple its SHA-256 hash, then pass
- * the RAW nonce to Supabase, which re-hashes and matches it against the token
- * Apple signed. Apple only returns name/email on the FIRST authorization, so we
- * surface them to the caller to persist immediately.
+ * Flow: generate a raw nonce, hand Apple its SHA-256 hash, then pass the RAW
+ * nonce to Supabase, which re-hashes and matches it against the token Apple
+ * signed. Apple only returns name/email on the FIRST authorization, so we persist
+ * them to the `profiles` row immediately (see `syncAppleProfile`).
  *
- * NOTE: `@capacitor-community/apple-sign-in` is not installed yet — that step is
- * gated on the approved Apple Developer account (App ID + SIWA capability). The
- * import below is intentionally indirect so the web build stays green until then.
+ * The `@capacitor-community/apple-sign-in` plugin is installed, but imported
+ * indirectly so the web/PWA build never tries to resolve the native module.
  */
 
 export function isAppleSignInAvailable(): boolean {
@@ -76,6 +75,67 @@ export interface AppleProfileSeed {
 }
 
 /**
+ * Persists Apple's first-sign-in name to the user's `profiles` row.
+ *
+ * Apple sends the user's name ONLY on the first authorization; every later
+ * sign-in returns an empty name. So:
+ *  - First sign-in (no profile row yet) → create the row, capturing the name.
+ *  - Existing row with empty `display_name` + a name from Apple → backfill it once.
+ *  - Subsequent sign-ins (name empty) → leave the stored `display_name` as the
+ *    source of truth; nothing to write.
+ *
+ * Mirrors the username derivation used by the OAuth web callback
+ * (`app/auth/callback/route.ts`); native sign-in skips that route.
+ */
+export async function syncAppleProfile(
+  supabase: SupabaseClient,
+  seed: AppleProfileSeed,
+): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const appleName = [seed.givenName, seed.familyName]
+    .filter(Boolean)
+    .join(" ")
+    .trim();
+
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id, display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!existing) {
+    const email = user.email ?? seed.email ?? "";
+    const base =
+      email
+        .split("@")[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "_")
+        .slice(0, 24) || "user";
+    // Apple private-relay prefixes are unique, but a bare-email fallback can
+    // collide — a short random suffix keeps the unique `username` constraint safe.
+    const username = email ? base : `${base}_${Math.random().toString(36).slice(2, 8)}`;
+
+    await supabase.from("profiles").insert({
+      id: user.id,
+      username,
+      display_name: appleName || null,
+    });
+    return;
+  }
+
+  if (appleName && !existing.display_name) {
+    await supabase
+      .from("profiles")
+      .update({ display_name: appleName })
+      .eq("id", user.id);
+  }
+}
+
+/**
  * Runs the native Apple sheet and exchanges the identity token for a Supabase
  * session. Returns the first-sign-in profile data (name/email) so the caller can
  * persist it — it will NOT be available on subsequent sign-ins.
@@ -105,11 +165,14 @@ export async function signInWithApple(
   });
   if (error) throw error;
 
-  return {
-    profile: {
-      givenName: result.response.givenName ?? null,
-      familyName: result.response.familyName ?? null,
-      email: result.response.email ?? null,
-    },
+  const profile: AppleProfileSeed = {
+    givenName: result.response.givenName ?? null,
+    familyName: result.response.familyName ?? null,
+    email: result.response.email ?? null,
   };
+
+  // Capture Apple's name now — it is gone on every subsequent sign-in.
+  await syncAppleProfile(supabase, profile);
+
+  return { profile };
 }

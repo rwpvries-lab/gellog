@@ -46,16 +46,8 @@ export default function LoginPage() {
   async function handleApple() {
     setError(null);
     try {
-      const { profile } = await signInWithApple(supabase);
-      // Apple only returns name on the FIRST sign-in — persist it now or lose it.
-      const fullName = [profile.givenName, profile.familyName]
-        .filter(Boolean)
-        .join(" ")
-        .trim();
-      if (fullName) {
-        // TODO(Day 3): mirror into the `profiles` row (check columns via list_tables).
-        await supabase.auth.updateUser({ data: { full_name: fullName } });
-      }
+      // Establishes the Supabase session and persists Apple's first-sign-in name.
+      await signInWithApple(supabase);
       const next = searchParams.get("next") || "/";
       router.push(next);
       router.refresh();
