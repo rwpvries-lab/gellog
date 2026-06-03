@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
   appName: "Gellog",
   webDir: "capacitor-webdir",
   server: {
-    url: "https://gellog.app",
+    url: "https://www.gellog.app",
     cleartext: false,
   },
 };
