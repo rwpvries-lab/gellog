@@ -5,6 +5,9 @@ import { LocationPermissionBanner } from "@/src/components/LocationPermissionBan
 import type { Visibility } from "@/src/components/VisibilityPicker";
 import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
 import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
+import { getCurrentPosition } from "@/src/lib/geolocation";
+import { pickPhoto } from "@/src/lib/camera";
+import { isNativePlatform } from "@/src/lib/platform";
 import { Camera, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { LogFlowAction, LogFlowState, WeatherData } from "../logFlowReducer";
@@ -57,7 +60,7 @@ export function Step3_Details({
     void (async () => {
       try {
         const position = await new Promise<GeolocationPosition | null>((resolve) => {
-          navigator.geolocation.getCurrentPosition(
+          getCurrentPosition(
             (pos) => resolve(pos),
             (err) => {
               if (err.code === err.PERMISSION_DENIED) {
@@ -259,7 +262,17 @@ export function Step3_Details({
           </p>
           <button
             type="button"
-            onClick={() => photoInputRef.current?.click()}
+            onClick={() => {
+              if (isNativePlatform()) {
+                // Native iOS: present the camera/library source picker.
+                void (async () => {
+                  const file = await pickPhoto();
+                  if (file) dispatch({ type: "SET_PHOTO", file });
+                })();
+              } else {
+                photoInputRef.current?.click();
+              }
+            }}
             className="flex h-[120px] w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-[color:var(--border-default)] bg-[color:var(--background-primary)]"
           >
             <Camera className="h-6 w-6 text-[color:var(--brand-primary)]" strokeWidth={2} aria-hidden />

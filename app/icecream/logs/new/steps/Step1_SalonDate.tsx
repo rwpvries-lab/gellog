@@ -2,6 +2,7 @@
 
 import type { SalonData } from "@/src/components/SalonInput";
 import { ICE_CREAM_AUTOCOMPLETE_DESCRIPTION_TERMS } from "@/src/lib/looksLikeIceCreamSalon";
+import { getCurrentPosition } from "@/src/lib/geolocation";
 import { ChevronDown, ChevronRight, MapPin, Navigation2, Search } from "lucide-react";
 import {
   useCallback,
@@ -110,7 +111,7 @@ export function Step1_SalonDate({
 
   useEffect(() => {
     if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
+    getCurrentPosition(
       (pos) => {
         userLocationRef.current = {
           lat: pos.coords.latitude,

@@ -1,9 +1,5 @@
 "use client";
 
-import {
-  searchCanonicalFlavours,
-  type CanonicalFlavourPick,
-} from "@/src/lib/canonical-flavour-search";
 import { BASE_TOKENS } from "@/src/lib/gelato-tokens";
 import type { BaseToken, DrizzleToken, CrumbleToken } from "@/src/lib/gelato-tokens";
 import { createClient } from "@/src/lib/supabase/client";
@@ -11,7 +7,7 @@ import { useFlavourTokens } from "@/src/lib/use-flavour-tokens";
 import { Vitrine } from "@/src/components/Gelato/variants/Vitrine";
 import type { VitrineFlavour } from "@/src/components/Gelato/variants/Vitrine";
 import { Star, X } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { LogFlowAction, LogFlowState } from "../logFlowReducer";
 
 // ── Vitrine data (extended with token fields for visual rendering) ─────────
@@ -58,85 +54,28 @@ function rowToVitrineFlavour(row: VitrineRow): VitrineFlavour {
 function FlavourNameInput({
   value,
   onChangeValue,
-  onPickCanonical,
   disabled,
 }: {
   value: string;
   onChangeValue: (v: string) => void;
-  onPickCanonical: (pick: CanonicalFlavourPick) => void;
   disabled?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<CanonicalFlavourPick[]>([]);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleDocClick(e: MouseEvent) {
-      if (containerRef.current?.contains(e.target as Node)) return;
-      setOpen(false);
-    }
-    document.addEventListener("mousedown", handleDocClick);
-    return () => document.removeEventListener("mousedown", handleDocClick);
-  }, []);
-
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    const t = value.trim();
-    if (t.length < 2) {
-      setItems([]);
-      return;
-    }
-    debounceRef.current = setTimeout(() => {
-      void (async () => {
-        const supabase = createClient();
-        const picks = await searchCanonicalFlavours(supabase, t);
-        setItems(picks);
-        setOpen(picks.length > 0);
-      })();
-    }, 280);
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
-  }, [value]);
-
+  // Plain text entry — no in-field suggestion dropdown. Canonical/colour
+  // resolution (resolve_flavour) happens after entry, on save.
   return (
-    <div ref={containerRef} className="relative min-w-0 flex-1">
-      <input
-        type="text"
-        disabled={disabled}
-        value={value}
-        onChange={(e) => onChangeValue(e.target.value)}
-        onFocus={() => { if (items.length > 0) setOpen(true); }}
-        placeholder="Flavour name"
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck={false}
-        data-form-type="other"
-        className="w-full border-none bg-transparent font-serif text-[18px] font-medium text-[color:var(--text-primary)] placeholder:text-[color:var(--text-tertiary)] focus:outline-none focus:ring-0 disabled:opacity-50"
-      />
-      {open && items.length > 0 ? (
-        <ul
-          className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 max-h-48 overflow-auto rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] py-1 shadow-sm"
-          role="listbox"
-        >
-          {items.map((item) => (
-            <li key={item.id}>
-              <button
-                type="button"
-                role="option"
-                className="flex w-full px-3 py-2 text-left font-sans text-sm text-[color:var(--text-primary)] hover:bg-[color:var(--background-tertiary)]"
-                onMouseDown={(e) => e.preventDefault()}
-                onClick={() => { onPickCanonical(item); setOpen(false); }}
-              >
-                {item.label}
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
+    <input
+      type="text"
+      disabled={disabled}
+      value={value}
+      onChange={(e) => onChangeValue(e.target.value)}
+      placeholder="Flavour name"
+      autoComplete="off"
+      autoCorrect="off"
+      autoCapitalize="off"
+      spellCheck={false}
+      data-form-type="other"
+      className="w-full min-w-0 flex-1 border-none bg-transparent font-serif text-[18px] font-medium text-[color:var(--text-primary)] placeholder:text-[color:var(--text-tertiary)] focus:outline-none focus:ring-0 disabled:opacity-50"
+    />
   );
 }
 
@@ -312,34 +251,33 @@ export function Step2_Flavours({
             return (
               <div
                 key={flavour.id}
-                className="flex items-center gap-4 rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] p-4"
+                className="flex flex-col gap-3 rounded-2xl border border-[color:var(--border-default)] bg-[color:var(--background-secondary)] p-4"
               >
-                {swatchHex ? (
-                  <SwatchDot colour={swatchHex} />
-                ) : (
-                  <ManualSwatch flavourName={flavour.name} />
-                )}
-                <FlavourNameInput
-                  value={flavour.name}
-                  onChangeValue={(v) =>
-                    dispatch({
-                      type: "UPDATE_FLAVOUR",
-                      id: flavour.id,
-                      patch: { name: v },
-                    })
-                  }
-                  onPickCanonical={(pick) =>
-                    dispatch({
-                      type: "UPDATE_FLAVOUR",
-                      id: flavour.id,
-                      patch: {
-                        name: pick.label,
-                        canonicalFlavourId: pick.id,
-                        vitrineFlavourId: null,
-                      },
-                    })
-                  }
-                />
+                <div className="flex items-center gap-4">
+                  {swatchHex ? (
+                    <SwatchDot colour={swatchHex} />
+                  ) : (
+                    <ManualSwatch flavourName={flavour.name} />
+                  )}
+                  <FlavourNameInput
+                    value={flavour.name}
+                    onChangeValue={(v) =>
+                      dispatch({
+                        type: "UPDATE_FLAVOUR",
+                        id: flavour.id,
+                        patch: { name: v },
+                      })
+                    }
+                  />
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: "REMOVE_FLAVOUR", id: flavour.id })}
+                    className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[color:var(--text-tertiary)] transition hover:bg-[color:var(--background-tertiary)] hover:text-[color:var(--text-secondary)]"
+                    aria-label="Remove flavour"
+                  >
+                    <X size={16} strokeWidth={2} aria-hidden />
+                  </button>
+                </div>
                 <StarRow
                   value={flavour.rating}
                   onChange={(n) =>
@@ -350,14 +288,6 @@ export function Step2_Flavours({
                     })
                   }
                 />
-                <button
-                  type="button"
-                  onClick={() => dispatch({ type: "REMOVE_FLAVOUR", id: flavour.id })}
-                  className="ml-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[color:var(--text-tertiary)] transition hover:bg-[color:var(--background-tertiary)] hover:text-[color:var(--text-secondary)]"
-                  aria-label="Remove flavour"
-                >
-                  <X size={16} strokeWidth={2} aria-hidden />
-                </button>
               </div>
             );
           })}

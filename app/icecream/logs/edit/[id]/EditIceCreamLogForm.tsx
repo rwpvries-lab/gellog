@@ -1,6 +1,7 @@
 "use client";
 
 import { StarRating } from "@/app/components/RatingStars";
+import { getCurrentPosition } from "@/src/lib/geolocation";
 import { SalonInput, type SalonData } from "@/src/components/SalonInput";
 import {
   PhotoVisibilityPicker,
@@ -466,7 +467,7 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
     setWeatherUnsupported(false);
     setWeatherLocationBanner(null);
     const position = await new Promise<GeolocationPosition | null>((resolve) => {
-      navigator.geolocation.getCurrentPosition(
+      getCurrentPosition(
         (pos) => resolve(pos),
         (err) => {
           if (err.code === err.PERMISSION_DENIED) {
