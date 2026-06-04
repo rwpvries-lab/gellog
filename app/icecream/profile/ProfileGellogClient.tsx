@@ -115,6 +115,8 @@ type ProfileGellogClientProps = {
   uncategorisedLogCount: number;
   uncategorisedInputNames: string[];
   heatmapData: Record<string, HeatmapDayData>;
+  /** Read-only view of someone else's profile: only Stats + Flavour ranking, no Activity or Passport. */
+  publicView?: boolean;
 };
 
 const cellClass =
@@ -127,15 +129,24 @@ export function ProfileGellogClient({
   uncategorisedLogCount,
   uncategorisedInputNames,
   heatmapData,
+  publicView = false,
 }: ProfileGellogClientProps) {
   const [sheetView, setSheetView] = useState<ProfileSheetView | null>(null);
 
+  // Visitors only see read-only summaries; Activity (calendar) and Passport are owner-only.
+  const cards = publicView
+    ? SHEET_CARDS.filter((c) => c.view !== "calendar")
+    : SHEET_CARDS;
+  const colsClass = publicView
+    ? "grid-cols-2"
+    : hasIceCreamPlus
+      ? "grid-cols-4"
+      : "grid-cols-3";
+
   return (
     <>
-      <div
-        className={`grid gap-2 ${hasIceCreamPlus ? "grid-cols-4" : "grid-cols-3"}`}
-      >
-        {SHEET_CARDS.map(({ label, view, icon, accent }) => (
+      <div className={`grid gap-2 ${colsClass}`}>
+        {cards.map(({ label, view, icon, accent }) => (
           <button
             key={label}
             type="button"
@@ -166,7 +177,7 @@ export function ProfileGellogClient({
             </span>
           </button>
         ))}
-        {hasIceCreamPlus ? (
+        {!publicView && hasIceCreamPlus ? (
           <Link
             href="/icecream/passport"
             className={cellClass}
