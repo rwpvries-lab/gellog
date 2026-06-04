@@ -8,7 +8,6 @@ import { ProfileFeedClient } from "./ProfileFeedClient";
 import { MySalonProfileCard } from "@/app/components/MySalonOwnerAccess";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
-import { ProfileStatsGrid, type TopFlavour } from "./ProfileStatsGrid";
 import { ProfilePassportStrip, type CityStampWithEarned } from "./ProfilePassportStrip";
 import type { ProfileSheetRankedFlavour } from "./ProfileSheet";
 import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
@@ -101,34 +100,6 @@ function resolveSalonPlaceId(logs: IceCreamLog[], salonName: string): string | n
     }
   }
   return bestId;
-}
-
-function computeStreak(logs: IceCreamLog[]): number {
-  if (logs.length === 0) return 0;
-
-  const uniqueDates = Array.from(
-    new Set(logs.map((l) => l.visited_at.slice(0, 10))),
-  ).sort((a, b) => b.localeCompare(a));
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const mostRecent = new Date(uniqueDates[0] + "T00:00:00");
-  const daysSince = Math.floor(
-    (today.getTime() - mostRecent.getTime()) / (1000 * 60 * 60 * 24),
-  );
-  if (daysSince > 7) return 0;
-
-  let streak = 1;
-  for (let i = 1; i < uniqueDates.length; i++) {
-    const prev = new Date(uniqueDates[i - 1] + "T00:00:00");
-    const curr = new Date(uniqueDates[i] + "T00:00:00");
-    const gap = Math.floor(
-      (prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24),
-    );
-    if (gap <= 7) streak++;
-    else break;
-  }
-  return streak;
 }
 
 function deriveStats(logs: IceCreamLog[]) {
@@ -265,12 +236,6 @@ function deriveStats(logs: IceCreamLog[]) {
         b.lastVisitedIso.localeCompare(a.lastVisitedIso),
     );
 
-  const citiesCount = new Set(
-    logs.map((l) => l.salon_city?.trim()).filter(Boolean),
-  ).size;
-
-  const currentStreak = computeStreak(logs);
-
   return {
     totalAllTime,
     totalThisYear,
@@ -283,8 +248,6 @@ function deriveStats(logs: IceCreamLog[]) {
     uniqueSalonCount: salonMap.size,
     flavoursRollup,
     salonsRollup,
-    citiesCount,
-    currentStreak,
   };
 }
 
@@ -379,16 +342,12 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
     uniqueSalonCount,
     flavoursRollup,
     salonsRollup,
-    citiesCount,
-    currentStreak,
   } = deriveStats(logs);
 
   const logIds = logs.map((l) => l.id);
   let rankedFlavours: ProfileSheetRankedFlavour[] = [];
   let uncategorisedLogCount = 0;
   let uncategorisedInputNames: string[] = [];
-  let uniqueCanonicalFlavourCount = 0;
-  let topFlavour: TopFlavour | null = null;
 
   if (logIds.length > 0) {
     const { data: lfRows } = await supabase
@@ -440,35 +399,6 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
     }));
     uncategorisedLogCount = uncLogs;
     uncategorisedInputNames = uncNames;
-
-    // Compute canonical flavour stats from lfRows
-    const canonicalFreq = new Map<
-      string,
-      { count: number; name: string; baseToken: string | null }
-    >();
-    for (const r of lfRows ?? []) {
-      const row = r as LfRow;
-      const cid = row.canonical_flavour_id;
-      if (!cid) continue;
-      const name =
-        row.canonical_name_en ??
-        row.canonical_name_nl ??
-        row.canonical_name_it ??
-        row.flavour_name ??
-        cid;
-      const existing = canonicalFreq.get(cid);
-      if (!existing) {
-        canonicalFreq.set(cid, { count: 1, name, baseToken: row.base_token ?? null });
-      } else {
-        existing.count += 1;
-        if (!existing.baseToken && row.base_token) existing.baseToken = row.base_token;
-      }
-    }
-    uniqueCanonicalFlavourCount = canonicalFreq.size;
-    if (canonicalFreq.size > 0) {
-      const best = Array.from(canonicalFreq.values()).sort((a, b) => b.count - a.count)[0];
-      topFlavour = { name: best.name, baseToken: best.baseToken };
-    }
   }
 
   const hasIceCreamPlus = profile?.subscription_tier === "premium";
@@ -527,15 +457,6 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
           salonCount={uniqueSalonCount}
           flavoursRollup={flavoursRollup}
           salonsRollup={salonsRollup}
-        />
-
-        <ProfileStatsGrid
-          totalVisits={totalAllTime}
-          avgRating={averageOverallRating}
-          citiesCount={citiesCount}
-          uniqueCanonicalFlavourCount={uniqueCanonicalFlavourCount}
-          topFlavour={topFlavour}
-          currentStreak={currentStreak}
         />
 
         {/* Quick access: stats / flavours / activity sheets; passport → full page (Ice Cream+ only) */}
