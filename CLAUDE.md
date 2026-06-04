@@ -20,6 +20,7 @@ Gellog is a mobile-first PWA for logging and discovering gelato / ice cream ("St
   - Schema inspection → `list_tables` (use `verbose=true`)
 - **Before writing any DB-touching code, call `list_tables` first** — don't assume column names from docs or memory
 - Treat the deployed Supabase DB as the source of truth, not migration files
+- **Migrations are dual-write:** apply via `apply_migration` **and** commit the SQL to `supabase/migrations/`. The "DB is source of truth" rule above governs *schema inspection* — it does not excuse skipping the committed `.sql` file. Both are always required for repo parity.
 - `pg_trgm` extension is enabled — `similarity()` is available for fuzzy search
 - Seed data in batches of 20–40 rows
 
@@ -53,6 +54,13 @@ Gellog is a mobile-first PWA for logging and discovering gelato / ice cream ("St
 - **User:** Free (no limiters) / Ice Cream+ at €2.99/month (enablers only)
 - **Salon:** Basic €9/month / Pro €29/month
 - Stripe is in live mode
+
+## Native app (Capacitor — iOS / Android)
+- **Approach: Option A — remote-URL wrapper, NOT static export.** `webDir` (`capacitor-webdir/`) is just a placeholder loading screen; the native shell loads the live hosted app via Capacitor `server.url` (pointed at the `www` host to skip the apex redirect). Lives on `feature/capacitor-ios`.
+- **Why static export (`output: 'export'`) was ruled out:** Gellog depends on server-side features that static export breaks — API routes (`app/api/places/*`, `app/api/stripe/*`), middleware (`proxy.ts`), and server components / SSR. Export would also force `next/image` `unoptimized`. Wrapping the deployed Vercel app keeps the full server stack intact with zero architectural compromise.
+- **"Option A + native plugins"** = the remote wrapper plus genuine native features layered on for Apple approval + UX: push notifications, geolocation, camera, Sign in with Apple. Apple rejects bare repackaged websites, so at least one real native capability must ship.
+- **Native-only divergence:** consumer Stripe upgrade/payment UI is hidden in the native iOS build (Apple IAP policy on digital subscriptions). Web and native payment surfaces intentionally differ here.
+- **Reuse for future projects (e.g. 30 Seconds):** Option A is the fast path when a product is *already* a deployed web app that needs server features — wrap remote + add native plugins. Choose a true native rewrite only when the product genuinely needs it (offline-first, App-Store-only party games, IAP-first revenue), per the Decisions Log.
 
 ## Route map (quick reference)
 - `/` — marketing landing (redirects signed-in → `/feed`)
@@ -115,6 +123,9 @@ Star ratings must render with filled state. CTA buttons must have terracotta bac
 - **Assuming column names:** Always call `list_tables verbose=true` before writing any DB-touching code. The table is `ice_cream_logs`, not `logs`. Join table structure may differ from what docs suggest.
 - **Over-correcting on bug fixes:** Distinguish real bugs from working-as-designed behaviour before writing fix prompts. Don't touch reducer/submission logic when fixing step UI.
 - **Re-using stale components:** When rebuilding a step, wipe the step file and rebuild from the current mockup. Preserve reducer and submission logic separately.
+
+## Dev workflow
+- **Parallel / multi-agent work: use git worktrees, not copied folders.** `git worktree add ../gellog-agent-b <branch>` shares the same underlying repo, so branches, commits and pushes are visible across both instantly — no fetch/pull dance, no drift. Copied folders caused real stale-branch drift (a billing-renewal fix was once stranded on an old branch in a copy) — the multi-folder form of the documented stale-context regression risk.
 
 ## What NOT to do
 - Don't run `npx supabase` CLI commands — they'll fail

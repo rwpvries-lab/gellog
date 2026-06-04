@@ -3,7 +3,7 @@
  * Base + Drizzle + Crumble = any flavour
  */
 
-// ========== BASE TOKENS (16) ==========
+// ========== BASE TOKENS (19) ==========
 // The main colour of the scoop
 
 export const BASE_TOKENS = {
@@ -23,6 +23,9 @@ export const BASE_TOKENS = {
   'matcha-deep': { hex: '#7BA05B', name: 'Matcha Deep' },
   'coconut-white': { hex: '#F8F4EA', name: 'Coconut White' },
   'blueberry-purple': { hex: '#7E57C2', name: 'Blueberry Purple' },
+  'banana-yellow': { hex: '#F4D35E', name: 'Banana Yellow' },
+  'white-chocolate': { hex: '#F3E5C0', name: 'White Chocolate' },
+  'dark-chocolate': { hex: '#3A2218', name: 'Dark Chocolate' },
 } as const;
 
 // ========== DRIZZLE TOKENS (8) ==========

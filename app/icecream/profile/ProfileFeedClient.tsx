@@ -13,14 +13,31 @@ import { useState } from "react";
 type ProfileFeedClientProps = {
   initialLogs: IceCreamLog[];
   pageSize: number;
-  currentUserId: string;
+  /** Viewer's id; undefined for anonymous visitors. Drives like/comment auth. */
+  currentUserId?: string;
+  /** Whose logs these are. Defaults to the viewer (own profile). */
+  targetUserId?: string;
+  /** Owner-only edit/delete actions + "log your first gelato" empty state. */
+  canManage?: boolean;
+  /** Visibility values to page through. Omit on own profile to load everything. */
+  visibilityFilter?: string[];
+  /** Empty-state copy when not the owner (e.g. "@alex hasn't logged any gelato yet."). */
+  emptyLabel?: string;
+  /** Viewer follows the profile owner — unlocks friends-only photos in FeedCard. */
+  viewerFollowsAuthor?: boolean;
 };
 
 export function ProfileFeedClient({
   initialLogs,
   pageSize,
   currentUserId,
+  targetUserId,
+  canManage = false,
+  visibilityFilter,
+  emptyLabel,
+  viewerFollowsAuthor = false,
 }: ProfileFeedClientProps) {
+  const feedUserId = targetUserId ?? currentUserId;
   const [logs, setLogs] = useState<IceCreamLog[]>(initialLogs);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,7 +45,7 @@ export function ProfileFeedClient({
   const [page, setPage] = useState(1);
 
   async function fetchMore(): Promise<void> {
-    if (loading || !hasMore) return;
+    if (loading || !hasMore || !feedUserId) return;
 
     setLoading(true);
     setError(null);
@@ -37,7 +54,7 @@ export function ProfileFeedClient({
     const from = page * pageSize;
     const to = from + pageSize - 1;
 
-    const { data, error: fetchError } = await supabase
+    let query = supabase
       .from("ice_cream_logs")
       .select(
         `
@@ -69,7 +86,13 @@ export function ProfileFeedClient({
 ${LOG_FLAVOURS_RESOLVED_SELECT}
       `,
       )
-      .eq("user_id", currentUserId)
+      .eq("user_id", feedUserId);
+
+    if (visibilityFilter && visibilityFilter.length > 0) {
+      query = query.in("visibility", visibilityFilter);
+    }
+
+    const { data, error: fetchError } = await query
       .order("visited_at", { ascending: false })
       .range(from, to);
 
@@ -93,14 +116,18 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}
       <div className="mt-2 flex flex-col items-center justify-center rounded-3xl border border-[color:var(--border-default)] bg-[color:var(--surface-elevated)] px-8 py-12 text-center shadow-[var(--shadow-card-sm)]">
         <PlaceholderScoop size={96} seed="profile-feed-empty" className="mb-4" />
         <p className="font-serif text-2xl font-medium text-[color:var(--text-primary)]">
-          You haven&apos;t logged any gelato yet.
+          {canManage
+            ? "You haven't logged any gelato yet."
+            : (emptyLabel ?? "No public gelato logs yet.")}
         </p>
-        <Link
-          href="/icecream/logs/new"
-          className="mt-5 inline-flex items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2"
-        >
-          Log your first gelato →
-        </Link>
+        {canManage ? (
+          <Link
+            href="/icecream/logs/new"
+            className="mt-5 inline-flex items-center justify-center rounded-full bg-[color:var(--brand-primary)] px-5 py-2.5 text-sm font-semibold text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2"
+          >
+            Log your first gelato →
+          </Link>
+        ) : null}
       </div>
     );
   }
@@ -112,8 +139,13 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}
           key={log.id}
           log={log}
           currentUserId={currentUserId}
-          showOwnerActions
-          onDelete={(id) => setLogs((prev) => prev.filter((l) => l.id !== id))}
+          viewerFollowsAuthor={viewerFollowsAuthor}
+          showOwnerActions={canManage}
+          onDelete={
+            canManage
+              ? (id) => setLogs((prev) => prev.filter((l) => l.id !== id))
+              : undefined
+          }
         />
       ))}
 

@@ -2,7 +2,6 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { useState } from "react";
-import Link from "next/link";
 import { Activity } from "lucide-react";
 import {
   ProfileSheet,
@@ -54,26 +53,6 @@ function IconTrophy() {
   );
 }
 
-function IconGlobe() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-      <path d="M2 12h20" />
-    </svg>
-  );
-}
-
 function IconActivity() {
   return (
     <Activity
@@ -109,33 +88,38 @@ const CARD_STYLE: CSSProperties = {
 };
 
 type ProfileGellogClientProps = {
-  hasIceCreamPlus: boolean;
   stats: ProfileSheetStats;
   rankedFlavours: ProfileSheetRankedFlavour[];
   uncategorisedLogCount: number;
   uncategorisedInputNames: string[];
   heatmapData: Record<string, HeatmapDayData>;
+  /** Read-only view of someone else's profile: only Stats + Flavour ranking, no Activity. */
+  publicView?: boolean;
 };
 
 const cellClass =
   "flex min-h-[88px] flex-col items-center justify-center gap-2 px-1 py-3 text-center";
 
 export function ProfileGellogClient({
-  hasIceCreamPlus,
   stats,
   rankedFlavours,
   uncategorisedLogCount,
   uncategorisedInputNames,
   heatmapData,
+  publicView = false,
 }: ProfileGellogClientProps) {
   const [sheetView, setSheetView] = useState<ProfileSheetView | null>(null);
 
+  // Visitors only see read-only summaries; Activity (calendar) is owner-only.
+  const cards = publicView
+    ? SHEET_CARDS.filter((c) => c.view !== "calendar")
+    : SHEET_CARDS;
+  const colsClass = publicView ? "grid-cols-2" : "grid-cols-3";
+
   return (
     <>
-      <div
-        className={`grid gap-2 ${hasIceCreamPlus ? "grid-cols-4" : "grid-cols-3"}`}
-      >
-        {SHEET_CARDS.map(({ label, view, icon, accent }) => (
+      <div className={`grid gap-2 ${colsClass}`}>
+        {cards.map(({ label, view, icon, accent }) => (
           <button
             key={label}
             type="button"
@@ -166,31 +150,6 @@ export function ProfileGellogClient({
             </span>
           </button>
         ))}
-        {hasIceCreamPlus ? (
-          <Link
-            href="/icecream/passport"
-            className={cellClass}
-            style={{
-              ...CARD_STYLE,
-              textDecoration: "none",
-              color: "inherit",
-            }}
-          >
-            <span style={{ color: "var(--color-orange)" }}>
-              <IconGlobe />
-            </span>
-            <span
-              style={{
-                color: "var(--color-text-primary)",
-                fontSize: 11,
-                fontWeight: 600,
-                lineHeight: 1.2,
-              }}
-            >
-              Passport
-            </span>
-          </Link>
-        ) : null}
       </div>
 
       <ProfileSheet
