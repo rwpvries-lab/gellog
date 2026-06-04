@@ -915,7 +915,9 @@ export function DashboardClient({
                   />
                 )}
 
-                {tier !== "free" && salonProfile.salon_subscription_expires_at && (
+                {tier !== "free" &&
+                  salonProfile.salon_subscription_expires_at &&
+                  new Date(salonProfile.salon_subscription_expires_at) > new Date() && (
                   <p className="mt-3 text-center text-xs text-zinc-400 dark:text-zinc-500">
                     Renews{" "}
                     {new Date(salonProfile.salon_subscription_expires_at).toLocaleDateString(
