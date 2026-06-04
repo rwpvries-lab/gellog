@@ -200,8 +200,8 @@ export default function TermsPage() {
         <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
           A paid subscription tier (&quot;Ice Cream+&quot;) is available at
           €2.99 per month. Ice Cream+ unlocks additional features including
-          advanced statistics, passport stamps, and other premium functionality
-          as described in the app.
+          advanced statistics and other premium functionality as described in
+          the app.
         </p>
 
         <h3 className="mt-5 text-[15px] font-bold text-[color:var(--text-primary)]">

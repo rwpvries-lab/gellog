@@ -180,10 +180,9 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
           salonsRollup={salonsRollup}
         />
 
-        {/* Read-only public stats: Stats + Flavour ranking only (no Activity / Passport / spend). */}
+        {/* Read-only public stats: Stats + Flavour ranking only (no Activity / spend). */}
         <ProfileGellogClient
           publicView
-          hasIceCreamPlus={false}
           stats={{
             totalAllTime,
             totalThisYear,

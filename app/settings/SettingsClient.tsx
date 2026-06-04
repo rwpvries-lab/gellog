@@ -683,7 +683,6 @@ export function SettingsClient({
             <ul className="flex flex-col gap-2">
               {[
                 "Advanced stats and flavour analytics",
-                "Ice cream passport with animated stamps",
                 "Priority support and early features",
               ].map((benefit) => (
                 <li key={benefit} className="flex items-center gap-2">

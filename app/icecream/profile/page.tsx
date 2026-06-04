@@ -8,7 +8,6 @@ import { ProfileFeedClient } from "./ProfileFeedClient";
 import { MySalonProfileCard } from "@/app/components/MySalonOwnerAccess";
 import { ProfileHeader } from "./ProfileHeader";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
-import { ProfilePassportStrip, type CityStampWithEarned } from "./ProfilePassportStrip";
 import type { ProfileSheetRankedFlavour } from "./ProfileSheet";
 import {
   applyResolvedFlavoursToLogRow,
@@ -28,7 +27,6 @@ type Profile = {
   username: string | null;
   display_name: string | null;
   avatar_url: string | null;
-  subscription_tier: "free" | "premium";
 };
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -51,12 +49,10 @@ export default async function IceCreamProfilePage() {
     { data: feedLogsData },
     { count: followerCount },
     { count: followingCount },
-    { data: cityStampsData },
-    { data: userStampsData },
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, username, display_name, avatar_url, subscription_tier")
+      .select("id, username, display_name, avatar_url")
       .eq("id", user.id)
       .single<Profile>(),
     supabase
@@ -87,14 +83,6 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
       .from("friendships")
       .select("*", { count: "exact", head: true })
       .eq("follower_id", user.id),
-    supabase
-      .from("city_stamps")
-      .select("city_key, city_name, country, landmark_label, colour_primary, colour_secondary")
-      .order("city_name"),
-    supabase
-      .from("user_stamps")
-      .select("city_key, earned_at")
-      .eq("user_id", user.id),
   ]);
 
   const logs = ((logsData ?? []) as unknown as Record<string, unknown>[]).map((row) =>
@@ -141,23 +129,6 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
       buildRankedFlavours((lfRows ?? []) as unknown as LogFlavourRankingInputRow[]));
   }
 
-  const hasIceCreamPlus = profile?.subscription_tier === "premium";
-
-  const earnedCityKeys = new Set((userStampsData ?? []).map((s) => s.city_key));
-  const earnedAtMap = new Map(
-    (userStampsData ?? []).map((s) => [s.city_key, s.earned_at as string]),
-  );
-  const cityStamps: CityStampWithEarned[] = (cityStampsData ?? []).map((cs) => ({
-    city_key: cs.city_key,
-    city_name: cs.city_name,
-    country: cs.country,
-    landmark_label: cs.landmark_label ?? null,
-    colour_primary: cs.colour_primary ?? null,
-    colour_secondary: cs.colour_secondary ?? null,
-    earned: earnedCityKeys.has(cs.city_key),
-    earned_at: earnedAtMap.get(cs.city_key) ?? null,
-  }));
-
   const heatmapData: Record<string, HeatmapDayData> = {};
   logs.forEach((log) => {
     const dateStr = log.visited_at.slice(0, 10);
@@ -199,9 +170,8 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
           salonsRollup={salonsRollup}
         />
 
-        {/* Quick access: stats / flavours / activity sheets; passport → full page (Ice Cream+ only) */}
+        {/* Quick access: stats / flavours / activity sheets */}
         <ProfileGellogClient
-          hasIceCreamPlus={hasIceCreamPlus}
           stats={{
             totalAllTime,
             totalThisYear,
@@ -218,8 +188,6 @@ ${LOG_FLAVOURS_RESOLVED_SELECT}`,
         />
 
         <MySalonProfileCard />
-
-        <ProfilePassportStrip stamps={cityStamps} />
 
         {/* Your logs feed */}
         <section id="profile-your-logs">
