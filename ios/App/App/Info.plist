@@ -26,10 +26,14 @@
 	<true/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Gellog uses your location to find nearby gelato salons.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Gellog uses your location to find nearby gelato salons and log where you enjoyed your gelato.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Gellog uses the camera so you can snap a photo of your gelato for a log.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Gellog needs access to your photo library so you can attach a gelato photo to a log.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Gellog needs access to save your gelato photos to your photo library.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
