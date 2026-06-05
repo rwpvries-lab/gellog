@@ -61,8 +61,6 @@ export function LogStepWrapper({
 
   const [state, dispatch] = useReducer(logFlowReducer, initial);
   const baselineFingerprint = useRef(flowFingerprint(initial));
-  const stateRef = useRef(state);
-  stateRef.current = state;
   const [discardOpen, setDiscardOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -70,7 +68,6 @@ export function LogStepWrapper({
   const pendingLeaveRef = useRef<
     | { kind: "href"; href: string }
     | { kind: "header" }
-    | { kind: "popstate" }
     | null
   >(null);
   const pathname = "/icecream/logs/new";
@@ -99,14 +96,6 @@ export function LogStepWrapper({
       router.push(pending.href);
       return;
     }
-    if (pending.kind === "popstate") {
-      if (typeof window !== "undefined" && window.history.length > 2) {
-        window.history.go(-2);
-      } else {
-        router.back();
-      }
-      return;
-    }
     router.back();
   }
 
@@ -114,21 +103,6 @@ export function LogStepWrapper({
     pendingLeaveRef.current = null;
     setDiscardOpen(false);
   }
-
-  /** Trap duplicate history entry so the first "back" stays on-page for interception. */
-  useEffect(() => {
-    window.history.pushState({ gellogLogDraft: true }, "", window.location.href);
-    function onPopState() {
-      if (flowFingerprint(stateRef.current) === baselineFingerprint.current) {
-        return;
-      }
-      window.history.pushState({ gellogLogDraft: true }, "", window.location.href);
-      pendingLeaveRef.current = { kind: "popstate" };
-      setDiscardOpen(true);
-    }
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, []);
 
   useEffect(() => {
     function onBeforeUnload(e: BeforeUnloadEvent) {
