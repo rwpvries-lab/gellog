@@ -525,7 +525,9 @@ export function MapClient({
     ? `maps://maps.apple.com/?daddr=${selected.lat},${selected.lng}`
     : "";
 
-  const NAV_HEIGHT = 80;
+  // Matches BottomNav content height (py-2 + min-h-[52px] row) so the sheet sits
+  // flush against the nav; safe-area inset is added separately in the sheet style.
+  const NAV_HEIGHT = 68;
   const floatingTop = pickerReturnTo ? "top-16" : "top-3";
   const toastTop = pickerReturnTo ? "top-24" : "top-3";
   /** Offset FAB below dismissible location banner when both are visible. */
