@@ -38,7 +38,38 @@ type Group = {
   ratingSum: number;
   ratingCount: number;
   count: number;
+  /** Tally of the names the user actually typed when logging this flavour. */
+  loggedNames: Map<string, number>;
 };
+
+/** Tally a user-logged name onto a group (skips blank names). */
+function tallyLoggedName(g: Group, rawName: string | null | undefined): void {
+  const name = rawName?.trim();
+  if (!name) return;
+  g.loggedNames.set(name, (g.loggedNames.get(name) ?? 0) + 1);
+}
+
+/**
+ * Prefer the name the user actually logged (most frequently used wins) over the
+ * canonical flavour name, so e.g. a user who logged "Strawberry" sees that
+ * rather than the canonical Dutch "Aardbei". Falls back to canonical names.
+ */
+function pickDisplayName(g: Group): string {
+  let best: string | null = null;
+  let bestCount = 0;
+  for (const [name, count] of g.loggedNames) {
+    if (count > bestCount) {
+      best = name;
+      bestCount = count;
+    }
+  }
+  return (
+    best ||
+    g.canonical_name_nl?.trim() ||
+    g.canonical_name_en?.trim() ||
+    "Flavour"
+  );
+}
 
 function rankingFromResolvedGroups(rows: LogFlavoursResolvedRankingRow[]): {
   ranking: CanonicalFlavourRankingRow[];
@@ -78,6 +109,7 @@ function rankingFromResolvedGroups(rows: LogFlavoursResolvedRankingRow[]): {
         ratingSum: 0,
         ratingCount: 0,
         count: 0,
+        loggedNames: new Map(),
       };
       groups.set(id, g);
     } else if (!g.base_token && r.base_token) {
@@ -91,6 +123,7 @@ function rankingFromResolvedGroups(rows: LogFlavoursResolvedRankingRow[]): {
         g.canonical_name_en = r.canonical_name_en;
       }
     }
+    tallyLoggedName(g, r.input_name);
     g.count += 1;
     if (r.rating != null && Number.isFinite(r.rating)) {
       g.ratingSum += r.rating;
@@ -100,9 +133,7 @@ function rankingFromResolvedGroups(rows: LogFlavoursResolvedRankingRow[]): {
 
   const sorted = [...groups.values()].sort((a, b) => {
     if (b.count !== a.count) return b.count - a.count;
-    const nameA = a.canonical_name_nl?.trim() || a.canonical_name_en?.trim() || "";
-    const nameB = b.canonical_name_nl?.trim() || b.canonical_name_en?.trim() || "";
-    return nameA.localeCompare(nameB);
+    return pickDisplayName(a).localeCompare(pickDisplayName(b));
   });
 
   const withTokens = sorted.filter((g) => g.base_token != null);
@@ -111,7 +142,7 @@ function rankingFromResolvedGroups(rows: LogFlavoursResolvedRankingRow[]): {
   const ranking: CanonicalFlavourRankingRow[] = top.map((g, i) => ({
     rank: i + 1,
     flavourId: g.flavour_id,
-    displayName: g.canonical_name_nl?.trim() || g.canonical_name_en?.trim() || "Flavour",
+    displayName: pickDisplayName(g),
     logCount: g.count,
     avgRating: g.ratingCount > 0 ? g.ratingSum / g.ratingCount : null,
     baseToken: g.base_token,
@@ -159,6 +190,7 @@ function rankingFromLegacyNameGroups(rows: LogFlavoursResolvedRankingRow[]): {
         ratingSum: 0,
         ratingCount: 0,
         count: 0,
+        loggedNames: new Map(),
       };
       groups.set(key, g);
     } else {
@@ -174,6 +206,7 @@ function rankingFromLegacyNameGroups(rows: LogFlavoursResolvedRankingRow[]): {
         g.canonical_name_en = r.canonical_name_en;
       }
     }
+    tallyLoggedName(g, name);
     g.count += 1;
     if (r.rating != null && Number.isFinite(r.rating)) {
       g.ratingSum += r.rating;
@@ -183,9 +216,7 @@ function rankingFromLegacyNameGroups(rows: LogFlavoursResolvedRankingRow[]): {
 
   const sorted = [...groups.values()].sort((a, b) => {
     if (b.count !== a.count) return b.count - a.count;
-    const nameA = a.canonical_name_nl?.trim() || "";
-    const nameB = b.canonical_name_nl?.trim() || "";
-    return nameA.localeCompare(nameB);
+    return pickDisplayName(a).localeCompare(pickDisplayName(b));
   });
 
   const withTokens = sorted.filter((g) => g.base_token != null);
@@ -194,7 +225,7 @@ function rankingFromLegacyNameGroups(rows: LogFlavoursResolvedRankingRow[]): {
   const ranking: CanonicalFlavourRankingRow[] = top.map((g, i) => ({
     rank: i + 1,
     flavourId: g.flavour_id,
-    displayName: g.canonical_name_nl?.trim() || g.canonical_name_en?.trim() || "Flavour",
+    displayName: pickDisplayName(g),
     logCount: g.count,
     avgRating: g.ratingCount > 0 ? g.ratingSum / g.ratingCount : null,
     baseToken: g.base_token,
