@@ -589,8 +589,8 @@ export function MapClient({
           }
           onClick={handleRequestMyLocation}
           disabled={locatingUser}
-          className={`absolute right-3 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-[top] disabled:opacity-60 dark:bg-zinc-800 ${locateFabTop}`}
-          style={{ zIndex: 30 }}
+          className={`absolute right-3 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md transition-[top] disabled:opacity-60 dark:bg-zinc-800 ${locateFabTop}`}
+          style={{ zIndex: 30, marginTop: "env(safe-area-inset-top, 0px)" }}
         >
           {locatingUser ? (
             <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500 dark:border-zinc-600 dark:border-t-blue-400" />
