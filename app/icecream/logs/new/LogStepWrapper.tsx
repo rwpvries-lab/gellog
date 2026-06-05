@@ -195,6 +195,13 @@ export function LogStepWrapper({
     const result = await submitIceCreamLog({ userId, state });
     setSubmitting(false);
     if (result.ok) {
+      // Collapse the create-log flow (and the history back-guard trap this
+      // page pushes on mount) out of the back stack: rewrite the current
+      // entry to the feed, then push the detail on top. Backing out of the
+      // published log now lands on the feed in one tap, instead of re-entering
+      // step 1 — which also remounted the flow and re-pushed the trap, the
+      // cause of the "first back tap does nothing" double-tap.
+      window.history.replaceState(null, "", "/icecream/feed");
       router.push(`/log/${result.logId}`);
       return;
     }
