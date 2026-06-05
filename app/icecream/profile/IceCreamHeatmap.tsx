@@ -20,19 +20,28 @@ const LEFT_LABEL_WIDTH = 22;
 const WEEKDAY_LABELS = ['M', '', 'W', '', 'F', '', ''];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-const LEGEND = [
-  { label: 'No logs', className: 'bg-zinc-100 dark:bg-zinc-800' },
-  { label: '1', className: 'bg-[color:var(--brand-primary-surface)]' },
-  { label: '2', className: 'bg-[color:var(--brand-primary-muted)]' },
-  { label: '3+', className: 'bg-[color:var(--brand-primary)]' },
-];
+const EMPTY_CELL_CLASS = 'bg-zinc-100 dark:bg-zinc-800';
 
-function cellColorClass(count: number): string {
-  if (count === 0) return 'bg-zinc-100 dark:bg-zinc-800';
-  if (count === 1) return 'bg-[color:var(--brand-primary-surface)]';
-  if (count === 2) return 'bg-[color:var(--brand-primary-muted)]';
-  return 'bg-[color:var(--brand-primary)]';
+/**
+ * Background for a day cell. Empty days use a neutral zinc; days with logs use
+ * an evenly-spaced alpha ramp of the brand colour so 1 vs 2 vs 3+ are each
+ * clearly distinct (the old surface/muted tints made 1 and 2 nearly
+ * indistinguishable on the small cells). Returns `null` for empty days so the
+ * caller falls back to the neutral class.
+ */
+function cellBackground(count: number): string | null {
+  if (count <= 0) return null;
+  if (count === 1) return 'rgb(var(--brand-primary-rgb) / 0.3)';
+  if (count === 2) return 'rgb(var(--brand-primary-rgb) / 0.62)';
+  return 'var(--brand-primary)';
 }
+
+const LEGEND = [
+  { label: 'No logs', background: null as string | null },
+  { label: '1', background: cellBackground(1) },
+  { label: '2', background: cellBackground(2) },
+  { label: '3+', background: cellBackground(3) },
+];
 
 function toDateStr(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -197,11 +206,16 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
                           ? 'ring-2 ring-[color:var(--brand-primary)] ring-offset-1'
                           : '';
 
+                    const cellBg = invisible ? null : cellBackground(count);
+
                     return (
                       <div
                         key={dIdx}
-                        style={{ width: CELL, height: CELL, borderRadius: 4, flexShrink: 0 }}
-                        className={[invisible ? '' : cellColorClass(count), ringClass].filter(Boolean).join(' ')}
+                        style={{ width: CELL, height: CELL, borderRadius: 4, flexShrink: 0, background: cellBg ?? undefined }}
+                        className={[
+                          invisible ? '' : cellBg ? '' : EMPTY_CELL_CLASS,
+                          ringClass,
+                        ].filter(Boolean).join(' ')}
                         onMouseEnter={(e) => {
                           if (invisible) return;
                           setHoverTooltip({ dateStr, rect: e.currentTarget.getBoundingClientRect() });
@@ -260,9 +274,12 @@ export function IceCreamHeatmap({ data }: IceCreamHeatmapProps) {
 
       {/* Legend */}
       <div className="flex items-center gap-3">
-        {LEGEND.map(({ label, className }) => (
+        {LEGEND.map(({ label, background }) => (
           <div key={label} className="flex items-center gap-1.5">
-            <div style={{ width: CELL, height: CELL, borderRadius: 4, flexShrink: 0 }} className={className} />
+            <div
+              style={{ width: CELL, height: CELL, borderRadius: 4, flexShrink: 0, background: background ?? undefined }}
+              className={background ? '' : EMPTY_CELL_CLASS}
+            />
             <span className="text-[11px] text-zinc-400 dark:text-zinc-500">{label}</span>
           </div>
         ))}
