@@ -11,7 +11,10 @@ import {
   LOCATION_DENIED_TROUBLESHOOT_HINT,
 } from "@/src/lib/locationMessages";
 import { userFacingPushError } from "@/src/lib/userFacingError";
-import { getCurrentPosition } from "@/src/lib/geolocation";
+import {
+  getCurrentPosition,
+  checkGeolocationPermission,
+} from "@/src/lib/geolocation";
 import { useIsNative } from "@/src/lib/useIsNative";
 import { useThemeToggle } from "@/src/app/ThemeProvider";
 import { type Visibility } from "@/src/components/VisibilityPicker";
@@ -218,34 +221,45 @@ export function SettingsClient({
   useEffect(() => {
     let cancelled = false;
     let registered: PermissionStatus | null = null;
-    const onChange = () => {
-      if (registered) {
-        setGeoPerm(registered.state as GeolocationPermissionUi);
-      }
+
+    const refresh = async () => {
+      const state = await checkGeolocationPermission();
+      if (!cancelled) setGeoPerm(state);
+    };
+
+    // Re-check whenever the app returns to the foreground — covers the user
+    // coming back from the native permission prompt or the iOS Settings app,
+    // where no web `permissionstatus` change event fires inside WKWebView.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void refresh();
     };
 
     void (async () => {
       if (typeof window === "undefined") return;
-      if (!navigator.permissions?.query) {
-        if (!cancelled) setGeoPerm("prompt");
-        return;
-      }
-      try {
-        const status = await navigator.permissions.query({
-          name: "geolocation" as PermissionName,
-        });
-        if (cancelled) return;
-        registered = status;
-        setGeoPerm(status.state as GeolocationPermissionUi);
-        status.addEventListener("change", onChange);
-      } catch {
-        if (!cancelled) setGeoPerm("prompt");
+      await refresh();
+      // Web Permissions API can still push live updates on supported browsers.
+      if (!cancelled && navigator.permissions?.query) {
+        try {
+          const status = await navigator.permissions.query({
+            name: "geolocation" as PermissionName,
+          });
+          if (cancelled) return;
+          registered = status;
+          status.addEventListener("change", refresh);
+        } catch {
+          /* ignore — refresh() already set the best-effort state */
+        }
       }
     })();
 
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
     return () => {
       cancelled = true;
-      registered?.removeEventListener("change", onChange);
+      registered?.removeEventListener("change", refresh);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
     };
   }, []);
 
@@ -268,33 +282,15 @@ export function SettingsClient({
       async () => {
         setGeoRequesting(false);
         setGeoHint(null);
-        try {
-          if (navigator.permissions?.query) {
-            const s = await navigator.permissions.query({
-              name: "geolocation" as PermissionName,
-            });
-            setGeoPerm(s.state as GeolocationPermissionUi);
-          } else {
-            setGeoPerm("granted");
-          }
-        } catch {
-          setGeoPerm("granted");
-        }
+        // A successful fix means access is granted; confirm via the plugin on
+        // native (where the web Permissions API mis-reports), else assume granted.
+        const state = await checkGeolocationPermission();
+        setGeoPerm(state === "prompt" ? "granted" : state);
       },
       async (err) => {
         setGeoRequesting(false);
-        try {
-          if (navigator.permissions?.query) {
-            const s = await navigator.permissions.query({
-              name: "geolocation" as PermissionName,
-            });
-            setGeoPerm(s.state as GeolocationPermissionUi);
-          } else {
-            setGeoPerm("denied");
-          }
-        } catch {
-          setGeoPerm("denied");
-        }
+        const state = await checkGeolocationPermission();
+        setGeoPerm(state === "prompt" ? "denied" : state);
         const code = (err as GeolocationPositionError).code;
         if (code === 1) {
           setGeoHint(
