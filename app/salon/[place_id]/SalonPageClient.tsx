@@ -465,7 +465,10 @@ export function SalonPageClient({ placeId }: Props) {
 
   return (
     <main
-      className="mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]"
+      // Salon content (description, flavour names) is the owner's own wording —
+      // opt out of WKWebView/Safari auto-translation so it isn't distorted.
+      translate="no"
+      className="notranslate mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]"
       style={userId == null ? { paddingBottom: PUBLIC_BANNER_LAYOUT_PX + 32 } : undefined}
     >
       {isOwner && (
