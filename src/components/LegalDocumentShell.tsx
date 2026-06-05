@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LegalBackButton } from "@/src/components/LegalBackButton";
 
 type LegalDocumentShellProps = {
   title: string;
@@ -16,15 +17,20 @@ export function LegalDocumentShell({
 }: LegalDocumentShellProps) {
   return (
     <div className="min-h-screen bg-[color:var(--background)] text-[color:var(--text-primary)]">
-      <div className="mx-auto max-w-[720px] px-6 py-10 sm:py-12">
-        <Link
-          href="/feed"
-          className="inline-block text-sm font-semibold tracking-tight text-[color:var(--brand-secondary)] transition-colors hover:text-[color:var(--brand-primary)]"
-        >
-          Gellog
-        </Link>
+      <header className="sticky top-0 z-10 border-b border-[color:var(--border-default)] bg-[color:var(--background)]/95 backdrop-blur supports-[backdrop-filter]:bg-[color:var(--background)]/80 pt-[env(safe-area-inset-top)]">
+        <div className="mx-auto flex h-12 max-w-[720px] items-center justify-between px-6">
+          <LegalBackButton />
+          <Link
+            href="/feed"
+            className="text-sm font-semibold tracking-tight text-[color:var(--brand-secondary)] transition-colors hover:text-[color:var(--brand-primary)]"
+          >
+            Gellog
+          </Link>
+        </div>
+      </header>
 
-        <h1 className="mt-8 text-3xl font-bold tracking-tight sm:text-4xl">
+      <div className="mx-auto max-w-[720px] px-6 py-10 sm:py-12">
+        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
           {title}
         </h1>
         <p className="mt-3 text-sm text-[color:var(--text-secondary)]">
