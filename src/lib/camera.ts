@@ -7,6 +7,11 @@ import { isNativePlatform } from "@/src/lib/platform";
  * `@capacitor/camera`, then returns a `File` so it drops straight into the
  * existing upload path (the flow stores `state.step3.photoFile` as a `File`).
  *
+ * Uses `DataUrl` rather than `Uri`: in the remote-URL wrapper the web origin is
+ * the live https site, so a `capacitor://localhost` `webPath` can't be fetched
+ * cross-origin and the tap would silently fail. A `data:` URL is fetchable from
+ * any origin.
+ *
  * Returns `null` if the user cancels. Callers should only invoke this when
  * `isNativePlatform()` is true; on web, keep the existing `<input type="file">`.
  */
@@ -21,7 +26,7 @@ export async function pickPhoto(): Promise<File | null> {
     const photo = await Camera.getPhoto({
       quality: 80,
       allowEditing: false,
-      resultType: CameraResultType.Uri,
+      resultType: CameraResultType.DataUrl,
       // Prompt → iOS action sheet letting the user choose camera or library.
       source: CameraSource.Prompt,
       promptLabelHeader: "Add a photo",
@@ -29,9 +34,9 @@ export async function pickPhoto(): Promise<File | null> {
       promptLabelPicture: "Take a photo",
     });
 
-    if (!photo.webPath) return null;
+    if (!photo.dataUrl) return null;
 
-    const res = await fetch(photo.webPath);
+    const res = await fetch(photo.dataUrl);
     const blob = await res.blob();
     const ext = photo.format || "jpeg";
     const type = blob.type || `image/${ext}`;

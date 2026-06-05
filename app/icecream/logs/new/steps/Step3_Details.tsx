@@ -266,8 +266,12 @@ export function Step3_Details({
               if (isNativePlatform()) {
                 // Native iOS: present the camera/library source picker.
                 void (async () => {
-                  const file = await pickPhoto();
-                  if (file) dispatch({ type: "SET_PHOTO", file });
+                  try {
+                    const file = await pickPhoto();
+                    if (file) dispatch({ type: "SET_PHOTO", file });
+                  } catch {
+                    // Permission denied or capture failed — leave photo unset.
+                  }
                 })();
               } else {
                 photoInputRef.current?.click();
