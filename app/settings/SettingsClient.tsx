@@ -2,7 +2,11 @@
 
 import { createClient } from "@/src/lib/supabase/client";
 import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
-import { deletePushSubscription, subscribeToPush } from "@/src/lib/push";
+import {
+  checkPushPermission,
+  disablePush,
+  enablePush,
+} from "@/src/lib/notifications";
 import {
   LOCATION_DENIED_TROUBLESHOOT_HINT,
 } from "@/src/lib/locationMessages";
@@ -174,6 +178,20 @@ export function SettingsClient({
   // checkout/portal). We keep plan status and link out to Safari instead.
   const isNative = useIsNative();
 
+  // On native iOS the web `push_subscriptions` row is never set, so the toggle's
+  // initial value can't reflect reality — read the real permission instead.
+  useEffect(() => {
+    if (!isNative) return;
+    let cancelled = false;
+    void (async () => {
+      const permission = await checkPushPermission();
+      if (!cancelled) setNotificationsEnabled(permission === "granted");
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isNative]);
+
   const [showDeleteSheet, setShowDeleteSheet] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -306,17 +324,16 @@ export function SettingsClient({
     setNotifError(null);
     try {
       if (notificationsEnabled) {
-        await deletePushSubscription();
+        await disablePush();
         setNotificationsEnabled(false);
       } else {
-        const permission = await Notification.requestPermission();
+        const permission = await enablePush();
         if (permission !== "granted") {
           setNotifError(
-            "Permission denied. Enable notifications in your browser settings.",
+            "Permission denied. Enable notifications in your device settings.",
           );
           return;
         }
-        await subscribeToPush();
         setNotificationsEnabled(true);
       }
     } catch (e) {

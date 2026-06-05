@@ -1,6 +1,6 @@
 "use client";
 
-import { requestNotificationPermission, subscribeToPush } from "@/src/lib/push";
+import { checkPushPermission, enablePush } from "@/src/lib/notifications";
 import { GellogClose } from "@/src/components/icons";
 import { useEffect, useState } from "react";
 
@@ -10,11 +10,19 @@ export function NotifPromptBanner() {
 
   useEffect(() => {
     if (localStorage.getItem("gellog-notif-asked")) return;
-    if ("Notification" in window && Notification.permission !== "default") {
-      localStorage.setItem("gellog-notif-asked", "1");
-      return;
-    }
-    setVisible(true);
+    let cancelled = false;
+    void (async () => {
+      const permission = await checkPushPermission();
+      if (cancelled) return;
+      if (permission !== "prompt") {
+        localStorage.setItem("gellog-notif-asked", "1");
+        return;
+      }
+      setVisible(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   function dismiss() {
@@ -25,8 +33,7 @@ export function NotifPromptBanner() {
   async function handleEnable() {
     setLoading(true);
     try {
-      const permission = await requestNotificationPermission();
-      if (permission === "granted") await subscribeToPush();
+      await enablePush();
     } finally {
       dismiss();
     }

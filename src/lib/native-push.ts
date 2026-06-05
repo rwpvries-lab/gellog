@@ -74,6 +74,31 @@ export async function registerPushNotifications(
   await PushNotifications.register();
 }
 
+/**
+ * Stops this device receiving push: drops its APNs tokens so the server has
+ * nothing to deliver to. iOS does not let an app revoke the system permission
+ * itself, so this is the native equivalent of "turn notifications off".
+ */
+export async function unregisterPushNotifications(
+  supabase: SupabaseClient,
+): Promise<void> {
+  if (!isNativePlatform()) return;
+
+  // Allow a later re-enable to re-attach listeners and re-register.
+  registered = false;
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  await supabase
+    .from("device_tokens")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("platform", "ios");
+}
+
 async function storeDeviceToken(
   supabase: SupabaseClient,
   token: string,
