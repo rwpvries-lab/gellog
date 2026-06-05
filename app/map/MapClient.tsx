@@ -619,7 +619,7 @@ export function MapClient({
       {selected && (
         <div
           className="absolute inset-x-0 rounded-t-3xl bg-white shadow-2xl dark:bg-zinc-900"
-          style={{ bottom: NAV_HEIGHT, zIndex: 40 }}
+          style={{ bottom: `calc(${NAV_HEIGHT}px + env(safe-area-inset-bottom, 0px))`, zIndex: 40 }}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
@@ -669,7 +669,7 @@ export function MapClient({
 
           <div
             className={`overflow-hidden transition-all duration-300 ease-in-out ${
-              expanded ? "max-h-[60vh]" : "max-h-0"
+              expanded ? "max-h-[60vh]" : "max-h-[112px]"
             }`}
           >
             <div className="overflow-y-auto px-5 pb-6">
