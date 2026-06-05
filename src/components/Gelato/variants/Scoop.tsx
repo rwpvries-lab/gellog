@@ -62,8 +62,6 @@ export function Scoop({
           cy={303.461}
           r={303.461}
           fill={base.hex}
-          stroke="var(--gelato-edge, transparent)"
-          strokeWidth={8}
         />
 
         {/* Bottom circles */}
@@ -74,40 +72,30 @@ export function Scoop({
               cy={552.393}
               r={99.5731}
               fill={base.hex}
-              stroke="var(--gelato-edge, transparent)"
-              strokeWidth={6}
             />
             <circle
               cx={199.146}
               cy={552.393}
               r={99.5731}
               fill={base.hex}
-              stroke="var(--gelato-edge, transparent)"
-              strokeWidth={6}
             />
             <circle
               cx={298.719}
               cy={552.393}
               r={99.5731}
               fill={base.hex}
-              stroke="var(--gelato-edge, transparent)"
-              strokeWidth={6}
             />
             <circle
               cx={429.112}
               cy={552.393}
               r={99.5731}
               fill={base.hex}
-              stroke="var(--gelato-edge, transparent)"
-              strokeWidth={6}
             />
             <circle
               cx={528.685}
               cy={552.393}
               r={99.5731}
               fill={base.hex}
-              stroke="var(--gelato-edge, transparent)"
-              strokeWidth={6}
             />
           </>
         ) : null}
