@@ -60,7 +60,7 @@ export function SplashWrapper({ children, user }: SplashWrapperProps) {
             user
               ? hideBottomNav
                 ? "min-h-screen"
-                : "min-h-screen pb-28 lg:pb-0"
+                : "min-h-screen pb-28"
               : "min-h-screen"
           }
         >
