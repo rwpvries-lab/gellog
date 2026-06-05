@@ -58,10 +58,14 @@ type SalonVitrineResolvedRow = {
 };
 
 function mapVitrineResolvedToFlavour(row: SalonVitrineResolvedRow): VitrineFlavour {
+  // Show the flavour name the salon owner actually typed — not the canonical
+  // (often Dutch) name. Previously this preferred `canonical_name_nl`, which
+  // rendered e.g. "Banaan (Banana)" for an owner who typed "Banana", looking
+  // like an unwanted auto-translation of their own board.
   const displayName =
+    row.input_name?.trim() ||
     row.canonical_name_nl?.trim() ||
     row.canonical_name_en?.trim() ||
-    row.input_name?.trim() ||
     "Flavour";
   return {
     id: row.vitrine_flavour_id,
