@@ -1,6 +1,7 @@
 "use client";
 
 import { FlavorColorPicker } from "@/src/components/FlavorColorPicker";
+import { resolveVitrineSwatch } from "@/src/lib/vitrine-swatch";
 import { createClient } from "@/src/lib/supabase/client";
 import { userFacingSaveError } from "@/src/lib/userFacingError";
 import { useEffect, useState } from "react";
@@ -341,7 +342,7 @@ export function FlavourBoard({
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setColourPickerOpenId(colourPickerOpenId === f.id ? null : f.id); }}
                 className="h-6 w-6 flex-shrink-0 rounded-full ring-1 ring-black/10 transition hover:scale-110"
-                style={{ backgroundColor: f.colour || DEFAULT_HEX }}
+                style={{ backgroundColor: resolveVitrineSwatch(f) ?? f.colour ?? DEFAULT_HEX }}
                 title="Change colour"
               />
 
