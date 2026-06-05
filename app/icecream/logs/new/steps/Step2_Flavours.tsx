@@ -236,13 +236,21 @@ export function Step2_Flavours({
       {state.step2.flavours.length > 0 && (
         <div className="flex flex-col gap-3">
           {state.step2.flavours.map((flavour) => {
-            const vitrineRow = vitrineRows.find(
-              (r) =>
-                (flavour.vitrineFlavourId &&
-                  r.vitrine_flavour_id === flavour.vitrineFlavourId) ||
-                (flavour.canonicalFlavourId != null &&
-                  r.flavour_id === flavour.canonicalFlavourId),
-            );
+            // Resolve by the exact vitrine selection first; only fall back to a
+            // canonical-id match when this flavour wasn't picked from the vitrine.
+            // (Multiple vitrine flavours can share a canonical flavour_id, so an
+            // OR predicate could otherwise match the wrong row and lose the colour.)
+            const vitrineRow =
+              (flavour.vitrineFlavourId != null
+                ? vitrineRows.find(
+                    (r) => r.vitrine_flavour_id === flavour.vitrineFlavourId,
+                  )
+                : undefined) ??
+              (flavour.canonicalFlavourId != null
+                ? vitrineRows.find(
+                    (r) => r.flavour_id === flavour.canonicalFlavourId,
+                  )
+                : undefined);
             const swatchHex =
               vitrineRow?.base_token
                 ? (BASE_TOKENS[vitrineRow.base_token as BaseToken]?.hex ?? null)
