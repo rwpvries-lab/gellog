@@ -72,18 +72,14 @@ export function BottomNav() {
   }
 
   return (
-    <nav
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-30 lg:hidden"
-      style={{
-        paddingBottom: "env(safe-area-inset-bottom, 0px)",
-      }}
-    >
+    <nav className="pointer-events-none fixed inset-x-0 bottom-0 z-30 lg:hidden">
       <div className="pointer-events-auto mx-auto max-w-2xl">
         <div
           style={{
             background: "var(--color-surface)",
             borderTop: "1px solid var(--color-border)",
             boxShadow: "0 -4px 24px rgba(0, 0, 0, 0.08)",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
           }}
         >
           <div className="flex items-stretch px-1 py-2">
