@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function IceCreamFeedLoading() {
   return (
     <main
-      className="px-4 pb-24 pt-4"
+      className="px-4 pb-24 pt-[max(1.5rem,env(safe-area-inset-top))]"
       style={{ background: "var(--page-gradient-bg)", minHeight: "100vh" }}
     >
       <div className="mx-auto flex w-full max-w-xl flex-col gap-5">

@@ -136,7 +136,7 @@ function fmtHour(h: number): string {
 
 function SalonPageSkeleton() {
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
+    <main className="mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]">
       <div className="mb-5 animate-pulse rounded-3xl bg-white px-6 py-6 shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
         <div className="mx-auto mb-4 h-20 w-20 rounded-2xl bg-[#F0E4CF] dark:bg-zinc-700" />
         <div className="flex items-center justify-between gap-3">
@@ -364,7 +364,7 @@ export function SalonPageClient({ placeId }: Props) {
     const placeName = emptyPlaceName;
     return (
       <main
-        className="mx-auto max-w-lg px-4 py-8"
+        className="mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]"
         style={userId == null ? { paddingBottom: PUBLIC_BANNER_LAYOUT_PX + 32 } : undefined}
       >
         {isOwner && (
@@ -465,7 +465,7 @@ export function SalonPageClient({ placeId }: Props) {
 
   return (
     <main
-      className="mx-auto max-w-lg px-4 py-8"
+      className="mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]"
       style={userId == null ? { paddingBottom: PUBLIC_BANNER_LAYOUT_PX + 32 } : undefined}
     >
       {isOwner && (

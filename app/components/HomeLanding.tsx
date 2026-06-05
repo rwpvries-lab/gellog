@@ -32,7 +32,7 @@ const featureCards = [
 export function HomeLanding() {
   return (
     <div className="min-h-screen bg-[color:var(--color-surface)] text-[color:var(--color-text-primary)]">
-      <header className="sticky top-0 z-40 border-b border-[color:var(--color-border)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] backdrop-blur-md supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--background)_72%,transparent)]">
+      <header className="sticky top-0 z-40 border-b border-[color:var(--color-border)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] backdrop-blur-md supports-[backdrop-filter]:bg-[color-mix(in_srgb,var(--background)_72%,transparent)]" style={{ paddingTop: "env(safe-area-inset-top)" }}>
         <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4 sm:px-6">
           <Link href="/" className="flex items-center gap-2" aria-label="Gellog home">
             <GellogLogo size={40} priority />

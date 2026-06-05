@@ -127,7 +127,7 @@ export default async function MapPage({
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       {!pickerReturnTo ? (
-        <header className="flex flex-none items-center border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
+        <header className="flex flex-none items-center border-b border-zinc-100 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] dark:border-zinc-800">
           <h1 className="text-base font-bold text-zinc-900 dark:text-zinc-50">
             Discover
           </h1>

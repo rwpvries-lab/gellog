@@ -21,7 +21,7 @@ export default async function MySalonsPage() {
 
   if (error) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-8">
+      <main className="mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]">
         <p className="text-sm text-red-600 dark:text-red-400">Could not load your salons.</p>
       </main>
     );
@@ -30,7 +30,7 @@ export default async function MySalonsPage() {
   const salons = rows ?? [];
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
+    <main className="mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">My Salons</h1>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">

@@ -94,7 +94,7 @@ export default async function SalonClaimPage({
   // Already claimed by someone else
   if (salonProfile?.is_claimed) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-8">
+      <main className="mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]">
         <div className="rounded-3xl bg-white px-6 py-8 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
           <span className="mb-4 inline-block text-5xl">🔒</span>
           <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
@@ -120,7 +120,7 @@ export default async function SalonClaimPage({
 
   if (isAtVerifiedSalonCap(verifiedSalonCount)) {
     return (
-      <main className="mx-auto max-w-lg px-4 py-8">
+      <main className="mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]">
         <div className="rounded-3xl bg-white px-6 py-8 text-center shadow-sm ring-1 ring-zinc-100 dark:bg-zinc-900 dark:ring-zinc-800">
           <span className="mb-4 inline-block text-5xl">📋</span>
           <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
@@ -154,7 +154,7 @@ export default async function SalonClaimPage({
   const prefillEmail = user.email ?? "";
 
   return (
-    <main className="mx-auto max-w-lg px-4 py-8">
+    <main className="mx-auto max-w-lg px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))]">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
           Claim {salonName}

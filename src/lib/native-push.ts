@@ -8,19 +8,21 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * this module is the APNs path and no-ops off-native.
  *
  * ───────────────────────────────────────────────────────────────────────────
- * TODO(APNs key) — pending the approved Apple Developer account. The app-side
- * wiring below + the `aps-environment` entitlement are done; what remains is
- * server/portal config so APNs will actually deliver:
- *   1. Apple Developer portal → Certificates, IDs & Profiles → Keys → create
- *      an APNs Auth Key (.p8). Note the Key ID and your Team ID.
- *   2. Enable the "Push Notifications" capability on the App ID
- *      `com.sidusstudio.gellog` (regenerates provisioning profiles).
- *   3. Store the .p8 + Key ID + Team ID + bundle ID as secrets in whatever
- *      sends the pushes (e.g. a Supabase Edge Function calling APNs over HTTP/2
- *      at api.push.apple.com, or a worker reading the `device_tokens` table).
- *   4. Switch `aps-environment` in App.entitlements to `production` for
- *      TestFlight/App Store builds.
- * Until then, registration + token storage work; delivery is a no-op.
+ * APNs delivery is wired in `native-push-server.ts` (`sendPushToUser`), which
+ * signs an ES256 provider token and pushes over HTTP/2 to api.push.apple.com.
+ * Credentials live in Vercel env vars, not in code:
+ *   APNS_PRIVATE_KEY  full .p8 contents (incl. BEGIN/END lines)
+ *   APNS_KEY_ID       ABP9JKN426
+ *   APNS_TEAM_ID      7N5C924G3K
+ *   APNS_BUNDLE_ID    (optional) push topic, defaults to com.sidusstudio.gellog
+ *   APNS_PRODUCTION   "true" only for TestFlight/App Store builds (else sandbox)
+ *
+ * Remaining manual steps (Apple portal / Xcode, not code):
+ *   1. APNs Auth Key (.p8) created — Key ID ABP9JKN426, Team ID 7N5C924G3K. ✓
+ *   2. "Push Notifications" capability enabled on App ID com.sidusstudio.gellog
+ *      (regenerate provisioning profiles after enabling).
+ *   3. For TestFlight/App Store: switch `aps-environment` in App.entitlements
+ *      to `production` and set APNS_PRODUCTION=true in Vercel.
  * ───────────────────────────────────────────────────────────────────────────
  */
 

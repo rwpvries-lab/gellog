@@ -33,9 +33,13 @@ export function AppShell({
       ? ({ background: "var(--page-gradient-bg)", minHeight: "100vh" } as const)
       : ({ background: "var(--color-surface-alt)", minHeight: "100vh" } as const);
 
-  const mainCombinedStyle = { ...bgStyle, ...mainStyle };
+  const mainCombinedStyle = {
+    ...bgStyle,
+    ...mainStyle,
+    paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+  };
 
-  const mainClass = `px-4 pb-24 pt-6 ${className}`.trim();
+  const mainClass = `px-4 pb-24 ${className}`.trim();
 
   if (!contained) {
     return (

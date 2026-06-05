@@ -380,7 +380,7 @@ export function DashboardClient({
   const displayLogoUrl = logoPreview ?? getLogoUrl(logoUrl);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 lg:px-6">
+    <main className="mx-auto max-w-7xl px-4 py-8 pt-[max(2rem,env(safe-area-inset-top))] lg:px-6">
       {/* Mobile: back to public salon; desktop uses section tabs below */}
       <div className="-mx-4 mb-5 flex items-center gap-3 border-b border-zinc-200 bg-white px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950 lg:hidden">
         <Link

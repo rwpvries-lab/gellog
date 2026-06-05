@@ -442,7 +442,7 @@ export function ConnectionsClient({
   return (
     <main
       style={{ background: "var(--color-surface-alt)", minHeight: "100vh" }}
-      className="px-4 pb-24 pt-6"
+      className="px-4 pb-24 pt-[max(1.5rem,env(safe-area-inset-top))]"
     >
       <div className="mx-auto flex w-full max-w-xl flex-col gap-4">
 
