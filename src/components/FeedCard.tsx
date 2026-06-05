@@ -10,7 +10,7 @@ import { formatVisitDate } from "@/src/lib/utils";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export type { LogFlavour };
 
@@ -497,6 +497,14 @@ export function FeedCard({
 
   const { toast, showToast, dismissToast } = useToast();
 
+  // Timestamps below are formatted from the client's clock + timezone, so the
+  // value can differ from what the server rendered (UTC, at request time). That
+  // text mismatch threw React #418 and blanked the WKWebView. The timestamp
+  // elements carry suppressHydrationWarning so hydration passes using the server
+  // text; this re-render then swaps in the correct local value after mount.
+  const [, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
+
   const isOwnLog = currentUserId != null && log.user_id === currentUserId;
 
   async function handleLike(e: React.MouseEvent) {
@@ -675,7 +683,7 @@ export function FeedCard({
                       log.salon_name
                     )}
                   </h2>
-                  <span className="mt-1 block text-[13px] font-medium text-[color:var(--text-secondary)]">
+                  <span suppressHydrationWarning className="mt-1 block text-[13px] font-medium text-[color:var(--text-secondary)]">
                     {timeAgo}
                   </span>
                 </div>
@@ -711,7 +719,7 @@ export function FeedCard({
                       log.salon_name
                     )}
                   </h2>
-                  <span className="shrink-0 text-[13px] font-medium text-[color:var(--text-secondary)]">
+                  <span suppressHydrationWarning className="shrink-0 text-[13px] font-medium text-[color:var(--text-secondary)]">
                     {timeAgo}
                   </span>
                 </div>
@@ -935,7 +943,7 @@ export function FeedCard({
               </>
             )}
             <span>·</span>
-            <span>{timeAgo}</span>
+            <span suppressHydrationWarning>{timeAgo}</span>
             {log.visibility === "friends" ? (
               <span className="rounded-full bg-[color:var(--brand-secondary-bg)] px-1.5 py-0.5 text-[10px] font-medium text-[color:var(--brand-secondary)] ring-1 ring-[color:color-mix(in_srgb,var(--brand-secondary)_35%,var(--border-default))]">
                 Friends
@@ -1181,7 +1189,7 @@ export function FeedCard({
               ) : null}
 
               {/* Full date/time */}
-              <p className="text-xs text-[color:var(--text-tertiary)]">{fullDate}</p>
+              <p suppressHydrationWarning className="text-xs text-[color:var(--text-tertiary)]">{fullDate}</p>
               {retroDays != null ? (
                 <p className="font-sans text-[11px] font-medium text-[color:var(--brand-primary)]">
                   logged {retroDays} {retroDays === 1 ? "day" : "days"} later

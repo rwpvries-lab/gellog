@@ -188,7 +188,7 @@ export function HomeLanding() {
               support@gellog.app
             </a>
           </nav>
-          <p className="text-xs text-[color:var(--color-text-tertiary)]">
+          <p suppressHydrationWarning className="text-xs text-[color:var(--color-text-tertiary)]">
             © {new Date().getFullYear()} Gellog
           </p>
         </div>
