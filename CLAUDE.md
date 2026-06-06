@@ -62,6 +62,9 @@ Gellog is a mobile-first PWA for logging and discovering gelato / ice cream ("St
 - **Native-only divergence:** consumer Stripe upgrade/payment UI is hidden in the native iOS build (Apple IAP policy on digital subscriptions). Web and native payment surfaces intentionally differ here.
 - **Reuse for future projects (e.g. 30 Seconds):** Option A is the fast path when a product is *already* a deployed web app that needs server features — wrap remote + add native plugins. Choose a true native rewrite only when the product genuinely needs it (offline-first, App-Store-only party games, IAP-first revenue), per the Decisions Log.
 
+### Android build notes
+- `gradle.properties` pins `org.gradle.java.home` to Android Studio's bundled JBR (Java 21) — this path is machine-specific. Any CI environment needs its own JDK 17+ via `JAVA_HOME` instead of relying on this property.
+
 ## Route map (quick reference)
 - `/` — marketing landing (redirects signed-in → `/feed`)
 - `/icecream/feed` — main feed
