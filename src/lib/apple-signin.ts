@@ -50,8 +50,8 @@ function randomNonce(length = 32): string {
   return Array.from(values, (v) => charset[v % charset.length]).join("");
 }
 
-/** Hex-encoded SHA-256 of the raw nonce — this is what Apple bakes into the token. */
-async function sha256Hex(input: string): Promise<string> {
+/** Hex-encoded SHA-256 — used for Apple Sign-In nonce hashing. */
+export async function sha256Hex(input: string): Promise<string> {
   const data = new TextEncoder().encode(input);
   const digest = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(digest))

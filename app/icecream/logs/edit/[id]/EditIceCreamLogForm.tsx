@@ -16,9 +16,9 @@ import { getFlavourColor } from "@/src/components/VesselIllustration";
 import { mapFlavourToSlug } from "@/src/lib/flavour-scoop";
 import { useFlavourTokens } from "@/src/lib/use-flavour-tokens";
 import { useSalonVitrine } from "@/src/lib/use-salon-vitrine";
-import { createClient } from "@/src/lib/supabase/client";
 import { LOCATION_DENIED_USER_MESSAGE } from "@/src/lib/locationMessages";
 import { userFacingSaveError } from "@/src/lib/userFacingError";
+import { updateIceCreamLog } from "./updateIceCreamLog";
 import { useRouter } from "next/navigation";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 
@@ -522,63 +522,35 @@ export function EditIceCreamLogForm({ userId, log }: EditIceCreamLogFormProps) {
     if (activeFlavours.length === 0) { setError("Add at least one flavour."); return; }
 
     setSubmitting(true);
-    const supabase = createClient();
 
     try {
-      const { error: logError } = await supabase
-        .from("ice_cream_logs")
-        .update({
-          salon_name: trimmedSalon,
-          salon_place_id: salonPlaceId,
-          salon_address: salonAddress,
-          salon_lat: salonLat,
-          salon_lng: salonLng,
-          salon_city: salonCity,
-          overall_rating: overallRating,
-          notes: notes.trim() || null,
-          visited_at: new Date(visitedAt).toISOString(),
-          vessel: vessel ?? null,
-          price_cents:
-            pricePaid !== ""
-              ? Math.round(parseFloat(pricePaid.replace(",", ".")) * 100)
-              : null,
-          hide_price: hidePriceFromOthers,
-          photo_visibility: log.photo_url ? photoVisibility : "public",
-          weather_temp_c: weather?.temperature ?? log.weather_temp_c,
-          weather_condition: weather
-            ? `${weather.emoji} ${weather.label}`
-            : log.weather_condition,
-          visibility,
-        })
-        .eq("id", log.id)
-        .eq("user_id", userId);
+      const result = await updateIceCreamLog({
+        userId,
+        logId: log.id,
+        salonName: trimmedSalon,
+        salonPlaceId,
+        salonAddress,
+        salonLat,
+        salonLng,
+        salonCity,
+        overallRating,
+        notes,
+        visitedAtIso: new Date(visitedAt).toISOString(),
+        vessel,
+        pricePaid,
+        hidePriceFromOthers,
+        photoUrl: log.photo_url,
+        photoVisibility,
+        savedWeatherTempC: log.weather_temp_c,
+        savedWeatherCondition: log.weather_condition,
+        capturedWeather: weather
+          ? { temperature: weather.temperature, label: weather.label, emoji: weather.emoji }
+          : null,
+        visibility,
+        flavours: activeFlavours,
+      });
 
-      if (logError) throw logError;
-
-      // Delete and re-insert flavours
-      const { error: deleteError } = await supabase
-        .from("log_flavours")
-        .delete()
-        .eq("log_id", log.id);
-
-      if (deleteError) throw deleteError;
-
-      const { error: flavoursError } = await supabase
-        .from("log_flavours")
-        .insert(
-          activeFlavours.map((f) => ({
-            log_id: log.id,
-            flavour_name: f.name,
-            rating_stars: f.rating,
-            tags: f.tags.length > 0 ? f.tags : null,
-            texture: f.ratingTexture,
-            originality: f.ratingOriginality,
-            intensity: f.ratingIntensity,
-            presentation: f.ratingPresentation,
-          }))
-        );
-
-      if (flavoursError) throw flavoursError;
+      if (!result.ok) throw result.error;
 
       router.push("/icecream/feed");
     } catch (err) {

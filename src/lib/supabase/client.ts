@@ -1,7 +1,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-function hasValidRefreshToken(value: unknown): boolean {
+export function hasValidRefreshToken(value: unknown): boolean {
   if (!value || typeof value !== "object") return false;
 
   const sessionLike = value as {
@@ -92,7 +92,7 @@ function clearInvalidAuthLocalStorage(): void {
   }
 }
 
-function shouldClearSessionAfterTokenResponse(url: string, body: unknown): boolean {
+export function shouldClearSessionAfterTokenResponse(url: string, body: unknown): boolean {
   if (!url.includes("/auth/v1/token")) return false;
   if (!body || typeof body !== "object") return false;
   const o = body as Record<string, unknown>;
