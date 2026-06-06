@@ -42,3 +42,4 @@ capacitor-webdir/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+gellog.keystore
