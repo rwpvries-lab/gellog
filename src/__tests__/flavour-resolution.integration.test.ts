@@ -6,17 +6,25 @@
  *
  * These tests require a running Supabase project.
  * Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to run them.
+ * The owner_defined priority test also needs SUPABASE_SERVICE_ROLE_KEY to seed/clean fixtures.
  *
  * Confirmed expected values from the live DB on 2026-06-01.
  */
-import { describe, it, expect, beforeAll } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
 const hasCredentials = supabaseUrl.length > 0 && supabaseKey.length > 0;
+const hasServiceRole = hasCredentials && serviceRoleKey.length > 0;
 
 const runOrSkip = hasCredentials ? describe : describe.skip;
+const runOwnerDefinedOrSkip = hasServiceRole ? describe : describe.skip;
+
+/** Isolated catalogue row — never touches production flavours like strawberry. */
+const OWNER_PRIORITY_TEST_NAME = "Gellog Owner Priority Test";
+const OWNER_PRIORITY_TEST_SLUG = "gellog-owner-priority-test";
 
 runOrSkip("parse_compound_flavour DB function", () => {
   let supabase: ReturnType<typeof createClient>;
@@ -183,8 +191,83 @@ runOrSkip("resolve_flavour_tokens DB function", () => {
     expect(row.drizzle_token).toBe("none");
     expect(row.crumble_token).toBe("none");
   });
+});
 
-  // owner_defined rows take priority in Layer 1 (ORDER BY (source = 'owner_defined') DESC)
-  // Cannot assert without seeding a fixture row; tested by code inspection only.
-  it.todo("owner_defined source beats system source on exact match — requires fixture row");
+runOwnerDefinedOrSkip("resolve_flavour_tokens owner_defined priority", () => {
+  let supabase: ReturnType<typeof createClient>;
+  let admin: ReturnType<typeof createClient>;
+  let fixtureFlavourId: string | null = null;
+
+  beforeAll(async () => {
+    supabase = createClient(supabaseUrl, supabaseKey);
+    admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    await admin.from("flavours").delete().eq("slug", OWNER_PRIORITY_TEST_SLUG);
+
+    const { data: inserted, error: insertError } = await admin
+      .from("flavours")
+      .insert({
+        name: OWNER_PRIORITY_TEST_NAME,
+        slug: OWNER_PRIORITY_TEST_SLUG,
+        name_en: OWNER_PRIORITY_TEST_NAME,
+        base_token: "strawberry-pink",
+        drizzle_token: "none",
+        crumble_token: "fruit-chunks-red",
+        source: "system",
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (insertError || !inserted?.id) {
+      throw insertError ?? new Error("Failed to seed owner_defined test flavour.");
+    }
+    fixtureFlavourId = inserted.id as string;
+  });
+
+  afterAll(async () => {
+    if (fixtureFlavourId) {
+      await admin.from("flavours").delete().eq("id", fixtureFlavourId);
+    }
+  });
+
+  async function resolveTokens(input: string) {
+    const { data, error } = await supabase.rpc("resolve_flavour_tokens", { input });
+    if (error) throw error;
+    return (data as {
+      flavour_id: string | null;
+      base_token: string;
+      drizzle_token: string;
+      crumble_token: string;
+      source: string | null;
+    }[])[0];
+  }
+
+  it("resolves the seeded row as system before promotion", async () => {
+    const row = await resolveTokens(OWNER_PRIORITY_TEST_NAME);
+
+    expect(row.source).toBe("system");
+    expect(row.flavour_id).toBe(fixtureFlavourId);
+    expect(row.base_token).toBe("strawberry-pink");
+  });
+
+  it("owner_defined promotion replaces system tokens on exact match", async () => {
+    const { error: promoteError } = await admin.rpc("upsert_owner_flavour_catalogue", {
+      p_name: OWNER_PRIORITY_TEST_NAME,
+      p_base_token: "matcha-deep",
+      p_drizzle_token: "honey-swirl",
+      p_crumble_token: "none",
+    });
+    if (promoteError) throw promoteError;
+
+    const row = await resolveTokens(OWNER_PRIORITY_TEST_NAME);
+
+    expect(row.source).toBe("owner_defined");
+    expect(row.flavour_id).toBe(fixtureFlavourId);
+    expect(row.base_token).toBe("matcha-deep");
+    expect(row.drizzle_token).toBe("honey-swirl");
+    expect(row.crumble_token).toBe("none");
+  });
 });
