@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "282057044030",
+    "project_id": "gellog-5c69d",
+    "storage_bucket": "gellog-5c69d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:282057044030:android:2ebc9c89ae9dd1bbb5216f",
+        "android_client_info": {
+          "package_name": "com.sidusstudio.gellog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAkIC9LZBn_ZnHzjo-jjUBA-VmzdlSM3pE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
