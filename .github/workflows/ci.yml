@@ -42,5 +42,6 @@ jobs:
       - name: Run Playwright smoke tests
         run: npm run test:e2e
         env:
+          PLAYWRIGHT_BASE_URL: https://www.gellog.app
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
           E2E_TEST_PASSWORD: ${{ secrets.E2E_TEST_PASSWORD }}
