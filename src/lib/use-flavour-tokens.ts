@@ -22,7 +22,7 @@ export function useFlavourTokens(flavourName: string | undefined): {
     }
 
     let cancelled = false;
-    const loadingId = requestAnimationFrame(() => setLoading(true));
+    setLoading(true);
 
     (async () => {
       const supabase = createClient();
@@ -50,7 +50,6 @@ export function useFlavourTokens(flavourName: string | undefined): {
     })();
 
     return () => {
-      cancelAnimationFrame(loadingId);
       cancelled = true;
     };
   }, [flavourName]);
