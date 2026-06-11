@@ -9,6 +9,8 @@ import {
   signInWithApple,
 } from "@/src/lib/apple-signin";
 import { AppleSignInButton } from "@/app/components/AppleSignInButton";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import { Toast, useToast } from "@/src/components/Toast";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -163,6 +165,23 @@ export default function SignupPage() {
   }
 
   async function handleGoogle() {
+    if (Capacitor.isNativePlatform()) {
+      // iOS: Google blocks OAuth in the WKWebView, so open it in
+      // ASWebAuthenticationSession and catch the gellog:// redirect natively.
+      const { data } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          skipBrowserRedirect: true,
+          redirectTo: "gellog://auth/callback",
+          queryParams: { access_type: "offline", prompt: "consent" },
+        },
+      });
+      if (data?.url) {
+        await Browser.open({ url: data.url });
+      }
+      return;
+    }
+
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
