@@ -4,7 +4,7 @@ import { GellogLogo } from "@/app/components/GellogLogo";
 import { createClient } from "@/src/lib/supabase/client";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { userFacingAuthMessage } from "@/src/lib/userFacingError";
 import {
   isAppleSignInAvailable,
@@ -35,6 +35,15 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
+
+  // Evaluate native availability after mount: under the remote-URL wrapper the
+  // initial HTML is server-rendered (getPlatform() === "web"), so gating inline
+  // would omit the button from SSR and rely on hydration to add it. Mounting it
+  // in state makes the Apple button appear deterministically on iPad + iPhone.
+  const [appleAvailable, setAppleAvailable] = useState(false);
+  useEffect(() => {
+    setAppleAvailable(isAppleSignInAvailable());
+  }, []);
 
   async function handleGoogle() {
     if (Capacitor.isNativePlatform()) {
@@ -73,8 +82,15 @@ export default function LoginPage() {
       const next = searchParams.get("next") || "/";
       router.push(next);
       router.refresh();
-    } catch {
-      setError("We couldn't sign you in with Apple. Please try again.");
+    } catch (err) {
+      // Surface the real reason (e.g. iPad presentation/availability failures)
+      // instead of masking every failure behind a generic retry message.
+      const detail = err instanceof Error ? err.message : "";
+      setError(
+        detail
+          ? `Apple sign-in failed: ${detail}`
+          : "We couldn't sign you in with Apple. Please try again.",
+      );
     }
   }
 
@@ -127,9 +143,7 @@ export default function LoginPage() {
           </button>
 
           {/* Apple — native iOS only (App Store guideline 4.8) */}
-          {isAppleSignInAvailable() && (
-            <AppleSignInButton onClick={handleApple} />
-          )}
+          {appleAvailable && <AppleSignInButton onClick={handleApple} />}
 
           {/* Divider */}
           <div className="flex items-center gap-3">
