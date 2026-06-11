@@ -640,22 +640,8 @@ export function SettingsClient({
                 Renews {expiresLabel}
               </p>
             )}
-            {isNative ? (
-              <a
-                href="https://www.gellog.app/settings"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  color: "var(--color-teal)",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  textAlign: "left",
-                  textDecoration: "none",
-                }}
-              >
-                Manage subscription at gellog.app →
-              </a>
-            ) : (
+            {/* Consumer billing is web-only; no in-app management link on native iOS. */}
+            {!isNative && (
               <button
                 type="button"
                 onClick={() => void handleManageSubscription()}
@@ -675,14 +661,15 @@ export function SettingsClient({
             )}
           </div>
         ) : isNative ? (
-          /* Native iOS: consumer billing is web-only — status + Safari link, no in-app checkout */
+          /* Native iOS: consumer billing is web-only — show plan status only, no
+             in-app checkout and no external upgrade link (Apple IAP / anti-steering). */
           <div
             style={{
               ...CARD,
               padding: "20px 16px",
               display: "flex",
               flexDirection: "column",
-              gap: 10,
+              gap: 6,
             }}
           >
             <p
@@ -695,21 +682,8 @@ export function SettingsClient({
               You&apos;re on the free plan
             </p>
             <p style={{ color: "var(--color-text-secondary)", fontSize: 13 }}>
-              Ice Cream+ is available on the web.
+              Log unlimited gelato visits, build your passport, and explore the map.
             </p>
-            <a
-              href="https://www.gellog.app/pricing"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                color: "var(--color-orange)",
-                fontSize: 14,
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              See plans at gellog.app →
-            </a>
           </div>
         ) : (
           /* Upgrade card */
