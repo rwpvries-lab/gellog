@@ -4,6 +4,7 @@ import { NotifPromptBanner } from "@/app/components/NotifPromptBanner";
 import { createClient } from "@/src/lib/supabase/server";
 import type { IceCreamLog } from "@/src/components/FeedCard";
 import { applyResolvedFlavoursToLogRow, LOG_FLAVOURS_RESOLVED_SELECT } from "@/src/lib/log-flavours-resolved";
+import { fetchBlockedUserIds, blockedInListFilter } from "@/src/lib/blocked-users";
 import { Bell } from "lucide-react";
 import Link from "next/link";
 import { IceCreamFeedClient } from "./IceCreamFeedClient";
@@ -16,6 +17,10 @@ export default async function IceCreamFeedPage() {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
+
+  // UGC moderation: drop logs authored by users the viewer has blocked.
+  const blockedUserIds = await fetchBlockedUserIds(supabase, user?.id);
+  const blockedFilter = blockedInListFilter(blockedUserIds);
 
   const followingQuery =
     user != null
@@ -33,8 +38,7 @@ export default async function IceCreamFeedPage() {
           .eq("user_id", user.id)
       : Promise.resolve({ count: 0 as number | null });
 
-  const [{ data, error }, { data: followingRows }, { count: logCount }] = await Promise.all([
-    supabase
+  let logsQuery = supabase
     .from("ice_cream_logs")
     .select(
       `
@@ -68,7 +72,14 @@ export default async function IceCreamFeedPage() {
     )
     .eq("visibility", "public")
     .order("visited_at", { ascending: false })
-    .limit(PAGE_SIZE),
+    .limit(PAGE_SIZE);
+
+  if (blockedFilter) {
+    logsQuery = logsQuery.not("user_id", "in", blockedFilter);
+  }
+
+  const [{ data, error }, { data: followingRows }, { count: logCount }] = await Promise.all([
+    logsQuery,
     followingQuery,
     logCountQuery,
   ]);
@@ -151,6 +162,7 @@ export default async function IceCreamFeedPage() {
           pageSize={PAGE_SIZE}
           currentUserId={user?.id}
           initialFollowingUserIds={initialFollowingUserIds}
+          blockedUserIds={blockedUserIds}
         />
     </AppShell>
   );

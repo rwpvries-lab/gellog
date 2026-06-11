@@ -11,6 +11,7 @@ import {
 import { AppleSignInButton } from "@/app/components/AppleSignInButton";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
+import { TermsGate } from "@/app/components/TermsGate";
 import { Toast, useToast } from "@/src/components/Toast";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -233,6 +234,7 @@ export default function SignupPage() {
   }
 
   return (
+    <TermsGate>
     <div className="flex min-h-screen flex-col items-center justify-center bg-[color:var(--background-primary)] px-4 py-12">
       <main className="w-full max-w-sm">
         <div className="mb-10 flex justify-center">
@@ -369,5 +371,6 @@ export default function SignupPage() {
         )}
       </main>
     </div>
+    </TermsGate>
   );
 }

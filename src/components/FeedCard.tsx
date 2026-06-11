@@ -3,6 +3,7 @@
 import { RatingStarsDisplay } from "@/app/components/RatingStars";
 import { Gelato } from "@/src/components/Gelato/Gelato";
 import { Toast, useToast, copyToClipboard } from "@/src/components/Toast";
+import { ReportLogButton } from "@/src/components/ReportLogButton";
 import type { LogFlavour } from "@/src/lib/log-flavours-resolved";
 import type { BaseToken, CrumbleToken, DrizzleToken, GelatoTokens } from "@/src/lib/gelato-tokens";
 import { createClient } from "@/src/lib/supabase/client";
@@ -886,6 +887,13 @@ export function FeedCard({
                     </svg>
                     {(log.comment_count ?? 0) > 0 ? <span>{log.comment_count}</span> : null}
                   </Link>
+                  {!isOwnLog && currentUserId ? (
+                    <ReportLogButton
+                      logId={log.id}
+                      currentUserId={currentUserId}
+                      className="flex items-center text-xs font-medium text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
+                    />
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -985,6 +993,10 @@ export function FeedCard({
                     <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                   </svg>
                 </button>
+              </div>
+            ) : !isOwnLog && currentUserId ? (
+              <div className="ml-auto flex items-center">
+                <ReportLogButton logId={log.id} currentUserId={currentUserId} />
               </div>
             ) : null}
           </div>

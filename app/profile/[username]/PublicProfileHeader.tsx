@@ -6,6 +6,7 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import { Icon } from "@/src/components/icons";
 import { FollowButton } from "./FollowButton";
+import { BlockUserButton } from "@/src/components/BlockUserButton";
 
 type PublicProfileHeaderProps = {
   displayName: string;
@@ -201,11 +202,16 @@ export function PublicProfileHeader({
             Edit profile
           </Link>
         ) : viewerId ? (
-          <div className="mt-2">
+          <div className="mt-2 flex flex-col items-center gap-2">
             <FollowButton
               currentUserId={viewerId}
               targetUserId={targetUserId}
               initialIsFollowing={isFollowing}
+            />
+            <BlockUserButton
+              blockerId={viewerId}
+              blockedId={targetUserId}
+              username={username}
             />
           </div>
         ) : null}

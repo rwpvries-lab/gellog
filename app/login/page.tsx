@@ -14,6 +14,7 @@ import { registerPushNotifications } from "@/src/lib/native-push";
 import { AppleSignInButton } from "@/app/components/AppleSignInButton";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
+import { TermsGate } from "@/app/components/TermsGate";
 
 function GoogleIcon() {
   return (
@@ -121,6 +122,7 @@ export default function LoginPage() {
   }
 
   return (
+    <TermsGate>
     <div className="flex min-h-screen flex-col items-center justify-center bg-[color:var(--background-primary)] px-4 py-12">
       <main className="w-full max-w-sm">
         <div className="mb-10 flex justify-center">
@@ -230,5 +232,6 @@ export default function LoginPage() {
         </p>
       </main>
     </div>
+    </TermsGate>
   );
 }

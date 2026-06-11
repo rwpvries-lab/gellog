@@ -4,6 +4,7 @@ import { FeedCard, type IceCreamLog } from "@/src/components/FeedCard";
 import { PlaceholderScoop } from "@/src/components/Gelato/PlaceholderScoop";
 import { createClient } from "@/src/lib/supabase/client";
 import { applyResolvedFlavoursToLogRow, LOG_FLAVOURS_RESOLVED_SELECT } from "@/src/lib/log-flavours-resolved";
+import { blockedInListFilter } from "@/src/lib/blocked-users";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -17,6 +18,8 @@ type IceCreamFeedClientProps = {
   currentUserId?: string;
   /** User IDs the current user follows (for friends-only photos). */
   initialFollowingUserIds?: string[];
+  /** User IDs the current user has blocked (filtered out of paginated/friends queries). */
+  blockedUserIds?: string[];
 };
 
 const SELECT_FIELDS = `
@@ -53,7 +56,9 @@ export function IceCreamFeedClient({
   pageSize,
   currentUserId,
   initialFollowingUserIds = [],
+  blockedUserIds = [],
 }: IceCreamFeedClientProps) {
+  const blockedFilter = blockedInListFilter(blockedUserIds);
   const [tab, setTab] = useState<Tab>("everyone");
   const tabRef = useRef<Tab>("everyone");
   const followingIdsRef = useRef<string[]>([]);
@@ -172,6 +177,10 @@ export function IceCreamFeedClient({
       query = query.in("user_id", ids).in("visibility", ["public", "friends"]);
     }
 
+    if (blockedFilter) {
+      query = query.not("user_id", "in", blockedFilter);
+    }
+
     const { data, error: fetchError } = await query;
 
     if (fetchError) {
@@ -227,13 +236,19 @@ export function IceCreamFeedClient({
       return;
     }
 
-    const { data, error: fetchError } = await supabase
+    let friendsQuery = supabase
       .from("ice_cream_logs")
       .select(SELECT_FIELDS)
       .in("user_id", ids)
       .in("visibility", ["public", "friends"])
       .order("visited_at", { ascending: false })
       .range(0, pageSize - 1);
+
+    if (blockedFilter) {
+      friendsQuery = friendsQuery.not("user_id", "in", blockedFilter);
+    }
+
+    const { data, error: fetchError } = await friendsQuery;
 
     if (fetchError) {
       setError("Could not load logs. Please try again.");
