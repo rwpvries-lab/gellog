@@ -1027,6 +1027,27 @@ export function SettingsClient({
         </div>
       </div>
 
+      {/* ── Section 3b: Safety ── */}
+      <div>
+        <p style={SECTION_LABEL}>Safety</p>
+        <div style={CARD}>
+          <Link
+            href="/settings/blocked-users"
+            style={{ ...ROW, textDecoration: "none" }}
+          >
+            <span
+              style={{
+                color: "var(--color-text-primary)",
+                fontSize: 15,
+              }}
+            >
+              Blocked users
+            </span>
+            <Chevron />
+          </Link>
+        </div>
+      </div>
+
       {/* ── Section 4: Salon (conditional) ── */}
       {ownedSalon && (
         <div>
