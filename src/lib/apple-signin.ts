@@ -60,6 +60,19 @@ export async function sha256Hex(input: string): Promise<string> {
     .join("");
 }
 
+/**
+ * On iPad the native Apple sheet can fail to acquire a presentation anchor and
+ * never present, leaving `authorize()` pending forever (the button spins with no
+ * error). Reject after `ms` so the caller's catch/finally can recover.
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 async function loadPlugin(): Promise<AppleSignInPlugin> {
   // Static specifier so the bundler includes the plugin's registerPlugin() shim.
   // A runtime import() of the bare package fails inside the remote-URL WebView
@@ -150,10 +163,14 @@ export async function signInWithApple(
   const rawNonce = randomNonce();
   const hashedNonce = await sha256Hex(rawNonce);
 
-  const result = await SignInWithApple.authorize({
-    scopes: "name email",
-    nonce: hashedNonce,
-  });
+  const result = await withTimeout(
+    SignInWithApple.authorize({
+      scopes: "name email",
+      nonce: hashedNonce,
+    }),
+    30_000,
+    "Apple sign-in timed out. The sign-in sheet didn't open — please try again.",
+  );
 
   const identityToken = result.response.identityToken;
   if (!identityToken) {
