@@ -14,8 +14,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * signed. Apple only returns name/email on the FIRST authorization, so we persist
  * them to the `profiles` row immediately (see `syncAppleProfile`).
  *
- * The `@capacitor-community/apple-sign-in` plugin is installed, but imported
- * indirectly so the web/PWA build never tries to resolve the native module.
+ * The `@capacitor-community/apple-sign-in` plugin is loaded via a deferred (but
+ * statically-specified) dynamic import so it's bundled yet only pulled in on iOS,
+ * where `isAppleSignInAvailable()` gates the call.
  */
 
 export function isAppleSignInAvailable(): boolean {
@@ -60,12 +61,13 @@ export async function sha256Hex(input: string): Promise<string> {
 }
 
 async function loadPlugin(): Promise<AppleSignInPlugin> {
-  // Indirect specifier keeps the bundler from hard-resolving the (not-yet-installed) package.
-  const pkg = "@capacitor-community/apple-sign-in";
-  const mod = (await import(/* webpackIgnore: true */ pkg)) as {
-    SignInWithApple: AppleSignInPlugin;
-  };
-  return mod.SignInWithApple;
+  // Static specifier so the bundler includes the plugin's registerPlugin() shim.
+  // A runtime import() of the bare package fails inside the remote-URL WebView
+  // ("Module name … does not resolve to a valid URL") — there's no resolver there.
+  const { SignInWithApple } = (await import(
+    "@capacitor-community/apple-sign-in"
+  )) as { SignInWithApple: AppleSignInPlugin };
+  return SignInWithApple;
 }
 
 export interface AppleProfileSeed {
