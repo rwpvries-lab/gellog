@@ -11,7 +11,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "postinstall": "patch-package"
+    "postinstall": "node scripts/postinstall.mjs"
   },
   "dependencies": {
     "@capacitor-community/apple-sign-in": "^7.1.0",
