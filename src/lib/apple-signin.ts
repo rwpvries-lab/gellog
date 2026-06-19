@@ -24,15 +24,6 @@ export function isAppleSignInAvailable(): boolean {
   return Capacitor.getPlatform() === "ios";
 }
 
-interface AppleAuthorizeResponse {
-  response: {
-    identityToken?: string;
-    givenName?: string | null;
-    familyName?: string | null;
-    email?: string | null;
-  };
-}
-
 export interface AppleProfileSeed {
   givenName?: string | null;
   familyName?: string | null;
@@ -151,10 +142,13 @@ async function signInWithAppleInner(
   const rawNonce = randomNonce();
   const hashedNonce = await sha256Hex(rawNonce);
 
-  const result = (await SignInWithApple.authorize({
+  const result = await SignInWithApple.authorize({
+    // Required by plugin typings (web OAuth); native iOS ignores these fields.
+    clientId: "com.sidusstudio.gellog",
+    redirectURI: "https://www.gellog.app",
     scopes: "name email",
     nonce: hashedNonce,
-  })) as AppleAuthorizeResponse;
+  });
 
   const identityToken = result.response.identityToken;
   if (!identityToken) {
