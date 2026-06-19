@@ -1,4 +1,5 @@
 import { Capacitor } from "@capacitor/core";
+import { SignInWithApple } from "@capacitor-community/apple-sign-in";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -14,9 +15,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * signed. Apple only returns name/email on the FIRST authorization, so we persist
  * them to the `profiles` row immediately (see `syncAppleProfile`).
  *
- * The `@capacitor-community/apple-sign-in` plugin is loaded via a deferred (but
- * statically-specified) dynamic import so it's bundled yet only pulled in on iOS,
- * where `isAppleSignInAvailable()` gates the call.
+ * `SignInWithApple` is imported statically so the plugin registers with Capacitor
+ * without a runtime chunk fetch — dynamic import() can hang in the remote-URL
+ * WebView when the async chunk never resolves.
  */
 
 export function isAppleSignInAvailable(): boolean {
@@ -32,14 +33,10 @@ interface AppleAuthorizeResponse {
   };
 }
 
-interface AppleSignInPlugin {
-  authorize(options: {
-    clientId?: string;
-    redirectURI?: string;
-    scopes?: string;
-    state?: string;
-    nonce?: string;
-  }): Promise<AppleAuthorizeResponse>;
+export interface AppleProfileSeed {
+  givenName?: string | null;
+  familyName?: string | null;
+  email?: string | null;
 }
 
 /** Random URL-safe string used as the raw nonce. */
@@ -61,9 +58,8 @@ export async function sha256Hex(input: string): Promise<string> {
 }
 
 /**
- * On iPad the native Apple sheet can fail to acquire a presentation anchor and
- * never present, leaving `authorize()` pending forever (the button spins with no
- * error). Reject after `ms` so the caller's catch/finally can recover.
+ * Reject after `ms` so the caller's catch/finally can recover when the native
+ * sheet never presents or the bridge never resolves.
  */
 function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promise<T> {
   let timer: ReturnType<typeof setTimeout>;
@@ -71,22 +67,6 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
     timer = setTimeout(() => reject(new Error(message)), ms);
   });
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
-}
-
-async function loadPlugin(): Promise<AppleSignInPlugin> {
-  // Static specifier so the bundler includes the plugin's registerPlugin() shim.
-  // A runtime import() of the bare package fails inside the remote-URL WebView
-  // ("Module name … does not resolve to a valid URL") — there's no resolver there.
-  const { SignInWithApple } = (await import(
-    "@capacitor-community/apple-sign-in"
-  )) as { SignInWithApple: AppleSignInPlugin };
-  return SignInWithApple;
-}
-
-export interface AppleProfileSeed {
-  givenName?: string | null;
-  familyName?: string | null;
-  email?: string | null;
 }
 
 /**
@@ -158,19 +138,23 @@ export async function syncAppleProfile(
 export async function signInWithApple(
   supabase: SupabaseClient,
 ): Promise<{ profile: AppleProfileSeed }> {
-  const SignInWithApple = await loadPlugin();
+  return withTimeout(
+    signInWithAppleInner(supabase),
+    45_000,
+    "Apple sign-in timed out. The sign-in sheet didn't open — please try again.",
+  );
+}
 
+async function signInWithAppleInner(
+  supabase: SupabaseClient,
+): Promise<{ profile: AppleProfileSeed }> {
   const rawNonce = randomNonce();
   const hashedNonce = await sha256Hex(rawNonce);
 
-  const result = await withTimeout(
-    SignInWithApple.authorize({
-      scopes: "name email",
-      nonce: hashedNonce,
-    }),
-    30_000,
-    "Apple sign-in timed out. The sign-in sheet didn't open — please try again.",
-  );
+  const result = (await SignInWithApple.authorize({
+    scopes: "name email",
+    nonce: hashedNonce,
+  })) as AppleAuthorizeResponse;
 
   const identityToken = result.response.identityToken;
   if (!identityToken) {

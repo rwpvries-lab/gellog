@@ -12,7 +12,7 @@ index 94246df..7d9d007 100644
      targets: [
          .target(
 diff --git a/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift b/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift
-index f53087c..1b5bf14 100755
+index f53087c..7f39e2e 100755
 --- a/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift
 +++ b/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift
 @@ -1,4 +1,5 @@
@@ -21,24 +21,57 @@ index f53087c..1b5bf14 100755
  import Capacitor
  import AuthenticationServices
  
-@@ -24,6 +25,8 @@ public class SignInWithApple: CAPPlugin, CAPBridgedPlugin {
+@@ -11,20 +12,30 @@ public class SignInWithApple: CAPPlugin, CAPBridgedPlugin {
+     ] 
  
-         let authorizationController = ASAuthorizationController(authorizationRequests: [request])
-         authorizationController.delegate = self
-+        // iPad requires a presentation anchor or the sheet never presents.
-+        authorizationController.presentationContextProvider = self
-         authorizationController.performRequests()
-     }
+     @objc func authorize(_ call: CAPPluginCall) {
+-        let appleIDProvider = ASAuthorizationAppleIDProvider()
+-        let request = appleIDProvider.createRequest()
+-        request.requestedScopes = getRequestedScopes(from: call)
+-        request.state = call.getString("state")
+-        request.nonce = call.getString("nonce")
++        // ASAuthorizationController must run on the main thread or the sheet may
++        // never present and the JS promise hangs with "Signing in…".
++        DispatchQueue.main.async { [weak self] in
++            guard let self = self else {
++                call.reject("Sign in with Apple is unavailable.")
++                return
++            }
  
-@@ -83,3 +86,20 @@ extension SignInWithApple: ASAuthorizationControllerDelegate {
-         self.bridge?.releaseCall(call)
-     }
- }
+-        let defaults = UserDefaults()
+-        defaults.setValue(call.callbackId, forKey: "callbackId")
++            let appleIDProvider = ASAuthorizationAppleIDProvider()
++            let request = appleIDProvider.createRequest()
++            request.requestedScopes = self.getRequestedScopes(from: call)
++            request.state = call.getString("state")
++            request.nonce = call.getString("nonce")
 +
-+extension SignInWithApple: ASAuthorizationControllerPresentationContextProviding {
-+    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-+        // Prefer the Capacitor host window; fall back to the foreground scene's key window.
-+        // iPad requires a real anchor or ASAuthorizationController never presents the sheet.
++            let defaults = UserDefaults()
++            defaults.setValue(call.callbackId, forKey: "callbackId")
+ 
+-        self.bridge?.saveCall(call)
++            self.bridge?.saveCall(call)
+ 
+-        let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+-        authorizationController.delegate = self
+-        authorizationController.performRequests()
++            let authorizationController = ASAuthorizationController(authorizationRequests: [request])
++            authorizationController.delegate = self
++            authorizationController.presentationContextProvider = self
++            authorizationController.performRequests()
++        }
+     }
+ 
+     func getRequestedScopes(from call: CAPPluginCall) -> [ASAuthorization.Scope]? {
+@@ -46,40 +57,88 @@ public class SignInWithApple: CAPPlugin, CAPBridgedPlugin {
+ 
+         return nil
+     }
++
++    private func presentationWindow() -> UIWindow {
++        if let window = self.bridge?.webView?.window {
++            return window
++        }
 +        if let window = self.bridge?.viewController?.view.window {
 +            return window
 +        }
@@ -50,4 +83,85 @@ index f53087c..1b5bf14 100755
 +        }
 +        return UIWindow()
 +    }
++
++    private func savedCall() -> CAPPluginCall? {
++        let defaults = UserDefaults()
++        let id = defaults.string(forKey: "callbackId") ?? ""
++        return self.bridge?.savedCall(withID: id)
++    }
++
++    private func finish(call: CAPPluginCall) {
++        self.bridge?.releaseCall(call)
++    }
+ }
+ 
+ extension SignInWithApple: ASAuthorizationControllerDelegate {
+     public func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+-        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else { return }
++        guard let call = self.savedCall() else { return }
+ 
+-        let defaults = UserDefaults()
+-        let id = defaults.string(forKey: "callbackId") ?? ""
+-        guard let call = self.bridge?.savedCall(withID: id) else {
++        guard let appleIDCredential = authorization.credential as? ASAuthorizationAppleIDCredential else {
++            call.reject("Apple did not return a valid credential.")
++            self.finish(call: call)
+             return
+         }
+ 
++        guard
++            let identityTokenData = appleIDCredential.identityToken,
++            let identityToken = String(data: identityTokenData, encoding: .utf8)
++        else {
++            call.reject("Apple did not return an identity token.")
++            self.finish(call: call)
++            return
++        }
++
++        let authorizationCode = appleIDCredential.authorizationCode.flatMap {
++            String(data: $0, encoding: .utf8)
++        }
++
+         let result = [
+             "response": [
+                 "user": appleIDCredential.user,
+                 "email": appleIDCredential.email,
+                 "givenName": appleIDCredential.fullName?.givenName,
+                 "familyName": appleIDCredential.fullName?.familyName,
+-                "identityToken": String(data: appleIDCredential.identityToken!, encoding: .utf8),
+-                "authorizationCode": String(data: appleIDCredential.authorizationCode!, encoding: .utf8)
++                "identityToken": identityToken,
++                "authorizationCode": authorizationCode
+             ]
+         ]
+ 
+         call.resolve(result)
+-        self.bridge?.releaseCall(call)
++        self.finish(call: call)
+     }
+ 
+     public func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+-        let defaults = UserDefaults()
+-        let id = defaults.string(forKey: "callbackId") ?? ""
+-        guard let call = self.bridge?.savedCall(withID: id) else {
+-            return
+-        }
++        guard let call = self.savedCall() else { return }
+         call.reject(error.localizedDescription)
+-        self.bridge?.releaseCall(call)
++        self.finish(call: call)
++    }
 +}
++
++extension SignInWithApple: ASAuthorizationControllerPresentationContextProviding {
++    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
++        if Thread.isMainThread {
++            return self.presentationWindow()
++        }
++        var window = UIWindow()
++        DispatchQueue.main.sync {
++            window = self.presentationWindow()
++        }
++        return window
+     }
+ }
