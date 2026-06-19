@@ -15,7 +15,19 @@ setup("authenticate test user", async ({ page }) => {
     return;
   }
 
+  // TermsGate blocks the login form until terms_accepted_v1 is set (Apple 1.2).
+  await page.addInitScript(() => {
+    localStorage.setItem("terms_accepted_v1", "true");
+  });
+
   await page.goto("/login");
+
+  // Fallback if init script did not run (e.g. cross-origin edge case).
+  const termsButton = page.getByRole("button", { name: /I agree/i });
+  if (await termsButton.isVisible().catch(() => false)) {
+    await termsButton.click();
+  }
+
   await page.getByLabel(/email/i).fill(email);
   await page.getByLabel(/password/i).fill(password);
   await page.getByRole("button", { name: /^log in$/i }).click();
