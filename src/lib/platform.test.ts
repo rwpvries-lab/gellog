@@ -12,7 +12,12 @@ vi.mock("@capacitor/core", () => ({
 
 import { Capacitor } from "@capacitor/core";
 import { isAppleSignInAvailable } from "./apple-signin";
-import { isNativePlatform } from "./platform";
+import {
+  getPlatformContext,
+  hasCapacitorShellMarker,
+  isCapacitorShell,
+  isNativePlatform,
+} from "./platform";
 
 describe("platform helpers", () => {
   it("detects native platform via Capacitor", () => {
@@ -21,6 +26,36 @@ describe("platform helpers", () => {
 
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
     expect(isNativePlatform()).toBe(false);
+  });
+
+  it("detects the Capacitor shell via the iOS bridge", () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
+    Object.defineProperty(window, "webkit", {
+      configurable: true,
+      value: { messageHandlers: { bridge: {} } },
+    });
+
+    expect(isCapacitorShell()).toBe(true);
+
+    Object.defineProperty(window, "webkit", {
+      configurable: true,
+      value: undefined,
+    });
+  });
+
+  it("detects the native host marker injected at document start", () => {
+    Object.defineProperty(window, "WEBVIEW_SERVER_URL", {
+      configurable: true,
+      value: "https://www.gellog.app",
+    });
+
+    expect(hasCapacitorShellMarker()).toBe(true);
+    expect(getPlatformContext()).toBe("ambiguous-shell");
+
+    Object.defineProperty(window, "WEBVIEW_SERVER_URL", {
+      configurable: true,
+      value: undefined,
+    });
   });
 
   it("enables Apple Sign-In only on iOS", () => {

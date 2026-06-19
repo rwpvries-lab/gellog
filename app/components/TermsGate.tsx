@@ -17,9 +17,13 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    void getTermsAccepted().then((accepted) => {
-      if (!cancelled) setStatus(accepted ? "accepted" : "needed");
-    });
+    void getTermsAccepted()
+      .then((accepted) => {
+        if (!cancelled) setStatus(accepted ? "accepted" : "needed");
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("needed");
+      });
     return () => {
       cancelled = true;
     };
@@ -35,9 +39,6 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
     await setTermsAccepted();
     setStatus("accepted");
   }
-
-  // Avoid flashing the gate before the stored value is read.
-  if (status === "loading") return null;
 
   if (status === "accepted") return <>{children}</>;
 
@@ -78,9 +79,10 @@ export function TermsGate({ children }: { children: React.ReactNode }) {
           <button
             type="button"
             onClick={() => void handleAccept()}
-            className="mt-1 flex h-11 w-full items-center justify-center rounded-lg bg-[color:var(--color-orange)] px-4 text-sm font-semibold text-white transition hover:brightness-105"
+            disabled={status === "loading"}
+            className="mt-1 flex h-11 w-full items-center justify-center rounded-lg bg-[color:var(--color-orange)] px-4 text-sm font-semibold text-white transition hover:brightness-105 disabled:opacity-60"
           >
-            I agree — continue
+            {status === "loading" ? "Loading…" : "I agree — continue"}
           </button>
         </div>
       </main>
