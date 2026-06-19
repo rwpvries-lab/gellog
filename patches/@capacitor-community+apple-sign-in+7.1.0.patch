@@ -1,5 +1,18 @@
+diff --git a/node_modules/@capacitor-community/apple-sign-in/Package.swift b/node_modules/@capacitor-community/apple-sign-in/Package.swift
+index 94246df..7d9d007 100644
+--- a/node_modules/@capacitor-community/apple-sign-in/Package.swift
++++ b/node_modules/@capacitor-community/apple-sign-in/Package.swift
+@@ -10,7 +10,7 @@ let package = Package(
+             targets: ["SignInWithApple"])
+     ],
+     dependencies: [
+-        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", from: "7.0.0")
++        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", from: "8.0.0")
+     ],
+     targets: [
+         .target(
 diff --git a/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift b/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift
-index f53087c..f2dbd14 100755
+index f53087c..1b5bf14 100755
 --- a/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift
 +++ b/node_modules/@capacitor-community/apple-sign-in/ios/Sources/SignInWithApple/Plugin.swift
 @@ -1,4 +1,5 @@
@@ -17,15 +30,24 @@ index f53087c..f2dbd14 100755
          authorizationController.performRequests()
      }
  
-@@ -83,3 +86,11 @@ extension SignInWithApple: ASAuthorizationControllerDelegate {
+@@ -83,3 +86,20 @@ extension SignInWithApple: ASAuthorizationControllerDelegate {
          self.bridge?.releaseCall(call)
      }
  }
 +
 +extension SignInWithApple: ASAuthorizationControllerPresentationContextProviding {
 +    public func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
-+        // Anchor the sheet to the Capacitor web view's window. Required on iPad,
-+        // where ASAuthorizationController will not present without an anchor.
-+        return self.bridge?.viewController?.view.window ?? UIWindow()
++        // Prefer the Capacitor host window; fall back to the foreground scene's key window.
++        // iPad requires a real anchor or ASAuthorizationController never presents the sheet.
++        if let window = self.bridge?.viewController?.view.window {
++            return window
++        }
++        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
++        let activeScene =
++            scenes.first { $0.activationState == .foregroundActive } ?? scenes.first
++        if let window = activeScene?.windows.first(where: \.isKeyWindow) ?? activeScene?.windows.first {
++            return window
++        }
++        return UIWindow()
 +    }
 +}

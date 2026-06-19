@@ -10,6 +10,7 @@ export type BlockedUser = {
   id: string;
   blockedId: string;
   username: string | null;
+  displayName: string | null;
   avatarUrl: string | null;
 };
 
@@ -38,6 +39,62 @@ function Sep() {
         marginLeft: 64,
       }}
     />
+  );
+}
+
+function UserLabel({
+  username,
+  displayName,
+}: {
+  username: string | null;
+  displayName: string | null;
+}) {
+  const name = displayName?.trim();
+  const handle = username?.trim();
+  if (name && handle) {
+    return (
+      <div className="min-w-0">
+        <span
+          style={{
+            color: "var(--color-text-primary)",
+            fontSize: 15,
+            fontWeight: 500,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            display: "block",
+          }}
+        >
+          {name}
+        </span>
+        <span
+          style={{
+            color: "var(--color-text-secondary)",
+            fontSize: 13,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+            display: "block",
+          }}
+        >
+          @{handle}
+        </span>
+      </div>
+    );
+  }
+  return (
+    <span
+      style={{
+        color: "var(--color-text-primary)",
+        fontSize: 15,
+        fontWeight: 500,
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {name ?? (handle ? `@${handle}` : "Unknown user")}
+    </span>
   );
 }
 
@@ -156,18 +213,10 @@ export function BlockedUsersClient({
             <div style={ROW}>
               <div className="flex min-w-0 items-center gap-3">
                 <Avatar username={user.username} avatarUrl={user.avatarUrl} />
-                <span
-                  style={{
-                    color: "var(--color-text-primary)",
-                    fontSize: 15,
-                    fontWeight: 500,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {user.username ? `@${user.username}` : "Unknown user"}
-                </span>
+                <UserLabel
+                  username={user.username}
+                  displayName={user.displayName}
+                />
               </div>
               <button
                 type="button"

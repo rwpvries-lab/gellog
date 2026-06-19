@@ -18,7 +18,7 @@ export default async function BlockedUsersPage() {
   const { data } = await supabase
     .from("blocked_users")
     .select(
-      "id, blocked_id, created_at, blocked:profiles!blocked_users_blocked_id_fkey(username, avatar_url)",
+      "id, blocked_id, created_at, blocked:profiles!blocked_users_blocked_id_fkey(username, display_name, avatar_url)",
     )
     .eq("blocker_id", user.id)
     .order("created_at", { ascending: false });
@@ -26,12 +26,14 @@ export default async function BlockedUsersPage() {
   const blocked: BlockedUser[] = (data ?? []).map((row) => {
     const profile = row.blocked as unknown as {
       username: string | null;
+      display_name: string | null;
       avatar_url: string | null;
     } | null;
     return {
       id: row.id as string,
       blockedId: row.blocked_id as string,
       username: profile?.username ?? null,
+      displayName: profile?.display_name ?? null,
       avatarUrl: profile?.avatar_url ?? null,
     };
   });
@@ -61,6 +63,7 @@ export default async function BlockedUsersPage() {
             <Icon name="GellogBack" size={18} strokeWidth={2} />
           </Link>
           <h1
+            className="font-serif"
             style={{
               color: "var(--color-text-primary)",
               fontSize: 20,
