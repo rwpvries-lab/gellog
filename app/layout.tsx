@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SplashWrapper } from "./components/SplashWrapper";
-import { CapacitorAuthInit } from "./components/CapacitorAuthInit";
 import { ThemeProvider } from "@/src/app/ThemeProvider";
 import { createClient } from "@/src/lib/supabase/server";
 
@@ -63,7 +62,6 @@ export default async function RootLayout({
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider>
-          <CapacitorAuthInit />
           <SplashWrapper user={!!user}>{children}</SplashWrapper>
         </ThemeProvider>
       </body>

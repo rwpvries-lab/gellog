@@ -21,11 +21,9 @@
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.sidusstudio.gellog</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>gellog</string>
+				<string>com.googleusercontent.apps.762912343297-fk7tgm52bdrprsbbrpj06vb6m9qkomrj</string>
 			</array>
 		</dict>
 	</array>
