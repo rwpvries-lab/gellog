@@ -1,4 +1,5 @@
 import { SocialLogin, type SocialLoginError } from "@capgo/capacitor-social-login";
+import { Capacitor } from "@capacitor/core";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -13,14 +14,10 @@ const IOS_CLIENT_ID =
 
 let initialized = false;
 
-type CapacitorWindow = Window & {
-  WEBVIEW_SERVER_URL?: string;
-};
-
-/** True inside the iOS Capacitor shell (remote-URL wrapper marker). */
+/** True inside the iOS Capacitor shell (native runtime, Option A remote-URL). */
 export function isIosGoogleNativeShell(): boolean {
   if (typeof window === "undefined") return false;
-  return typeof (window as CapacitorWindow).WEBVIEW_SERVER_URL !== "undefined";
+  return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
 }
 
 export class GoogleSignInCancelled extends Error {
