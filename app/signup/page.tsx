@@ -10,7 +10,7 @@ import {
 } from "@/src/lib/apple-signin";
 import {
   GoogleSignInCancelled,
-  isIosGoogleNativeShell,
+  isNativeGoogleShell,
   signInWithGoogle,
 } from "@/src/lib/google-signin";
 import { AppleSignInButton } from "@/app/components/AppleSignInButton";
@@ -185,12 +185,11 @@ export default function SignupPage() {
   }
 
   async function handleGoogle() {
-    if (isIosGoogleNativeShell()) {
+    if (isNativeGoogleShell()) {
       setError(null);
       try {
         await signInWithGoogle(supabase);
         router.push("/");
-        router.refresh();
       } catch (err) {
         if (err instanceof GoogleSignInCancelled) return;
         const detail = err instanceof Error ? err.message : "";

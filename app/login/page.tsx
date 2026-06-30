@@ -13,7 +13,7 @@ import {
 import { registerPushNotifications } from "@/src/lib/native-push";
 import {
   GoogleSignInCancelled,
-  isIosGoogleNativeShell,
+  isNativeGoogleShell,
   signInWithGoogle,
 } from "@/src/lib/google-signin";
 import { AppleSignInButton } from "@/app/components/AppleSignInButton";
@@ -50,14 +50,13 @@ export default function LoginPage() {
   }, []);
 
   async function handleGoogle() {
-    if (isIosGoogleNativeShell()) {
+    if (isNativeGoogleShell()) {
       setError(null);
       try {
         await signInWithGoogle(supabase);
-        void registerPushNotifications(supabase);
         const next = searchParams.get("next") || "/";
         router.push(next);
-        router.refresh();
+        setTimeout(() => void registerPushNotifications(supabase), 0);
       } catch (err) {
         if (err instanceof GoogleSignInCancelled) return;
         const detail = err instanceof Error ? err.message : "";
@@ -115,11 +114,11 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      // Native iOS: prompt for push + register the device (no-op on web).
-      void registerPushNotifications(supabase);
       const next = searchParams.get("next") || "/";
       router.push(next);
-      router.refresh();
+      // Defer push registration until after navigation to avoid the Android
+      // POST_NOTIFICATIONS permission dialog interrupting the route transition.
+      setTimeout(() => void registerPushNotifications(supabase), 0);
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {

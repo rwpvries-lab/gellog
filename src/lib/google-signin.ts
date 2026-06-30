@@ -3,7 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Native Google Sign-In for the Capacitor iOS shell (Option A remote URL).
+ * Native Google Sign-In for the Capacitor iOS and Android shells (Option A remote URL).
  *
  * Uses @capgo/capacitor-social-login to obtain an idToken in-process — no browser
  * handoff, no deep-link round-trip. Web/PWA continues to use Supabase OAuth redirect.
@@ -12,13 +12,23 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 const IOS_CLIENT_ID =
   "762912343297-fk7tgm52bdrprsbbrpj06vb6m9qkomrj.apps.googleusercontent.com";
 
+// Web Application client ID from Google Cloud Console (OAuth 2.0 → type: Web application).
+// Required for native Google Sign-In on Android via the Credential Manager API.
+// Android OAuth client (type: Android) with the keystore SHA-1 must also be registered
+// in the same GCP project, and google-services.json regenerated to include it.
+const ANDROID_WEB_CLIENT_ID =
+  "762912343297-kl9hpbfgehluq749uk3t8763hmce14g1.apps.googleusercontent.com";
+
 let initialized = false;
 
-/** True inside the iOS Capacitor shell (native runtime, Option A remote-URL). */
-export function isIosGoogleNativeShell(): boolean {
+/** True inside any native Capacitor shell (iOS or Android). */
+export function isNativeGoogleShell(): boolean {
   if (typeof window === "undefined") return false;
-  return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
+  return Capacitor.isNativePlatform();
 }
+
+/** @deprecated use isNativeGoogleShell */
+export const isIosGoogleNativeShell = isNativeGoogleShell;
 
 export class GoogleSignInCancelled extends Error {
   constructor() {
@@ -37,6 +47,7 @@ async function ensureGoogleSignInInitialized(): Promise<void> {
   await SocialLogin.initialize({
     google: {
       iOSClientId: IOS_CLIENT_ID,
+      webClientId: ANDROID_WEB_CLIENT_ID,
       mode: "online",
     },
   });
