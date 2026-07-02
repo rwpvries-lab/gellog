@@ -120,6 +120,7 @@ export async function signInWithGoogle(
     // Default OIDC scopes (email, profile, openid) are sufficient.
     const { result } = await SocialLogin.login({
       provider: "google",
+      options: {},
     });
 
     if (result.responseType !== "online") {

@@ -111,7 +111,7 @@ describe("signInWithGoogle", () => {
 
     await signInWithGoogle(supabase);
 
-    expect(mockLogin).toHaveBeenCalledWith({ provider: "google" });
+    expect(mockLogin).toHaveBeenCalledWith({ provider: "google", options: {} });
     expect(supabase.auth.signInWithIdToken).toHaveBeenCalledWith({
       provider: "google",
       token: "google-id-token",
