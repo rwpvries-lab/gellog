@@ -37,6 +37,11 @@ export class GoogleSignInCancelled extends Error {
   }
 }
 
+export interface GoogleProfileSeed {
+  name?: string | null;
+  email?: string | null;
+}
+
 function isUserCancelled(err: unknown): boolean {
   if (!err || typeof err !== "object") return false;
   return (err as SocialLoginError).code === "USER_CANCELLED";
@@ -55,6 +60,52 @@ async function ensureGoogleSignInInitialized(): Promise<void> {
 }
 
 /**
+ * Ensures a `profiles` row exists after native Google sign-in.
+ * Native sign-in skips the OAuth web callback (`app/auth/callback/route.ts`).
+ */
+export async function syncGoogleProfile(
+  supabase: SupabaseClient,
+  seed: GoogleProfileSeed = {},
+): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const displayName = seed.name?.trim() || null;
+
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id, display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!existing) {
+    const email = user.email ?? seed.email ?? "";
+    const base =
+      email
+        .split("@")[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9_]/g, "_")
+        .slice(0, 30) || "user";
+
+    await supabase.from("profiles").insert({
+      id: user.id,
+      username: base,
+      display_name: displayName,
+    });
+    return;
+  }
+
+  if (displayName && !existing.display_name) {
+    await supabase
+      .from("profiles")
+      .update({ display_name: displayName })
+      .eq("id", user.id);
+  }
+}
+
+/**
  * Runs the native Google sheet and exchanges the identity token for a Supabase session.
  * Throws {@link GoogleSignInCancelled} when the user dismisses the sheet (silent).
  */
@@ -64,11 +115,12 @@ export async function signInWithGoogle(
   await ensureGoogleSignInInitialized();
 
   try {
+    // Do not pass custom scopes here: on Android the plugin rejects scoped login
+    // unless MainActivity implements ModifiedMainActivityForSocialLoginPlugin.
+    // Default OIDC scopes (email, profile, openid) are sufficient.
     const { result } = await SocialLogin.login({
       provider: "google",
-      options: {
-        scopes: ["email", "profile"],
-      },
+      options: {},
     });
 
     if (result.responseType !== "online") {
@@ -85,6 +137,11 @@ export async function signInWithGoogle(
       token: idToken,
     });
     if (error) throw error;
+
+    await syncGoogleProfile(supabase, {
+      name: result.profile?.name ?? null,
+      email: result.profile?.email ?? null,
+    });
   } catch (err) {
     if (isUserCancelled(err)) {
       throw new GoogleSignInCancelled();
