@@ -64,11 +64,17 @@ export async function signInWithGoogle(
   await ensureGoogleSignInInitialized();
 
   try {
+    // No `scopes` here on purpose: email/profile are already in the default
+    // ID token claims, and requesting scopes on Android triggers a separate
+    // Credential Manager authorization screen that requires MainActivity to
+    // override onActivityResult() — which this app's MainActivity doesn't do.
+    // Without that wiring the plugin fails native-side, and the failure
+    // surfaces to JS as a generic "SocialLogin plugin is not implemented on
+    // android" instead of the real error. iOS has no such requirement, which
+    // is why this only broke on Android.
     const { result } = await SocialLogin.login({
       provider: "google",
-      options: {
-        scopes: ["email", "profile"],
-      },
+      options: {},
     });
 
     if (result.responseType !== "online") {
