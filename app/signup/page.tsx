@@ -192,6 +192,11 @@ export default function SignupPage() {
         router.push("/");
       } catch (err) {
         if (err instanceof GoogleSignInCancelled) return;
+        // Log the raw error so it's visible in a device inspector — the
+        // Capacitor bridge can surface a misleading generic message here
+        // (e.g. "plugin is not implemented") when the real native error is
+        // something else entirely, so don't rely on `detail` alone to debug.
+        console.error("Google sign-in failed:", err);
         const detail = err instanceof Error ? err.message : "";
         setError(
           detail
