@@ -56,6 +56,7 @@ export default function LoginPage() {
         await signInWithGoogle(supabase);
         const next = searchParams.get("next") || "/";
         router.push(next);
+        router.refresh();
         setTimeout(() => void registerPushNotifications(supabase), 0);
       } catch (err) {
         if (err instanceof GoogleSignInCancelled) return;
@@ -121,6 +122,7 @@ export default function LoginPage() {
       }
       const next = searchParams.get("next") || "/";
       router.push(next);
+      router.refresh();
       // Defer push registration until after navigation to avoid the Android
       // POST_NOTIFICATIONS permission dialog interrupting the route transition.
       setTimeout(() => void registerPushNotifications(supabase), 0);

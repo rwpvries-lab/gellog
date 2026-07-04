@@ -190,6 +190,7 @@ export default function SignupPage() {
       try {
         await signInWithGoogle(supabase);
         router.push("/");
+        router.refresh();
       } catch (err) {
         if (err instanceof GoogleSignInCancelled) return;
         // Log the raw error so it's visible in a device inspector — the
