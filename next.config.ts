@@ -36,7 +36,15 @@ function supabaseStorageRemotePatterns(): NonNullable<
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: supabaseStorageRemotePatterns(),
+    remotePatterns: [
+      ...supabaseStorageRemotePatterns(),
+      // Google account profile photos (native + web Google Sign-In).
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+        pathname: "/**",
+      },
+    ],
   },
   /** Ensure geolocation is not stripped by a CDN default; `(self)` = this origin only. */
   async headers() {

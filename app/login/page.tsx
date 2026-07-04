@@ -56,9 +56,15 @@ export default function LoginPage() {
         await signInWithGoogle(supabase);
         const next = searchParams.get("next") || "/";
         router.push(next);
+        router.refresh();
         setTimeout(() => void registerPushNotifications(supabase), 0);
       } catch (err) {
         if (err instanceof GoogleSignInCancelled) return;
+        // Log the raw error so it's visible in a device inspector — the
+        // Capacitor bridge can surface a misleading generic message here
+        // (e.g. "plugin is not implemented") when the real native error is
+        // something else entirely, so don't rely on `detail` alone to debug.
+        console.error("Google sign-in failed:", err);
         const detail = err instanceof Error ? err.message : "";
         setError(
           detail
@@ -116,6 +122,7 @@ export default function LoginPage() {
       }
       const next = searchParams.get("next") || "/";
       router.push(next);
+      router.refresh();
       // Defer push registration until after navigation to avoid the Android
       // POST_NOTIFICATIONS permission dialog interrupting the route transition.
       setTimeout(() => void registerPushNotifications(supabase), 0);
