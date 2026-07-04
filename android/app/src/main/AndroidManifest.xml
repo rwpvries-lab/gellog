@@ -42,8 +42,11 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <!-- Location is a convenience feature (map, salon search, log creation),
-         not required to use the app — don't let ACCESS_FINE_LOCATION's
-         implicit hardware requirement hide the app from GPS-less devices. -->
+         not required to use the app. The location permissions above imply
+         three separate hardware features — the base feature plus both
+         children — all three must be marked optional or Play Console still
+         hides the app from devices lacking any location hardware at all. -->
+    <uses-feature android:name="android.hardware.location" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.location.network" android:required="false" />
 </manifest>
