@@ -172,7 +172,11 @@ export default function LoginPage() {
             </p>
           )}
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4"
+            data-clarity-mask="true"
+          >
             <div>
               <label
                 htmlFor="login-email"

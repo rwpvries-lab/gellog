@@ -308,6 +308,29 @@ export default function PrivacyPolicyPage() {
             open-meteo.com/en/terms
           </a>
         </p>
+
+        <p className="text-sm leading-[1.7] text-[color:var(--text-primary)]">
+          <strong>Microsoft Clarity (session analytics &amp; heatmaps)</strong>
+          <br />
+          We use Microsoft Clarity, provided by Microsoft Corporation, to
+          record anonymised session replays, heatmaps, and click/scroll
+          behaviour so we can understand how Gellog is used and improve it.
+          Text you type into form fields — including the login and signup
+          forms — is masked and never captured. We do not use Clarity for
+          advertising. If you are visiting from the EU/EEA, UK, or
+          Switzerland, Clarity only sets tracking cookies and links your
+          sessions together after you accept the cookie banner shown on your
+          first visit; declining keeps Clarity in a limited mode with no
+          cookies. Privacy policy:{" "}
+          <a
+            className="font-medium text-[color:var(--brand-secondary)] underline hover:opacity-90"
+            href="https://privacy.microsoft.com/en-us/privacystatement"
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            privacy.microsoft.com/en-us/privacystatement
+          </a>
+        </p>
       </section>
 
       <section className="mb-8 space-y-3">

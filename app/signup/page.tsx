@@ -285,7 +285,11 @@ export default function SignupPage() {
                 </p>
               )}
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col gap-4"
+                data-clarity-mask="true"
+              >
                 <div>
                   <label
                     htmlFor="signup-email"
