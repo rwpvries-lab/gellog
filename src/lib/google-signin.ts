@@ -42,6 +42,33 @@ function isUserCancelled(err: unknown): boolean {
   return (err as SocialLoginError).code === "USER_CANCELLED";
 }
 
+/**
+ * Generates a raw/hashed nonce pair for the iOS Google sign-in flow.
+ *
+ * GIDSignIn (the native SDK behind the iOS Google button) embeds its own
+ * random nonce into the returned id_token's `nonce` claim even when none is
+ * passed in. Supabase's signInWithIdToken hashes whatever nonce you give it
+ * and compares that against the claim, so the hashed value must go to Google
+ * (echoed verbatim into the id_token) and the raw value must go to Supabase.
+ */
+async function generateNoncePair(): Promise<{ raw: string; hashed: string }> {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  const raw = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join(
+    "",
+  );
+
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    new TextEncoder().encode(raw),
+  );
+  const hashed = Array.from(new Uint8Array(digest), (b) =>
+    b.toString(16).padStart(2, "0"),
+  ).join("");
+
+  return { raw, hashed };
+}
+
 async function ensureGoogleSignInInitialized(): Promise<void> {
   if (initialized) return;
   await SocialLogin.initialize({
@@ -63,6 +90,13 @@ export async function signInWithGoogle(
 ): Promise<void> {
   await ensureGoogleSignInInitialized();
 
+  // Only iOS's GIDSignIn auto-embeds a nonce claim into the id_token (see
+  // generateNoncePair above). Android's Credential Manager flow doesn't
+  // exhibit this and already signs in successfully without a nonce, so it's
+  // left untouched here to avoid regressing it.
+  const noncePair =
+    Capacitor.getPlatform() === "ios" ? await generateNoncePair() : null;
+
   try {
     // No `scopes` here on purpose: email/profile are already in the default
     // ID token claims, and requesting scopes on Android triggers a separate
@@ -74,7 +108,7 @@ export async function signInWithGoogle(
     // is why this only broke on Android.
     const { result } = await SocialLogin.login({
       provider: "google",
-      options: {},
+      options: noncePair ? { nonce: noncePair.hashed } : {},
     });
 
     if (result.responseType !== "online") {
@@ -89,6 +123,7 @@ export async function signInWithGoogle(
     const { error } = await supabase.auth.signInWithIdToken({
       provider: "google",
       token: idToken,
+      ...(noncePair ? { nonce: noncePair.raw } : {}),
     });
     if (error) throw error;
   } catch (err) {
