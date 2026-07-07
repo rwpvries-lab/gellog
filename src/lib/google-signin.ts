@@ -1,6 +1,7 @@
 import { SocialLogin, type SocialLoginError } from "@capgo/capacitor-social-login";
 import { Capacitor } from "@capacitor/core";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { registerPushNotifications } from "@/src/lib/native-push";
 
 /**
  * Native Google Sign-In for the Capacitor iOS and Android shells (Option A remote URL).
@@ -132,4 +133,37 @@ export async function signInWithGoogle(
     }
     throw err;
   }
+}
+
+type AppRouterLike = {
+  push: (href: string) => void;
+  refresh: () => void;
+};
+
+/**
+ * Shared post-auth path for native Google sign-in — used identically by
+ * /login and /signup so a first-time user is handled the same way from
+ * either entry point.
+ *
+ * Navigates first, then defers push-notification registration well past
+ * the RSC round-trip. On a first-ever call, registerPushNotifications()
+ * shows a native OS permission dialog; firing that too early (previously a
+ * bare `setTimeout(fn, 0)` on the login page only, and not called at all
+ * on signup) can interrupt the in-flight router.refresh() navigation and
+ * strand the user on a stale, unauthenticated render — which is why only
+ * first-time /login looked broken while /signup (which never called
+ * registerPushNotifications) didn't, and why a second /login attempt
+ * always worked (the permission prompt only shows once). This mirrors the
+ * Android POST_NOTIFICATIONS race fixed in 45551ac, tuned with enough
+ * delay to survive a real network round-trip instead of just the next tick.
+ */
+export async function completeGoogleSignIn(
+  supabase: SupabaseClient,
+  router: AppRouterLike,
+  next: string,
+): Promise<void> {
+  await signInWithGoogle(supabase);
+  router.push(next);
+  router.refresh();
+  setTimeout(() => void registerPushNotifications(supabase), 500);
 }
