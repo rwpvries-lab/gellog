@@ -107,9 +107,18 @@ export async function signInWithGoogle(
     // surfaces to JS as a generic "SocialLogin plugin is not implemented on
     // android" instead of the real error. iOS has no such requirement, which
     // is why this only broke on Android.
+    // forcePrompt is required whenever we're using a nonce: the plugin only
+    // threads `nonce` through its fresh-login path. If this device has ever
+    // signed in before, GIDSignIn.hasPreviousSignIn() is true (persisted in
+    // the Keychain) and the plugin silently takes a restorePreviousSignIn()
+    // -> refreshTokensIfNeeded() path instead, which never receives our
+    // nonce at all — yet we'd still send Supabase a nonce that has nothing
+    // to match in the id_token, reproducing the exact same mismatch error.
+    // Forcing the prompt skips that silent-restore path so nonce is always
+    // honored, at the cost of always showing the account picker on iOS.
     const { result } = await SocialLogin.login({
       provider: "google",
-      options: noncePair ? { nonce: noncePair.hashed } : {},
+      options: noncePair ? { nonce: noncePair.hashed, forcePrompt: true } : {},
     });
 
     if (result.responseType !== "online") {
