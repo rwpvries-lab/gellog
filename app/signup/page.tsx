@@ -10,8 +10,8 @@ import {
 } from "@/src/lib/apple-signin";
 import {
   GoogleSignInCancelled,
+  completeGoogleSignIn,
   isNativeGoogleShell,
-  signInWithGoogle,
 } from "@/src/lib/google-signin";
 import { AppleSignInButton } from "@/app/components/AppleSignInButton";
 import { TermsGate } from "@/app/components/TermsGate";
@@ -188,9 +188,7 @@ export default function SignupPage() {
     if (isNativeGoogleShell()) {
       setError(null);
       try {
-        await signInWithGoogle(supabase);
-        router.push("/");
-        router.refresh();
+        await completeGoogleSignIn(supabase, router, "/");
       } catch (err) {
         if (err instanceof GoogleSignInCancelled) return;
         // Log the raw error so it's visible in a device inspector — the
