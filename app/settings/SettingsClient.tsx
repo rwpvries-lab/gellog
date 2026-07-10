@@ -682,7 +682,7 @@ export function SettingsClient({
               You&apos;re on the free plan
             </p>
             <p style={{ color: "var(--color-text-secondary)", fontSize: 13 }}>
-              Log unlimited gelato visits, build your passport, and explore the map.
+              Log unlimited gelato visits and explore the map.
             </p>
           </div>
         ) : (

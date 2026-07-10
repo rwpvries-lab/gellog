@@ -10,8 +10,8 @@ import {
 } from "@/src/lib/apple-signin";
 import {
   GoogleSignInCancelled,
+  completeGoogleSignIn,
   isNativeGoogleShell,
-  signInWithGoogle,
 } from "@/src/lib/google-signin";
 import { AppleSignInButton } from "@/app/components/AppleSignInButton";
 import { TermsGate } from "@/app/components/TermsGate";
@@ -188,9 +188,7 @@ export default function SignupPage() {
     if (isNativeGoogleShell()) {
       setError(null);
       try {
-        await signInWithGoogle(supabase);
-        router.push("/");
-        router.refresh();
+        await completeGoogleSignIn(supabase, router, "/");
       } catch (err) {
         if (err instanceof GoogleSignInCancelled) return;
         // Log the raw error so it's visible in a device inspector — the
@@ -364,7 +362,7 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex h-11 w-full items-center justify-center rounded-lg bg-[color:var(--brand-primary)] font-medium text-[color:var(--text-inverse)] transition-colors hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-50"
+                  className="pressable flex h-11 w-full items-center justify-center rounded-lg bg-[color:var(--brand-primary)] font-medium text-[color:var(--text-inverse)] transition-colors hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-50"
                 >
                   {loading ? "Creating account…" : "Sign up"}
                 </button>

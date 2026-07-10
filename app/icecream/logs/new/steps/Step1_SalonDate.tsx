@@ -2,7 +2,7 @@
 
 import type { SalonData } from "@/src/components/SalonInput";
 import { ICE_CREAM_AUTOCOMPLETE_DESCRIPTION_TERMS } from "@/src/lib/looksLikeIceCreamSalon";
-import { getCurrentPosition } from "@/src/lib/geolocation";
+import { checkGeolocationPermission, getCurrentPosition } from "@/src/lib/geolocation";
 import { ChevronDown, ChevronRight, MapPin, Navigation2, Search } from "lucide-react";
 import {
   useCallback,
@@ -109,18 +109,30 @@ export function Step1_SalonDate({
   );
   const todayStr = todayLocalStr();
 
+  // Silently bias results toward the user's location when permission is
+  // already granted — never prompt for it from this screen. Fetched once on
+  // mount, not per keystroke; fetchPredictions reads the ref synchronously so
+  // a slow/absent position never blocks the first search results.
   useEffect(() => {
     if (!navigator.geolocation) return;
-    getCurrentPosition(
-      (pos) => {
-        userLocationRef.current = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-      },
-      () => {},
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 },
-    );
+    let cancelled = false;
+    void checkGeolocationPermission().then((state) => {
+      if (cancelled || state !== "granted") return;
+      getCurrentPosition(
+        (pos) => {
+          if (cancelled) return;
+          userLocationRef.current = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+          };
+        },
+        () => {},
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 300_000 },
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const fetchPredictions = useCallback(async (input: string) => {

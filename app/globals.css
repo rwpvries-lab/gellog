@@ -224,6 +224,21 @@
   --font-mono: ui-monospace, monospace;
 }
 
+/*
+ * Canonical tap/pressed feedback — one treatment reused across every
+ * interactive surface so press state is consistent app-wide. Scale-down
+ * works regardless of the element's own background; the warm inset wash
+ * (using the brand-primary-active token, previously unused) ties it back
+ * to the Gellog palette. ~100ms so it reads as instant, not animated.
+ */
+@utility pressable {
+  transition: transform 100ms ease-out, box-shadow 100ms ease-out;
+  &:active {
+    transform: scale(0.97);
+    box-shadow: inset 0 0 0 999px rgb(var(--brand-primary-active-rgb) / 0.12);
+  }
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

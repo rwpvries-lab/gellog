@@ -14,6 +14,7 @@ import {
   logFlowReducer,
 } from "./logFlowReducer";
 import { submitIceCreamLog, visitedAtToIsoUtc } from "./submitIceCreamLog";
+import { hapticImpactLight } from "@/src/lib/haptics";
 import { isVisitedAtValid } from "@/src/lib/visitedAtValidator";
 import { Step1_SalonDate } from "./steps/Step1_SalonDate";
 import { Step2_Flavours } from "./steps/Step2_Flavours";
@@ -169,6 +170,7 @@ export function LogStepWrapper({
     const result = await submitIceCreamLog({ userId, state });
     setSubmitting(false);
     if (result.ok) {
+      void hapticImpactLight();
       // Land on the feed after publishing, via the Next.js router rather than
       // raw history. A previous fix used history.replaceState, but WKWebView
       // restored that rewritten entry as step 1 on back; letting the router own
@@ -277,7 +279,7 @@ export function LogStepWrapper({
               (state.currentStep === 1 && !canAdvanceFromStep1(state)) ||
               (state.currentStep === 2 && !canAdvanceFromStep2(state))
             }
-            className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[color:var(--brand-primary)] px-6 font-sans text-base font-medium text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background-primary)] disabled:opacity-45"
+            className="pressable inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[color:var(--brand-primary)] px-6 font-sans text-base font-medium text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background-primary)] disabled:opacity-45"
           >
             Continue
             <ArrowRight size={18} strokeWidth={2.25} aria-hidden />
@@ -287,7 +289,7 @@ export function LogStepWrapper({
             type="button"
             onClick={() => void handleFinalSubmit()}
             disabled={submitting}
-            className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[color:var(--brand-primary)] px-6 font-sans text-base font-medium text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background-primary)] disabled:opacity-60"
+            className="pressable inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-[color:var(--brand-primary)] px-6 font-sans text-base font-medium text-[color:var(--text-inverse)] transition hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background-primary)] disabled:opacity-60"
           >
             {submitting ? (
               "Scooping…"

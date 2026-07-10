@@ -132,6 +132,11 @@ export function LogDetailClient({ logId }: Props) {
         return;
       }
 
+      // Friends-visibility gate must resolve — and reject — before any further
+      // data (comments, likes) is fetched, so unauthorised content is never
+      // even transiently held in memory (RLS does not enforce this; see note
+      // at the friendships query below).
+      let friendshipWithAuthor: { following_id: string } | null = null;
       if (raw.visibility === "friends") {
         if (!user) {
           setPhase("notfound");
@@ -148,6 +153,7 @@ export function LogDetailClient({ logId }: Props) {
             setPhase("notfound");
             return;
           }
+          friendshipWithAuthor = friendship;
         }
       }
 
@@ -167,12 +173,14 @@ export function LogDetailClient({ logId }: Props) {
               .eq("user_id", user.id)
           : Promise.resolve({ data: null }),
         user && raw.user_id !== user.id
-          ? supabase
-              .from("friendships")
-              .select("following_id")
-              .eq("follower_id", user.id)
-              .eq("following_id", raw.user_id)
-              .maybeSingle()
+          ? friendshipWithAuthor
+            ? Promise.resolve({ data: friendshipWithAuthor })
+            : supabase
+                .from("friendships")
+                .select("following_id")
+                .eq("follower_id", user.id)
+                .eq("following_id", raw.user_id)
+                .maybeSingle()
           : Promise.resolve({ data: null }),
         supabase
           .from("log_comments")
