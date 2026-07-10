@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Plus_Jakarta_Sans } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { SplashWrapper } from "./components/SplashWrapper";
 import { ClarityConsentBanner } from "./components/ClarityConsentBanner";
+import { ClarityLoader } from "./components/ClarityLoader";
 import { ThemeProvider } from "@/src/app/ThemeProvider";
 import { createClient } from "@/src/lib/supabase/server";
-import { CLARITY_CONSENT_STORAGE_KEY } from "@/src/lib/clarity-consent";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -69,31 +68,17 @@ export default async function RootLayout({
             __html: `(function(){try{var s=localStorage.getItem('gellog-theme');var d=s==='dark'||(s!=='light'&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.add(d?'dark':'light');}catch(e){}})();`,
           }}
         />
-        {clarityEnabled && (
-          <Script id="ms-clarity" strategy="afterInteractive">
-            {`(function(c,l,a,r,i,t,y){
-                c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-                t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-                y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-              })(window, document, "clarity", "script", "${clarityProjectId}");
-              (function(){
-                try {
-                  var consent = localStorage.getItem(${JSON.stringify(CLARITY_CONSENT_STORAGE_KEY)});
-                  if (consent === "granted") {
-                    window.clarity("consentv2", { ad_Storage: "granted", analytics_Storage: "granted" });
-                  } else if (consent === "denied") {
-                    window.clarity("consentv2", { ad_Storage: "denied", analytics_Storage: "denied" });
-                  }
-                } catch (e) {}
-              })();`}
-          </Script>
-        )}
       </head>
       <body className="font-sans antialiased">
         <ThemeProvider>
           <SplashWrapper user={!!user}>{children}</SplashWrapper>
         </ThemeProvider>
-        {clarityEnabled && <ClarityConsentBanner />}
+        {clarityEnabled && clarityProjectId && (
+          <>
+            <ClarityLoader projectId={clarityProjectId} />
+            <ClarityConsentBanner projectId={clarityProjectId} />
+          </>
+        )}
       </body>
     </html>
   );
