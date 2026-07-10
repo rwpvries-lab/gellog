@@ -606,7 +606,7 @@ export function FeedCard({
   return (
     <>
       <article
-        className={`overflow-hidden ring-1 ${
+        className={`overflow-hidden ring-1 ${isDetailPage ? "" : "pressable"} ${
           isFeedLayout
             ? "rounded-2xl bg-[color:var(--background-secondary)]"
             : `rounded-3xl bg-[color:var(--surface-elevated)] shadow-sm backdrop-blur-sm ${ratingBorderClass}`
@@ -846,7 +846,7 @@ export function FeedCard({
                     type="button"
                     onClick={(e) => void handleLike(e)}
                     disabled={!currentUserId || likeLoading}
-                    className="flex items-center gap-1 text-xs font-medium transition-colors disabled:cursor-default"
+                    className="pressable flex items-center gap-1 rounded-full text-xs font-medium transition-colors disabled:cursor-default"
                     style={{ color: liked ? "var(--brand-primary)" : "var(--text-secondary)" }}
                     aria-label={liked ? "Unlike" : "Like"}
                   >
@@ -869,7 +869,7 @@ export function FeedCard({
                   <Link
                     href={`/log/${log.id}#comments`}
                     onClick={(e) => e.stopPropagation()}
-                    className="flex items-center gap-1 text-xs font-medium text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
+                    className="pressable flex items-center gap-1 rounded-full text-xs font-medium text-[color:var(--text-secondary)] transition-colors hover:text-[color:var(--text-primary)]"
                     aria-label="Comments"
                   >
                     <svg
@@ -1279,7 +1279,7 @@ export function FeedCard({
               type="button"
               onClick={(e) => void handleLike(e)}
               disabled={!currentUserId || likeLoading}
-              className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)] disabled:cursor-default"
+              className="pressable mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)] disabled:cursor-default"
               style={{ color: liked ? "var(--brand-primary)" : "var(--text-secondary)" }}
               aria-label={liked ? "Unlike" : "Like"}
             >
@@ -1303,7 +1303,7 @@ export function FeedCard({
             <Link
               href={isDetailPage ? "#comments" : `/log/${log.id}#comments`}
               onClick={(e) => e.stopPropagation()}
-              className="mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)]"
+              className="pressable mx-auto flex min-h-[40px] min-w-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)]"
               style={{ color: "var(--text-secondary)" }}
               aria-label="Comments"
             >
@@ -1327,7 +1327,7 @@ export function FeedCard({
             <button
               type="button"
               onClick={(e) => void handleShare(e)}
-              className="mx-auto flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)]"
+              className="pressable mx-auto flex min-h-[40px] items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-medium transition hover:bg-[color:var(--surface-elevated-alt)]"
               style={{ color: "var(--text-secondary)" }}
               aria-label="Share"
             >

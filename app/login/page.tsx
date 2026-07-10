@@ -208,7 +208,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="flex h-11 w-full items-center justify-center rounded-lg bg-[color:var(--brand-primary)] font-medium text-[color:var(--text-inverse)] transition-colors hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-50"
+              className="pressable flex h-11 w-full items-center justify-center rounded-lg bg-[color:var(--brand-primary)] font-medium text-[color:var(--text-inverse)] transition-colors hover:bg-[color:var(--brand-primary-hover)] focus:outline-none focus:ring-2 focus:ring-[color:var(--border-focus)] focus:ring-offset-2 disabled:opacity-50"
             >
               {loading ? "Logging in…" : "Log in"}
             </button>

@@ -608,7 +608,7 @@ export function MapClient({
           <button
             type="button"
             onClick={() => router.push(pickerReturnTo)}
-            className="rounded-xl px-2 py-1 text-sm font-medium text-[color:var(--brand-primary)]"
+            className="pressable rounded-xl px-2 py-1 text-sm font-medium text-[color:var(--brand-primary)]"
           >
             ← Back
           </button>
@@ -657,7 +657,7 @@ export function MapClient({
               }
               onClick={handleRequestMyLocation}
               disabled={locatingUser}
-              className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md disabled:opacity-60 dark:bg-zinc-800"
+              className="pressable relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md disabled:opacity-60 dark:bg-zinc-800"
             >
               {locatingUser ? (
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500 dark:border-zinc-600 dark:border-t-blue-400" />
@@ -735,7 +735,7 @@ export function MapClient({
               <button
                 type="button"
                 onClick={confirmPickerSelection}
-                className="w-full rounded-2xl bg-[color:var(--brand-primary)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--text-inverse)]"
+                className="pressable w-full rounded-2xl bg-[color:var(--brand-primary)] px-4 py-3 text-center text-sm font-semibold text-[color:var(--text-inverse)]"
               >
                 Use this salon
               </button>
@@ -765,14 +765,14 @@ export function MapClient({
                   <div className="flex gap-3">
                     <Link
                       href={`/salon/${encodeURIComponent(selected.place_id)}`}
-                      className="flex-1 rounded-2xl bg-zinc-100 px-4 py-3 text-center text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+                      className="pressable flex-1 rounded-2xl bg-zinc-100 px-4 py-3 text-center text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
                     >
                       View salon page →
                     </Link>
                     <button
                       type="button"
                       onClick={() => setShowDirections((v) => !v)}
-                      className="flex-1 rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+                      className="pressable flex-1 rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
                     >
                       Get directions
                     </button>
@@ -780,7 +780,7 @@ export function MapClient({
                   {!pickerReturnTo && (
                     <Link
                       href={`/icecream/logs/new?place_id=${encodeURIComponent(selected.place_id)}&salon_name=${encodeURIComponent(selected.name)}`}
-                      className="mt-3 block w-full rounded-2xl px-4 py-3 text-center text-sm font-semibold text-white transition hover:brightness-110"
+                      className="pressable mt-3 block w-full rounded-2xl px-4 py-3 text-center text-sm font-semibold text-white transition hover:brightness-110"
                       style={{ background: "var(--brand-primary)" }}
                     >
                       Log a gelato here
@@ -791,14 +791,14 @@ export function MapClient({
                 <>
                   <Link
                     href={`/salon/${encodeURIComponent(selected.place_id)}`}
-                    className="mb-3 block w-full rounded-2xl bg-zinc-100 px-4 py-3 text-center text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 transition"
+                    className="pressable mb-3 block w-full rounded-2xl bg-zinc-100 px-4 py-3 text-center text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 transition"
                   >
                     View salon page →
                   </Link>
                   {!pickerReturnTo && (
                     <Link
                       href={`/icecream/logs/new?place_id=${encodeURIComponent(selected.place_id)}&salon_name=${encodeURIComponent(selected.name)}`}
-                      className="mb-3 block w-full rounded-2xl px-4 py-3 text-center text-sm font-semibold text-white transition hover:brightness-110"
+                      className="pressable mb-3 block w-full rounded-2xl px-4 py-3 text-center text-sm font-semibold text-white transition hover:brightness-110"
                       style={{ background: "var(--brand-primary)" }}
                     >
                       Log a gelato here
@@ -807,7 +807,7 @@ export function MapClient({
                   <button
                     type="button"
                     onClick={() => setShowDirections((v) => !v)}
-                    className="w-full rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
+                    className="pressable w-full rounded-2xl bg-zinc-100 px-4 py-3 text-sm font-semibold text-zinc-700 dark:bg-zinc-800 dark:text-zinc-200"
                   >
                     Get directions
                   </button>

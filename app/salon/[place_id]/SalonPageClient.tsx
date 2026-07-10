@@ -378,7 +378,7 @@ export function SalonPageClient({ placeId }: Props) {
             </span>
             <Link
               href={`/salon/${placeId}/dashboard`}
-              className="text-sm font-semibold text-[color:var(--brand-primary)] hover:underline"
+              className="pressable rounded-lg text-sm font-semibold text-[color:var(--brand-primary)] hover:underline"
             >
               Go to dashboard →
             </Link>
@@ -392,7 +392,7 @@ export function SalonPageClient({ placeId }: Props) {
             </span>
             <Link
               href={`/salon/${placeId}/claim`}
-              className="text-sm font-semibold text-amber-700 hover:underline dark:text-amber-400"
+              className="pressable rounded-lg text-sm font-semibold text-amber-700 hover:underline dark:text-amber-400"
             >
               Claim this page →
             </Link>
@@ -482,7 +482,7 @@ export function SalonPageClient({ placeId }: Props) {
           </span>
           <Link
             href={`/salon/${placeId}/dashboard`}
-            className="text-sm font-semibold text-[color:var(--brand-primary)] hover:underline"
+            className="pressable rounded-lg text-sm font-semibold text-[color:var(--brand-primary)] hover:underline"
           >
             Go to dashboard →
           </Link>

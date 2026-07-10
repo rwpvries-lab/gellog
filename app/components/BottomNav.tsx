@@ -52,7 +52,7 @@ function NavIconLink({ item }: { item: NavItem }) {
     <Link
       href={item.href}
       aria-label={item.label}
-      className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-opacity hover:opacity-80 active:opacity-70"
+      className="pressable flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-opacity hover:opacity-80"
       style={{ color: isActive ? "var(--color-teal)" : "var(--color-text-secondary)" }}
     >
       <Icon
@@ -92,7 +92,7 @@ export function BottomNav() {
             <div className="flex shrink-0 items-center justify-center px-1">
               <Link
                 href="/icecream/logs/new"
-                className="flex h-12 w-12 items-center justify-center rounded-full transition hover:brightness-110 active:brightness-95"
+                className="pressable flex h-12 w-12 items-center justify-center rounded-full transition hover:brightness-110"
                 style={{
                   background: "var(--color-teal)",
                   color: "var(--color-on-brand)",
