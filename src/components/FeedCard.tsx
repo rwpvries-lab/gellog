@@ -8,6 +8,7 @@ import type { LogFlavour } from "@/src/lib/log-flavours-resolved";
 import type { BaseToken, CrumbleToken, DrizzleToken, GelatoTokens } from "@/src/lib/gelato-tokens";
 import { createClient } from "@/src/lib/supabase/client";
 import { formatVisitDate } from "@/src/lib/utils";
+import { hapticImpactLight } from "@/src/lib/haptics";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -511,6 +512,7 @@ export function FeedCard({
   async function handleLike(e: React.MouseEvent) {
     e.stopPropagation();
     if (!currentUserId || likeLoading) return;
+    void hapticImpactLight();
     setLikeLoading(true);
     const supabase = createClient();
     if (liked) {

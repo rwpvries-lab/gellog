@@ -3,6 +3,7 @@
 
 import { shouldShowIceCreamMapMarker } from "@/src/lib/looksLikeIceCreamSalon";
 import { checkGeolocationPermission, getCurrentPosition } from "@/src/lib/geolocation";
+import { hapticImpactLight } from "@/src/lib/haptics";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -530,6 +531,7 @@ export function MapClient({
 
   function handleRequestMyLocation() {
     if (!mapReady || !mapInstanceRef.current) return;
+    void hapticImpactLight();
     setLocationBannerMessage(null);
     setShowLocateHint(false);
 

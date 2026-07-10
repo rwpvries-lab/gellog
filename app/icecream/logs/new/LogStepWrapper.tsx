@@ -14,6 +14,7 @@ import {
   logFlowReducer,
 } from "./logFlowReducer";
 import { submitIceCreamLog, visitedAtToIsoUtc } from "./submitIceCreamLog";
+import { hapticImpactLight } from "@/src/lib/haptics";
 import { isVisitedAtValid } from "@/src/lib/visitedAtValidator";
 import { Step1_SalonDate } from "./steps/Step1_SalonDate";
 import { Step2_Flavours } from "./steps/Step2_Flavours";
@@ -169,6 +170,7 @@ export function LogStepWrapper({
     const result = await submitIceCreamLog({ userId, state });
     setSubmitting(false);
     if (result.ok) {
+      void hapticImpactLight();
       // Land on the feed after publishing, via the Next.js router rather than
       // raw history. A previous fix used history.replaceState, but WKWebView
       // restored that rewritten entry as step 1 on back; letting the router own
