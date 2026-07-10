@@ -74,7 +74,6 @@ Gellog is a mobile-first PWA for logging and discovering gelato / ice cream ("St
 - `/map` — salon map
 - `/search` — user/salon discovery
 - `/icecream/profile` — current user profile
-- `/icecream/passport` — passport visualisation
 - `/profile/[username]` — public profile
 - `/salon/[place_id]` — public salon page
 - `/salon/[place_id]/claim` — claim flow
