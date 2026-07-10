@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { shouldShowIceCreamMapMarker } from "@/src/lib/looksLikeIceCreamSalon";
-import { getCurrentPosition } from "@/src/lib/geolocation";
+import { checkGeolocationPermission, getCurrentPosition } from "@/src/lib/geolocation";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -22,6 +22,7 @@ declare global {
 
 const AMSTERDAM = { lat: 52.3676, lng: 4.9041 };
 const MAP_ICE_TEXT_QUERY = "ijssalon gelato ice cream";
+const LOCATE_HINT_SHOWN_KEY = "gellog-locate-tooltip-shown";
 
 type MapSelection =
   | (SalonPin & { kind: "logged" })
@@ -80,6 +81,7 @@ export function MapClient({
   const idleListenerRef = useRef<{ remove: () => void } | null>(null);
   const dragStartY = useRef<number | null>(null);
   const markerJustTapped = useRef(false);
+  const autoCenterAttempted = useRef(false);
 
   const [selected, setSelected] = useState<MapSelection | null>(null);
   const [expanded, setExpanded] = useState(false);
@@ -90,6 +92,9 @@ export function MapClient({
   /** Set only after the user taps “my location” — never from automatic prompts. */
   const [locationBannerMessage, setLocationBannerMessage] = useState<string | null>(null);
   const [locatingUser, setLocatingUser] = useState(false);
+  /** True once the map is centred on the user; reverts to false as soon as they pan. */
+  const [isCentered, setIsCentered] = useState(false);
+  const [showLocateHint, setShowLocateHint] = useState(false);
 
   useEffect(() => {
     salonsRef.current = salons;
@@ -117,6 +122,37 @@ export function MapClient({
       };
     }
   }, []);
+
+  // First-visit locate-button hint, plus a silent re-centre if permission was
+  // already granted elsewhere — a read-only check, so this never triggers the
+  // permission dialog itself.
+  useEffect(() => {
+    if (!mapReady || autoCenterAttempted.current) return;
+    autoCenterAttempted.current = true;
+
+    void checkGeolocationPermission().then((state) => {
+      if (state !== "granted") return;
+      getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          setUserLocation(loc);
+          mapInstanceRef.current?.panTo(loc);
+          setIsCentered(true);
+        },
+        () => {},
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 },
+      );
+    });
+
+    if (localStorage.getItem(LOCATE_HINT_SHOWN_KEY)) return;
+    localStorage.setItem(LOCATE_HINT_SHOWN_KEY, "1");
+    const showId = requestAnimationFrame(() => setShowLocateHint(true));
+    const hideId = setTimeout(() => setShowLocateHint(false), 4000);
+    return () => {
+      cancelAnimationFrame(showId);
+      clearTimeout(hideId);
+    };
+  }, [mapReady]);
 
   // Update pin icons when selection changes
   useEffect(() => {
@@ -389,6 +425,12 @@ export function MapClient({
         setShowDirections(false);
       });
 
+      // Manual pan un-centres the locate button (Google/Apple Maps convention).
+      map.addListener("dragstart", () => {
+        setIsCentered(false);
+        setShowLocateHint(false);
+      });
+
       setMapReady(true);
 
       service.textSearch(
@@ -477,9 +519,11 @@ export function MapClient({
   function handleRequestMyLocation() {
     if (!mapReady || !mapInstanceRef.current) return;
     setLocationBannerMessage(null);
+    setShowLocateHint(false);
 
     if (userLocation) {
       mapInstanceRef.current.panTo(userLocation);
+      setIsCentered(true);
       return;
     }
 
@@ -494,6 +538,7 @@ export function MapClient({
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(loc);
         mapInstanceRef.current?.panTo(loc);
+        setIsCentered(true);
         setLocationBannerMessage(null);
         setLocatingUser(false);
       },
@@ -582,22 +627,40 @@ export function MapClient({
 
       {/* My location — requests geolocation only on tap (never on page load). */}
       {mapReady && (
-        <button
-          type="button"
-          aria-label={
-            userLocation ? "Centre map on my location" : "Use my location to centre the map"
-          }
-          onClick={handleRequestMyLocation}
-          disabled={locatingUser}
-          className={`absolute right-3 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md transition-[top] disabled:opacity-60 dark:bg-zinc-800 ${locateFabTop}`}
+        <div
+          className={`absolute right-3 flex items-center gap-2 transition-[top] ${locateFabTop}`}
           style={{ zIndex: 30, marginTop: "env(safe-area-inset-top, 0px)" }}
         >
-          {locatingUser ? (
-            <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500 dark:border-zinc-600 dark:border-t-blue-400" />
-          ) : (
-            <GellogDirections size={20} className="text-blue-500" />
+          {showLocateHint && (
+            <div className="whitespace-nowrap rounded-full bg-black/70 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
+              Tap to find yourself
+            </div>
           )}
-        </button>
+          <div className="relative h-11 w-11">
+            {showLocateHint && (
+              <span className="absolute inset-0 animate-ping rounded-full bg-blue-400/60" />
+            )}
+            <button
+              type="button"
+              aria-label={
+                isCentered ? "Centre map on my location" : "Use my location to centre the map"
+              }
+              onClick={handleRequestMyLocation}
+              disabled={locatingUser}
+              className="relative flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md disabled:opacity-60 dark:bg-zinc-800"
+            >
+              {locatingUser ? (
+                <span className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-200 border-t-blue-500 dark:border-zinc-600 dark:border-t-blue-400" />
+              ) : (
+                <GellogDirections
+                  size={20}
+                  className="text-blue-500"
+                  fill={isCentered ? "currentColor" : "none"}
+                />
+              )}
+            </button>
+          </div>
+        </div>
       )}
 
       {locationBannerMessage ? (
