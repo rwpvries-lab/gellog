@@ -45,16 +45,24 @@ export default async function MapPage({
 
   const supabase = await createClient();
 
-  const { data: logsData } = await supabase
-    .from("ice_cream_logs")
-    .select(
-      `salon_place_id, salon_name, salon_lat, salon_lng, overall_rating,
+  const [{ data: logsData }, { data: userSubmittedData }] = await Promise.all([
+    supabase
+      .from("ice_cream_logs")
+      .select(
+        `salon_place_id, salon_name, salon_lat, salon_lng, overall_rating,
        log_flavours ( flavour_name )`,
-    )
-    .eq("visibility", "public")
-    .not("salon_lat", "is", null)
-    .not("salon_lng", "is", null)
-    .not("salon_place_id", "is", null);
+      )
+      .eq("visibility", "public")
+      .not("salon_lat", "is", null)
+      .not("salon_lng", "is", null)
+      .not("salon_place_id", "is", null),
+    supabase
+      .from("salon_profiles")
+      .select("place_id, salon_name, salon_lat, salon_lng")
+      .eq("is_user_submitted", true)
+      .not("salon_lat", "is", null)
+      .not("salon_lng", "is", null),
+  ]);
 
   // Group by salon and compute stats
   const salonMap = new Map<
@@ -107,13 +115,6 @@ export default async function MapPage({
         .map(([name]) => name),
     }),
   );
-
-  const { data: userSubmittedData } = await supabase
-    .from("salon_profiles")
-    .select("place_id, salon_name, salon_lat, salon_lng")
-    .eq("is_user_submitted", true)
-    .not("salon_lat", "is", null)
-    .not("salon_lng", "is", null);
 
   const userSubmittedSalons: UserSubmittedPin[] = (userSubmittedData ?? [])
     .filter((r) => r.salon_lat != null && r.salon_lng != null)

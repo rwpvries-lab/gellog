@@ -4,7 +4,15 @@ import { redirect } from "next/navigation";
 import { LogStepWrapper } from "./LogStepWrapper";
 import type { SalonData } from "@/src/components/SalonInput";
 
-async function googlePlaceDisplayName(placeId: string): Promise<string | null> {
+type GooglePlaceDetails = {
+  name?: string;
+  formatted_address?: string;
+  geometry?: { location?: { lat?: number; lng?: number } };
+  address_components?: { types: string[]; long_name: string }[];
+};
+
+/** Single Places Details call fetching the union of fields both the name-resolution and salon-prefill paths need. */
+async function fetchGooglePlaceDetails(placeId: string): Promise<GooglePlaceDetails | null> {
   const key =
     process.env.GOOGLE_PLACES_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
   if (!key) return null;
@@ -13,18 +21,20 @@ async function googlePlaceDisplayName(placeId: string): Promise<string | null> {
       "https://maps.googleapis.com/maps/api/place/details/json",
     );
     url.searchParams.set("place_id", placeId);
-    url.searchParams.set("fields", "name");
+    url.searchParams.set(
+      "fields",
+      "name,formatted_address,geometry,address_components",
+    );
     url.searchParams.set("key", key);
     const res = await fetch(url.toString());
     const data = (await res.json()) as {
-      result?: { name?: string };
+      result?: GooglePlaceDetails;
       status?: string;
     };
-    const name = data.result?.name?.trim();
-    if (!name || data.status === "NOT_FOUND" || data.status === "INVALID_REQUEST") {
+    if (!data.result || data.status === "NOT_FOUND" || data.status === "INVALID_REQUEST") {
       return null;
     }
-    return name;
+    return data.result;
   } catch {
     return null;
   }
@@ -65,58 +75,26 @@ export default async function NewIceCreamLogPage({
   let salon_name = raw.salon_name;
   const flavour = raw.flavour;
 
-  if (place_id && !salon_name) {
-    const resolved = await googlePlaceDisplayName(place_id);
-    if (resolved) {
-      salon_name = resolved;
-    }
+  const placeDetails = place_id ? await fetchGooglePlaceDetails(place_id) : null;
+  if (!salon_name && placeDetails?.name) {
+    salon_name = placeDetails.name.trim();
   }
 
   let initialSalonData: SalonData | null = null;
 
   if (place_id && salon_name) {
-    const key =
-      process.env.GOOGLE_PLACES_KEY ?? process.env.NEXT_PUBLIC_GOOGLE_PLACES_KEY;
-
-    if (key) {
-      try {
-        const url = new URL(
-          "https://maps.googleapis.com/maps/api/place/details/json",
-        );
-        url.searchParams.set("place_id", place_id);
-        url.searchParams.set(
-          "fields",
-          "name,formatted_address,geometry,address_components",
-        );
-        url.searchParams.set("key", key);
-
-        const res = await fetch(url.toString());
-        const data = (await res.json()) as {
-          result?: {
-            name?: string;
-            formatted_address?: string;
-            geometry?: { location?: { lat?: number; lng?: number } };
-            address_components?: { types: string[]; long_name: string }[];
-          };
-        };
-
-        const result = data.result;
-        if (result) {
-          const cityComponent = result.address_components?.find((c) =>
-            c.types.includes("locality"),
-          );
-          initialSalonData = {
-            salon_name: decodeURIComponent(salon_name),
-            salon_place_id: place_id,
-            salon_address: result.formatted_address ?? null,
-            salon_lat: result.geometry?.location?.lat ?? null,
-            salon_lng: result.geometry?.location?.lng ?? null,
-            salon_city: cityComponent?.long_name ?? null,
-          };
-        }
-      } catch {
-        // fall through to name-only fallback
-      }
+    if (placeDetails) {
+      const cityComponent = placeDetails.address_components?.find((c) =>
+        c.types.includes("locality"),
+      );
+      initialSalonData = {
+        salon_name: decodeURIComponent(salon_name),
+        salon_place_id: place_id,
+        salon_address: placeDetails.formatted_address ?? null,
+        salon_lat: placeDetails.geometry?.location?.lat ?? null,
+        salon_lng: placeDetails.geometry?.location?.lng ?? null,
+        salon_city: cityComponent?.long_name ?? null,
+      };
     }
 
     // Fallback: name + place_id only, no coordinates
