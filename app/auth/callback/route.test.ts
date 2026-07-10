@@ -37,8 +37,14 @@ describe("auth callback GET", () => {
       new Request("https://gellog.app/auth/callback?code=abc123&next=/feed"),
     );
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("https://gellog.app/feed");
+    // Successful exchange renders a 200 HTML page that self-navigates via
+    // meta-refresh + location.replace(), rather than a 307, so Safari's ITP
+    // doesn't treat the gellog.app -> accounts.google.com -> gellog.app hop
+    // as a cross-site redirect bounce and drop the session cookie.
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    const body = await response.text();
+    expect(body).toContain("https://gellog.app/feed");
     expect(insert).toHaveBeenCalledWith({
       id: "user-42",
       username: "new_user",
