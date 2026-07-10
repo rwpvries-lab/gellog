@@ -23,6 +23,8 @@ declare global {
 const AMSTERDAM = { lat: 52.3676, lng: 4.9041 };
 const MAP_ICE_TEXT_QUERY = "ijssalon gelato ice cream";
 const LOCATE_HINT_SHOWN_KEY = "gellog-locate-tooltip-shown";
+/** Minimum zoom when centring on the user — avoids landing "correctly placed but miles overhead" after zooming out. */
+const LOCATE_MIN_ZOOM = 15;
 
 type MapSelection =
   | (SalonPin & { kind: "logged" })
@@ -96,6 +98,17 @@ export function MapClient({
   const [isCentered, setIsCentered] = useState(false);
   const [showLocateHint, setShowLocateHint] = useState(false);
 
+  /** Pans to the user's location and zooms in if the map is currently zoomed further out. */
+  function centerMapOnLocation(loc: { lat: number; lng: number }) {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+    map.panTo(loc);
+    if ((map.getZoom() ?? 0) < LOCATE_MIN_ZOOM) {
+      map.setZoom(LOCATE_MIN_ZOOM);
+    }
+    setIsCentered(true);
+  }
+
   useEffect(() => {
     salonsRef.current = salons;
     userSubmittedSalonsRef.current = userSubmittedSalons;
@@ -136,8 +149,7 @@ export function MapClient({
         (pos) => {
           const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setUserLocation(loc);
-          mapInstanceRef.current?.panTo(loc);
-          setIsCentered(true);
+          centerMapOnLocation(loc);
         },
         () => {},
         { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 },
@@ -522,8 +534,7 @@ export function MapClient({
     setShowLocateHint(false);
 
     if (userLocation) {
-      mapInstanceRef.current.panTo(userLocation);
-      setIsCentered(true);
+      centerMapOnLocation(userLocation);
       return;
     }
 
@@ -537,8 +548,7 @@ export function MapClient({
       (pos) => {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(loc);
-        mapInstanceRef.current?.panTo(loc);
-        setIsCentered(true);
+        centerMapOnLocation(loc);
         setLocationBannerMessage(null);
         setLocatingUser(false);
       },
