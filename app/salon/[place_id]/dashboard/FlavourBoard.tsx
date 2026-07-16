@@ -24,6 +24,8 @@ export type VitrineFlavour = {
   is_exclusive: boolean;
   is_brand_new: boolean;
   is_vegan: boolean;
+  is_signature?: boolean;
+  signature_position?: number | null;
   created_at?: string;
   // Token layer columns — present after going through the Flavour Builder
   base_token?: string | null;

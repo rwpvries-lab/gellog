@@ -7,6 +7,7 @@ import {
   LOG_FLAVOURS_RESOLVED_SELECT,
 } from "@/src/lib/log-flavours-resolved";
 import { lookupPlaceName } from "@/src/lib/salon-place-lookup";
+import { resolvePageTheme } from "@/src/lib/salonPageTheme";
 import { SalonPageClient, type SalonProfile, type SalonVitrineResolvedRow } from "./SalonPageClient";
 
 // Salon pages show the owner's own description and flavour names. On iOS,
@@ -97,6 +98,7 @@ export default async function SalonPage({
         emptyPlaceName={name}
         followingAuthorIds={[]}
         vitrineResolvedRows={vitrineResolvedRows}
+        pageTheme={resolvePageTheme(profile?.page_theme)}
       />
     );
   }
@@ -143,6 +145,7 @@ export default async function SalonPage({
       emptyPlaceName={null}
       followingAuthorIds={following}
       vitrineResolvedRows={vitrineResolvedRows}
+      pageTheme={resolvePageTheme(profile?.page_theme)}
     />
   );
 }

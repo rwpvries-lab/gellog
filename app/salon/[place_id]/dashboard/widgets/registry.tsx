@@ -13,12 +13,14 @@ import { VitrineConversionWidget } from "./VitrineConversionWidget";
 import { FlavourInsightsWidget } from "./FlavourInsightsWidget";
 import { CsvExportWidget } from "./CsvExportWidget";
 import { LogCleanupHistoryWidget } from "./LogCleanupHistoryWidget";
+import { PageAppearanceWidget } from "./PageAppearanceWidget";
 import type { DashboardData, WidgetId } from "./types";
 
 export const WIDGET_COMPONENTS: Record<WidgetId, ComponentType<{ data: DashboardData }>> = {
   stats_strip: StatsStripWidget,
   flavour_board: FlavourBoardWidget,
   weather: WeatherWidget,
+  page_appearance: PageAppearanceWidget,
   visits_trend: VisitsTrendWidget,
   flavour_performance: FlavourPerformanceWidget,
   recent_logs: RecentLogsWidget,

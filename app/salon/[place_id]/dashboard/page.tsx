@@ -34,6 +34,7 @@ type SalonProfile = {
   salon_subscription_expires_at: string | null;
   created_at?: string | null;
   dashboard_layout: unknown;
+  page_theme: unknown;
 };
 
 type RecentLogQueryRow = {

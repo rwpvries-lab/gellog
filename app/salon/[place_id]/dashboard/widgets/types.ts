@@ -1,5 +1,6 @@
 import type { PeakGridPayload } from "@/src/lib/salonPeakGrid";
 import type { SalonDashboardWeatherPayload } from "@/src/lib/salonDashboardWeather";
+import type { PageTheme } from "@/src/lib/salonPageTheme";
 import type {
   Suggestion,
   VitrineFlavour,
@@ -12,6 +13,7 @@ export type WidgetId =
   | "stats_strip"
   | "flavour_board"
   | "weather"
+  | "page_appearance"
   | "visits_trend"
   | "flavour_performance"
   | "recent_logs"
@@ -29,6 +31,7 @@ export const DEFAULT_WIDGET_ORDER: WidgetId[] = [
   "stats_strip",
   "flavour_board",
   "weather",
+  "page_appearance",
   "visits_trend",
   "flavour_performance",
   "recent_logs",
@@ -42,10 +45,14 @@ export const DEFAULT_WIDGET_ORDER: WidgetId[] = [
   "log_cleanup_history",
 ];
 
+// page_appearance has no single min tier -- it's visible to every tier, and
+// gates its Basic+/Pro-only fields internally. "free" here just means the
+// widget itself is never centrally blurred/locked by DashboardWidgetGrid.
 export const WIDGET_MIN_TIER: Record<WidgetId, Tier> = {
   stats_strip: "free",
   flavour_board: "free",
   weather: "free",
+  page_appearance: "free",
   visits_trend: "basic",
   flavour_performance: "basic",
   recent_logs: "basic",
@@ -63,6 +70,7 @@ export const WIDGET_TITLES: Record<WidgetId, string> = {
   stats_strip: "At a glance",
   flavour_board: "Flavour Board",
   weather: "Weather",
+  page_appearance: "Page appearance",
   visits_trend: "Visits & rating trend",
   flavour_performance: "Flavour performance",
   recent_logs: "Recent visits",
@@ -78,10 +86,13 @@ export const WIDGET_TITLES: Record<WidgetId, string> = {
 
 export type PlaceholderVariant = "chart" | "table" | "list" | "grid";
 
+// Unused for page_appearance (never centrally locked) but every WidgetId
+// needs an entry for the Record to type-check.
 export const WIDGET_PLACEHOLDER_VARIANT: Record<WidgetId, PlaceholderVariant> = {
   stats_strip: "grid",
   flavour_board: "list",
   weather: "list",
+  page_appearance: "list",
   visits_trend: "chart",
   flavour_performance: "table",
   recent_logs: "list",
@@ -173,6 +184,10 @@ export type FlavourInsightRow = {
 export type DashboardData = {
   tier: Tier;
   placeId: string;
+  salonName: string;
+  logoUrl: string | null;
+  pageTheme: PageTheme;
+  onPageThemeSave: (next: PageTheme) => Promise<void>;
   stats: Stats;
   weeklyVisits: WeeklyVisit[];
   flavourPerformance: FlavourPerformanceRow[];
@@ -201,7 +216,14 @@ export type DashboardData = {
  */
 export type DashboardDataBase = Omit<
   DashboardData,
-  "visibilityLog" | "flavourNameById" | "onVisibilityLogAppend" | "onFlavoursSnapshot"
+  | "visibilityLog"
+  | "flavourNameById"
+  | "onVisibilityLogAppend"
+  | "onFlavoursSnapshot"
+  | "salonName"
+  | "logoUrl"
+  | "pageTheme"
+  | "onPageThemeSave"
 > & {
   initialVitrineLog: VitrineVisibilityLogRow[];
 };

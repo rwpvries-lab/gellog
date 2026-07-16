@@ -2,6 +2,7 @@
 
 import { createClient } from "@/src/lib/supabase/client";
 import { resizeImageBeforeUpload } from "@/src/lib/imageUtils";
+import { resolvePageTheme, type PageTheme } from "@/src/lib/salonPageTheme";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/src/components/icons";
@@ -37,6 +38,7 @@ type SalonProfile = {
   salon_subscription_tier: "free" | "basic" | "pro" | null;
   salon_subscription_expires_at: string | null;
   dashboard_layout: unknown;
+  page_theme: unknown;
 };
 
 export type OwnerSalonOption = {
@@ -89,6 +91,21 @@ export function DashboardClient({ salonProfile, ownerSalons, justClaimed, justUp
   const handleFlavoursSnapshot = useCallback((rows: { id: string; name: string }[]) => {
     setFlavourNameById(Object.fromEntries(rows.map((r) => [r.id, r.name])));
   }, []);
+
+  const [pageTheme, setPageTheme] = useState<PageTheme>(() => resolvePageTheme(salonProfile.page_theme));
+
+  const handlePageThemeSave = useCallback(
+    async (next: PageTheme) => {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("salon_profiles")
+        .update({ page_theme: next })
+        .eq("place_id", salonProfile.place_id);
+      if (error) throw error;
+      setPageTheme(next);
+    },
+    [salonProfile.place_id],
+  );
 
   useEffect(() => {
     if (justUpgraded) {
@@ -269,6 +286,10 @@ export function DashboardClient({ salonProfile, ownerSalons, justClaimed, justUp
           <DashboardWidgetGrid
             data={{
               ...dashboardData,
+              salonName,
+              logoUrl: displayLogoUrl,
+              pageTheme,
+              onPageThemeSave: handlePageThemeSave,
               visibilityLog,
               flavourNameById,
               onVisibilityLogAppend: handleVisibilityLogAppend,
