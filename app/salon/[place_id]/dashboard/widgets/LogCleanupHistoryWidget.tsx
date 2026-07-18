@@ -10,12 +10,17 @@ function formatVisibilityLogInstant(iso: string): string {
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const yesterdayStart = new Date(todayStart.getTime() - 86400000);
   const weekAgoStart = new Date(todayStart.getTime() - 6 * 86400000);
-  const hhmm = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
+  // Fixed locale ("en-GB"), not the browser's — the server render and the
+  // client hydration must produce byte-identical text, and `undefined`
+  // resolves to whatever locale each environment happens to run under
+  // (they differ in practice: 24h en-GB-ish on the server vs. a 12h
+  // AM/PM locale in the browser), which throws a hydration mismatch.
+  const hhmm = d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
   if (d >= todayStart) return `Today at ${hhmm}`;
   if (d >= yesterdayStart) return `Yesterday at ${hhmm}`;
-  if (d >= weekAgoStart) return `${d.toLocaleDateString(undefined, { weekday: "short" })} at ${hhmm}`;
+  if (d >= weekAgoStart) return `${d.toLocaleDateString("en-GB", { weekday: "short" })} at ${hhmm}`;
   const sameYear = d.getFullYear() === now.getFullYear();
-  const dateStr = d.toLocaleDateString(undefined, {
+  const dateStr = d.toLocaleDateString("en-GB", {
     month: "short",
     day: "numeric",
     ...(sameYear ? {} : { year: "numeric" }),

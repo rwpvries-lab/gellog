@@ -1,10 +1,12 @@
 "use client";
 
 import { FlavorColorPicker } from "@/src/components/FlavorColorPicker";
+import { Vitrine } from "@/src/components/Gelato/variants/Vitrine";
+import { gelatoTokensFromNullableTokens } from "@/src/lib/gelato-tokens";
 import { resolveVitrineSwatch } from "@/src/lib/vitrine-swatch";
 import { createClient } from "@/src/lib/supabase/client";
 import { userFacingSaveError } from "@/src/lib/userFacingError";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FlavourBuilderModal } from "./FlavourBuilderModal";
 
 const DEFAULT_HEX = "#A8C5A0";
@@ -303,6 +305,21 @@ export function FlavourBoard({
     setSuggestions((prev) => prev.filter((s) => s.id !== id));
   }
 
+  const visiblePreviewFlavours = useMemo(
+    () =>
+      flavours
+        .filter((f) => f.is_visible)
+        .map((f) => ({
+          id: f.id,
+          displayName: f.name,
+          tokens: gelatoTokensFromNullableTokens(f.base_token, f.drizzle_token, f.crumble_token),
+          isExclusive: f.is_exclusive,
+          isBrandNew: f.is_brand_new,
+          isVegan: f.is_vegan,
+        })),
+    [flavours],
+  );
+
   return (
     <div className="flex flex-col gap-2">
       <div className="mb-1 flex flex-wrap items-start justify-between gap-3">
@@ -321,6 +338,15 @@ export function FlavourBoard({
           <span className="text-base leading-none">+</span> Add flavour
         </button>
       </div>
+
+      {visiblePreviewFlavours.length > 0 && (
+        <div className="mb-2 rounded-2xl bg-zinc-50 px-3 pb-3 pt-2.5 dark:bg-zinc-800/50">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+            Live preview — what visitors see
+          </p>
+          <Vitrine flavours={visiblePreviewFlavours} seed={placeId} narrow />
+        </div>
+      )}
 
       {flavours.length === 0 && !addingNew && (
         <p className="py-2 text-xs text-zinc-400 dark:text-zinc-500">

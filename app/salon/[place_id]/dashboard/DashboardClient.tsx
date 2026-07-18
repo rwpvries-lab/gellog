@@ -302,7 +302,7 @@ export function DashboardClient({ salonProfile, ownerSalons, justClaimed, justUp
 
         <aside
           id="settings"
-          className="min-w-0 scroll-mt-28 lg:sticky lg:top-6 lg:self-start lg:border-l lg:border-zinc-200/80 lg:pl-8 dark:lg:border-zinc-800"
+          className="min-w-0 scroll-mt-28 lg:self-start lg:border-l lg:border-zinc-200/80 lg:pl-8 dark:lg:border-zinc-800"
         >
           <div className="space-y-4 rounded-3xl bg-zinc-50/80 p-3 shadow-[0_14px_28px_-22px_rgba(15,23,42,0.7)] ring-1 ring-zinc-200/70 dark:bg-zinc-900/60 dark:ring-zinc-700/70 lg:rounded-none lg:bg-transparent lg:p-0 lg:shadow-none lg:ring-0">
             <div className="space-y-4 [&>*]:mb-0">

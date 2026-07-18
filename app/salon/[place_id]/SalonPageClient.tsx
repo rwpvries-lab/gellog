@@ -223,7 +223,7 @@ export function SalonPageClient({
 
         {coverPhotoUrl && (
           <div className="relative mb-5 aspect-[16/7] w-full overflow-hidden rounded-3xl">
-            <Image src={coverPhotoUrl} alt="" fill className="object-cover" />
+            <Image src={coverPhotoUrl} alt="" fill sizes="(max-width: 640px) 100vw, 640px" className="object-cover" />
           </div>
         )}
 
@@ -350,7 +350,7 @@ export function SalonPageClient({
 
       {coverPhotoUrl && (
         <div className="relative mb-5 aspect-[16/7] w-full overflow-hidden rounded-3xl">
-          <Image src={coverPhotoUrl} alt="" fill className="object-cover" />
+          <Image src={coverPhotoUrl} alt="" fill sizes="(max-width: 640px) 100vw, 640px" className="object-cover" />
         </div>
       )}
 

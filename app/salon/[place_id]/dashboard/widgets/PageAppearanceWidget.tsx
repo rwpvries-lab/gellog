@@ -30,7 +30,7 @@ function TierGate({
   const hasAccess = rank(tier) >= rank(requiredTier);
   if (hasAccess) return <>{children}</>;
   return (
-    <div className="relative overflow-hidden rounded-2xl">
+    <div className="relative min-h-[6.5rem] overflow-hidden rounded-2xl">
       <div className="pointer-events-none opacity-50 blur-[1px]">{children}</div>
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-white/70 px-4 text-center dark:bg-zinc-900/70">
         <p className="text-xs font-medium text-zinc-600 dark:text-zinc-300">
@@ -174,7 +174,7 @@ export function PageAppearanceWidget({ data }: { data: DashboardData }) {
       <div className="mb-5 overflow-hidden rounded-2xl ring-1 ring-zinc-200 dark:ring-zinc-700">
         <div className="relative flex h-20 w-full items-end justify-center bg-zinc-100 dark:bg-zinc-800">
           {previewCoverUrl ? (
-            <Image src={previewCoverUrl} alt="" fill className="object-cover" />
+            <Image src={previewCoverUrl} alt="" fill sizes="(max-width: 640px) 100vw, 640px" className="object-cover" />
           ) : null}
         </div>
         <div className="flex items-center gap-3 bg-white px-4 py-3 dark:bg-zinc-900">
